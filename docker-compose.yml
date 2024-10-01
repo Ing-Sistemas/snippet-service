@@ -7,20 +7,28 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - 8081:8081
+      - ${PORT}:${PORT}
     env_file:
       - .env
+    networks:
+      - wii-network
 
   db:
     container_name: snippet-db
     image: postgres:12
     ports:
-      - 5433:5433
+      - 5433:5432
     env_file:
       - .env
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+        - wii-network
+
+networks:
+  wii-network:
+    name: wii-network
+    driver: bridge
 
 volumes:
   pgdata:
-
