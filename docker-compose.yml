@@ -7,11 +7,13 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - ${PORT}:${PORT}
+      - "${PORT}:${PORT}"
     env_file:
       - .env
     networks:
       - wii-network
+    expose:
+      - "${PORT}"
 
   db:
     container_name: snippet-db
