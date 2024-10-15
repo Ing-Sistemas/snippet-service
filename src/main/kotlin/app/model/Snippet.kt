@@ -17,5 +17,7 @@ data class Snippet(
     @NotNull
     val description: String,
     @NotNull
+    val language: CodingLanguage,
+    @NotNull
     val code: String
 )
