@@ -7,11 +7,9 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "${PORT}:${PORT}"
+      - "8081:8081"
     env_file:
       - .env
-    networks:
-      - wii-network
     expose:
       - "${PORT}"
 
@@ -26,11 +24,6 @@ services:
       - pgdata:/var/lib/postgresql/data
     networks:
         - wii-network
-
-networks:
-  wii-network:
-    name: wii-network
-    driver: bridge
 
 volumes:
   pgdata:

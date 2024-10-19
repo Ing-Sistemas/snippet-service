@@ -1,6 +1,6 @@
 package app.service
 
-import app.model.Snippet
+import app.repository.entity.Snippet
 import app.repository.SnippetRepository
 
 class SnippetService(private val snippetRepository: SnippetRepository) {

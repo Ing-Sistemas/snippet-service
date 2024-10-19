@@ -1,11 +1,11 @@
-package app
+package com.example.springboot.app
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication
-class SnippetSearcherApplication
+class SnippetServiceApplication
 
 fun main(args: Array<String>) {
-	runApplication<SnippetSearcherApplication>(*args)
+	runApplication<SnippetServiceApplication>(*args)
 }

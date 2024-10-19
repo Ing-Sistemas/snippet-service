@@ -1,6 +1,6 @@
 package app.repository
 
-import app.model.Snippet
+import app.repository.entity.Snippet
 
 class SnippetRepository {
     fun save(snippet: Snippet): Snippet {

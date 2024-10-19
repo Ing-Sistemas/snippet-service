@@ -1,6 +1,6 @@
 spring:
   application:
-    name: Snippet-Searcher-Service
+    name: snippet-service
   datasource:
     url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${POSTGRES_DB}
     driver-class-name: org.postgresql.Driver
@@ -13,4 +13,4 @@ spring:
     hibernate:
       ddl-auto: update
 server:
-  port: 8082
+  port: 8081
