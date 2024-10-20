@@ -10,8 +10,6 @@ services:
       - "8081:8081"
     env_file:
       - .env
-    expose:
-      - "${PORT}"
 
   db:
     container_name: snippet-db
@@ -22,8 +20,6 @@ services:
       - .env
     volumes:
       - pgdata:/var/lib/postgresql/data
-    networks:
-        - wii-network
 
 volumes:
   pgdata:
