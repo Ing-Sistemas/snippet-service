@@ -28,7 +28,7 @@ class SnippetController(
         @RequestBody snippetRequestCreate: SnippetRequestCreate,
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetEntity> {
-        val userId = jwt.claims["sub"] as String
+        val userId = jwt.claims["sub"] as String //si queremos mandarle el uId sino directo el jwt
         //send userId to Perm service and create the snippet to its table (with owner perms)
         try {
             val snippetDTO = SnippetDTO(null, snippetRequestCreate.title, snippetRequestCreate.language)
