@@ -1,38 +1,69 @@
-package app.controller
+package com.example.springboot.app.controller
 
-import app.model.Snippet
-import app.service.SnippetService
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
-import reactor.core.publisher.Mono
+import com.example.springboot.app.dto.SnippetDTO
+import com.example.springboot.app.repository.entity.SnippetEntity
+import com.example.springboot.app.service.SnippetService
+import com.example.springboot.app.utils.URLs.API_URL
+import com.example.springboot.app.utils.URLs.BASE_URL
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.*
+import org.springframework.web.client.RestTemplate
 
 @RestController
 @RequestMapping("/api")
-class SnippetController(private val snippetService: SnippetService) {
+class SnippetController(
+    private val snippetService: SnippetService,
+    private val restTemplate: RestTemplate,
+) {
+    private val host = System.getenv().getOrDefault("HOST", "localhost")
+    private val permissionPort = System.getenv().getOrDefault("PERMISSION_SERVICE_PORT", "none")
 
-    @GetMapping("/ping")
-    fun pingPermissionService(): Mono<String> {
-        println("entering pingPermissionService")
-        return snippetService.pingPermissionService()
+    @PostMapping("/create")
+    fun create(
+        @RequestParam userId:String,
+        @RequestParam title: String,
+        @RequestParam language:String,
+        @RequestParam code:String
+    ): ResponseEntity<SnippetEntity> {
+        //send userId to Perm service and create the snippet to its table (with owner perms)
+        try {
+        val snippetDTO = SnippetDTO(null, title, language)
+        val savedSnippet = snippetService.createSnippet(snippetDTO)
+        val permURL = "$BASE_URL$host:$permissionPort/$API_URL/create"
+        //TODO add the asset url
+        val assetURL = "$BASE_URL$host:nose/"
+            val response = restTemplate.put(permURL, userId, savedSnippet.id)
+            val assetResponse = restTemplate.put(assetURL, code, savedSnippet.id)
+            //first, create the perms in the db
+            //then, create the snippet file bucket (the asset receives the title as key, but it would be better to create it
+            // with the snippet_id)
+            return ResponseEntity.ok(savedSnippet)
+        } catch (e: Exception){
+            println(e.message)
+            return ResponseEntity.status(500).body(null)
+        }
     }
 
-    @PostMapping("/add/snippet")
-    fun addSnippet(@RequestParam snippet: Snippet): Mono<Snippet> {
-        return snippetService.addSnippet(snippet)
+    @PutMapping("/update")
+    fun update(@RequestBody userId:String, @RequestBody snippetId: Long, @RequestBody title: String): ResponseEntity<String> {
+        // this sends the userId to the Perm service, check if the user can w, and then send the update
+        // to the asset service
+        return ResponseEntity.ok("Snippet updated")
     }
 
-    @DeleteMapping("/delete/snippet")
-    fun deleteSnippet(@RequestParam snippetId: Int): Mono<String> {
-        return snippetService.deleteSnippet(snippetId)
+    @GetMapping("/get")
+    fun get(@RequestBody userId:String, @RequestBody snippetId: Long): ResponseEntity<SnippetEntity> {
+        val snippet = snippetService.findSnippetById(snippetId)
+        val permURL = "$BASE_URL$host:$permissionPort/$API_URL/get"
+        //check if the user can read the snippet
+        return ResponseEntity.ok(snippet)
     }
 
-    @GetMapping("/get/snippet")
-    fun getSnippet(@RequestParam snippetId: Int): Mono<Snippet> {
-        return snippetService.getSnippet(snippetId)
+    @DeleteMapping("/delete")
+    fun delete(@RequestBody userId:String, @RequestBody snippetId: String){
+        // this sends the userId to the Perm service, check if the user can delete and if so
+        // the Perm deletes the snippet from its db, the asset deletes de file
+        // and the SnippetS deletes the snippet from its db
+        snippetService.deleteSnippet(snippetId)
     }
-
 }
