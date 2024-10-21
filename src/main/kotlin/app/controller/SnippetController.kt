@@ -29,11 +29,11 @@ class SnippetController(
         try {
         val snippetDTO = SnippetDTO(null, title, language)
         val savedSnippet = snippetService.createSnippet(snippetDTO)
-        val permURL = "$BASE_URL$host:$permissionPort/$API_URL/create"
+        //val permURL = "$BASE_URL$host:$permissionPort/$API_URL/create"
         //TODO add the asset url
-        val assetURL = "$BASE_URL$host:nose/"
-            val response = restTemplate.put(permURL, userId, savedSnippet.id)
-            val assetResponse = restTemplate.put(assetURL, code, savedSnippet.id)
+        //val assetURL = "$BASE_URL$host:nose/"
+            //val response = restTemplate.put(permURL, userId, savedSnippet.id)
+            //val assetResponse = restTemplate.put(assetURL, code, savedSnippet.id)
             //first, create the perms in the db
             //then, create the snippet file bucket (the asset receives the title as key, but it would be better to create it
             // with the snippet_id)
@@ -54,7 +54,7 @@ class SnippetController(
     @GetMapping("/get")
     fun get(@RequestBody userId:String, @RequestBody snippetId: Long): ResponseEntity<SnippetEntity> {
         val snippet = snippetService.findSnippetById(snippetId)
-        val permURL = "$BASE_URL$host:$permissionPort/$API_URL/get"
+        //val permURL = "$BASE_URL$host:$permissionPort/$API_URL/get"
         //check if the user can read the snippet
         return ResponseEntity.ok(snippet)
     }
