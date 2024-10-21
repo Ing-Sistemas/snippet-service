@@ -19,28 +19,28 @@ class SnippetController(
     private val permissionPort = System.getenv().getOrDefault("PERMISSION_SERVICE_PORT", "none")
 
     @PostMapping("/create")
-    fun save(
+    fun create(
         @RequestParam userId:String,
         @RequestParam title: String,
         @RequestParam language:String,
         @RequestParam code:String
     ): ResponseEntity<SnippetEntity> {
-        //send userId to Perm service and save the snippet to its table (with owner perms)
+        //send userId to Perm service and create the snippet to its table (with owner perms)
+        try {
         val snippetDTO = SnippetDTO(null, title, language)
         val savedSnippet = snippetService.createSnippet(snippetDTO)
         val permURL = "$BASE_URL$host:$permissionPort/$API_URL/create"
         //TODO add the asset url
         val assetURL = "$BASE_URL$host:nose/"
-        try {
             val response = restTemplate.put(permURL, userId, savedSnippet.id)
             val assetResponse = restTemplate.put(assetURL, code, savedSnippet.id)
             //first, create the perms in the db
-            //then, create the snippet file bucket (the asset receives the title as key, but it would be better to save it
+            //then, create the snippet file bucket (the asset receives the title as key, but it would be better to create it
             // with the snippet_id)
             return ResponseEntity.ok(savedSnippet)
         } catch (e: Exception){
             println(e.message)
-            return ResponseEntity.status(500).body(savedSnippet)
+            return ResponseEntity.status(500).body(null)
         }
     }
 
