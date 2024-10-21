@@ -3,6 +3,8 @@ package com.example.springboot.app.controller
 import com.example.springboot.app.dto.SnippetDTO
 import com.example.springboot.app.repository.entity.SnippetEntity
 import com.example.springboot.app.service.SnippetService
+import com.example.springboot.app.utils.PermissionRequest
+import com.example.springboot.app.utils.PermissionResponse
 import com.example.springboot.app.utils.URLs.API_URL
 import com.example.springboot.app.utils.URLs.BASE_URL
 import org.springframework.http.ResponseEntity
@@ -29,12 +31,19 @@ class SnippetController(
         try {
         val snippetDTO = SnippetDTO(null, title, language)
         val savedSnippet = snippetService.createSnippet(snippetDTO)
-        //val permURL = "$BASE_URL$host:$permissionPort/$API_URL/create"
-        //TODO add the asset url
+        val permURL = "$BASE_URL$host:$permissionPort/$API_URL/create"
+
+            //TODO add the asset url
         //val assetURL = "$BASE_URL$host:nose/"
-            //val response = restTemplate.put(permURL, userId, savedSnippet.id)
-            //val assetResponse = restTemplate.put(assetURL, code, savedSnippet.id)
-            //first, create the perms in the db
+            val response = restTemplate.postForEntity(permURL,PermissionRequest(savedSnippet.id!!, userId), PermissionResponse::class.java)
+            println("above if")
+            if (response.body != null){
+                println("in if")
+                println(response.body!!.permissions)
+            } else {
+                ResponseEntity.status(400).body("Failed to create permissions!")
+            }
+            println("out if, failed")
             //then, create the snippet file bucket (the asset receives the title as key, but it would be better to create it
             // with the snippet_id)
             return ResponseEntity.ok(savedSnippet)
