@@ -5,6 +5,7 @@ import com.example.springboot.app.repository.entity.SnippetEntity
 import com.example.springboot.app.service.SnippetService
 import com.example.springboot.app.utils.PermissionRequest
 import com.example.springboot.app.utils.PermissionResponse
+import com.example.springboot.app.utils.SnippetRequest
 import com.example.springboot.app.utils.URLs.API_URL
 import com.example.springboot.app.utils.URLs.BASE_URL
 import org.springframework.http.ResponseEntity
@@ -22,20 +23,16 @@ class SnippetController(
 
     @PostMapping("/create")
     fun create(
-        @RequestParam userId:String,
-        @RequestParam title: String,
-        @RequestParam language:String,
-        @RequestParam code:String
+        @RequestBody snippetRequest: SnippetRequest
     ): ResponseEntity<SnippetEntity> {
         //send userId to Perm service and create the snippet to its table (with owner perms)
         try {
-        val snippetDTO = SnippetDTO(null, title, language)
-        val savedSnippet = snippetService.createSnippet(snippetDTO)
-        val permURL = "$BASE_URL$host:$permissionPort/$API_URL/create"
-
+            val snippetDTO = SnippetDTO(null, snippetRequest.title, snippetRequest.language)
+            val savedSnippet = snippetService.createSnippet(snippetDTO)
+            val permURL = "$BASE_URL$host:$permissionPort/$API_URL/create"
             //TODO add the asset url
         //val assetURL = "$BASE_URL$host:nose/"
-            val response = restTemplate.postForEntity(permURL,PermissionRequest(savedSnippet.id!!, userId), PermissionResponse::class.java)
+            val response = restTemplate.postForEntity(permURL,PermissionRequest(savedSnippet.id!!, snippetRequest.userId), PermissionResponse::class.java)
             println("above if")
             if (response.body != null){
                 println("in if")
