@@ -9,6 +9,8 @@ import com.example.springboot.app.utils.SnippetRequestCreate
 import com.example.springboot.app.utils.URLs.API_URL
 import com.example.springboot.app.utils.URLs.BASE_URL
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.client.RestTemplate
 
@@ -23,8 +25,10 @@ class SnippetController(
 
     @PostMapping("/create")
     fun create(
-        @RequestBody snippetRequestCreate: SnippetRequestCreate
+        @RequestBody snippetRequestCreate: SnippetRequestCreate,
+        @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetEntity> {
+        val userId = jwt.claims["sub"] as String
         //send userId to Perm service and create the snippet to its table (with owner perms)
         try {
             val snippetDTO = SnippetDTO(null, snippetRequestCreate.title, snippetRequestCreate.language)
