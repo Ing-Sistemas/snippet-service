@@ -28,7 +28,7 @@ class SnippetController(
         //send userId to Perm service and save the snippet to its table (with owner perms)
         val snippetDTO = SnippetDTO(null, title, language)
         val savedSnippet = snippetService.createSnippet(snippetDTO)
-        val permURL = "$BASE_URL$host:$permissionPort/$API_URL/save"
+        val permURL = "$BASE_URL$host:$permissionPort/$API_URL/create"
         val assetURL = "$BASE_URL$host:nose/"
         try {
             val response = restTemplate.put(permURL, userId, savedSnippet.id)
