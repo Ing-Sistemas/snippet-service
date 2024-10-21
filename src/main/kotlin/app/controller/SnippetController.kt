@@ -29,6 +29,7 @@ class SnippetController(
         val snippetDTO = SnippetDTO(null, title, language)
         val savedSnippet = snippetService.createSnippet(snippetDTO)
         val permURL = "$BASE_URL$host:$permissionPort/$API_URL/create"
+        //TODO add the asset url
         val assetURL = "$BASE_URL$host:nose/"
         try {
             val response = restTemplate.put(permURL, userId, savedSnippet.id)
