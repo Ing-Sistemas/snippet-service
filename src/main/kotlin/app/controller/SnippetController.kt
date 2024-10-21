@@ -33,14 +33,11 @@ class SnippetController(
             //TODO add the asset url
         //val assetURL = "$BASE_URL$host:nose/"
             val response = restTemplate.postForEntity(permURL,PermissionRequest(savedSnippet.id!!, snippetRequestCreate.userId), PermissionResponse::class.java)
-            println("above if")
             if (response.body != null){
-                println("in if")
                 println(response.body!!.permissions)
             } else {
                 ResponseEntity.status(400).body("Failed to create permissions!")
             }
-            println("out if, failed")
             //then, create the snippet file bucket (the asset receives the title as key, but it would be better to create it
             // with the snippet_id)
             return ResponseEntity.ok(savedSnippet)
