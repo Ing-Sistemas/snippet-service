@@ -1,12 +1,14 @@
 package com.example.springboot.app.repository.entity
 
 import jakarta.persistence.*
+import org.jetbrains.annotations.NotNull
 
 @Entity
 data class SnippetEntity(
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    val id: Long?,
+    val id: String?,
+    @NotNull
     val title: String,
+    @NotNull
     val language: String,
 )

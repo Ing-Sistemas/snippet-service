@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 
 
 interface SnippetRepository: JpaRepository<SnippetEntity, String> {
-    fun findById(id: Long): SnippetEntity
+    fun findSnippetEntityById(id: String): SnippetEntity
     fun findByLanguage(language: String): SnippetEntity
 }

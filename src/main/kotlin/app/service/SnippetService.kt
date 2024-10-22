@@ -1,7 +1,7 @@
 package com.example.springboot.app.service
 
-import com.example.springboot.app.auth.OAuth2ResourceServerSecurityConfiguration
 import com.example.springboot.app.dto.SnippetDTO
+import com.example.springboot.app.dto.UpdateSnippetDTO
 import com.example.springboot.app.repository.SnippetRepository
 import com.example.springboot.app.repository.entity.SnippetEntity
 import com.example.springboot.app.utils.PermissionRequest
@@ -9,7 +9,6 @@ import com.example.springboot.app.utils.PermissionResponse
 import com.example.springboot.app.utils.SnippetRequestCreate
 import com.example.springboot.app.utils.URLs.API_URL
 import com.example.springboot.app.utils.URLs.BASE_URL
-import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties
 import org.springframework.http.ResponseEntity
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Service
@@ -36,7 +35,7 @@ class SnippetService (
 
             val res = restTemplate.postForEntity(
                 permUrl,
-                PermissionRequest(savedSnippet.id, jwt),
+                PermissionRequest(savedSnippet.id!!, jwt),
                 PermissionResponse::class.java
             )
             if (res.body != null) {
@@ -53,12 +52,42 @@ class SnippetService (
         }
     }
 
+    fun updateSnippet(
+        snippetId: String,
+        updateSnippetDTO: UpdateSnippetDTO,
+        jwt: Jwt
+    ): ResponseEntity<SnippetEntity> {
+        return try {
+            val snippet = snippetRepository.findSnippetEntityById(snippetId)
+            if (snippet != null) {
+                val permUrl = "$BASE_URL$host:$permissionPort/$API_URL/update"
+                val assetUrl = "$BASE_URL$host:..." //TODO
+                val res = restTemplate.postForEntity(
+                    permUrl,
+                    PermissionRequest(snippetId, jwt),
+                    PermissionResponse::class.java
+                )
+                if (res.body != null) {
+                    println(res.body!!.permissions)
+                } else {
+                    ResponseEntity.status(400).body("Failed to create permissions")
+                }
+                ResponseEntity.ok(snippet)
+            } else {
+                ResponseEntity.status(404).body(null)
+            }
+        } catch (e: Exception) {
+            println(e.message)
+            ResponseEntity.status(500).body(null)
+        }
+    }
+
     fun deleteSnippet(snippetId: String){
         return snippetRepository.deleteById(snippetId)
     }
 
-    fun findSnippetById(id: Long): SnippetEntity {
-        return snippetRepository.findById(id)
+    fun findSnippetById(id: String): SnippetEntity {
+        return snippetRepository.findSnippetEntityById(id)
     }
 
     private fun translateToEntity(snippetDTO: SnippetDTO): SnippetEntity{

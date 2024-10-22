@@ -23,25 +23,27 @@ class SnippetController(
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetEntity> {
         return try {
+
             val savedSnippetResponse = snippetService.createAndSetPermissions(snippetRequestCreate, jwt)
             return savedSnippetResponse
         } catch (e: Exception) {
-            logger.error(e.message)
-            ResponseEntity.status(500).body(null)
+            logger.error(" The error is: {}", e.message)
+            ResponseEntity.status(400).body(null)
         }
     }
 
     @PutMapping("/update")
     fun update(
         @RequestBody snippetId: String,
-        @RequestBody updateSnippetDTO: UpdateSnippetDTO,
-        // falta el jwt
+        @RequestBody code: String,
+        @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetEntity> {
         // this sends the userId to the Perm service, check if the user can w, and then send the update
         // to the asset service
         return try {
-            val updatedSnippet = snippetService.updateSnippet(snippetId, updateSnippetDTO)
-            ResponseEntity.ok(updatedSnippet)
+            val updateSnippetDTO = UpdateSnippetDTO(snippetId, code)
+            val updatedSnippet = snippetService.updateSnippet(snippetId, updateSnippetDTO, jwt)
+            updatedSnippet
         } catch (e: Exception) {
             logger.error("Error updating snippet: {}", e.message)
             ResponseEntity.status(500).body(null)
@@ -51,7 +53,7 @@ class SnippetController(
     @GetMapping("/get")
     fun get(
         @RequestBody userId: String,
-        @RequestBody snippetId: Long
+        @RequestBody snippetId: String
     ): ResponseEntity<SnippetEntity> {
         //val permURL = "$BASE_URL$host:$permissionPort/$API_URL/get"
         //check if the user can read the snippet
