@@ -1,76 +1,83 @@
 package com.example.springboot.app.controller
 
-import com.example.springboot.app.dto.SnippetDTO
+import com.example.springboot.app.dto.UpdateSnippetDTO
 import com.example.springboot.app.repository.entity.SnippetEntity
 import com.example.springboot.app.service.SnippetService
-import com.example.springboot.app.utils.PermissionRequest
-import com.example.springboot.app.utils.PermissionResponse
 import com.example.springboot.app.utils.SnippetRequestCreate
-import com.example.springboot.app.utils.URLs.API_URL
-import com.example.springboot.app.utils.URLs.BASE_URL
+import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.client.RestTemplate
 
 @RestController
 @RequestMapping("/api")
 class SnippetController(
     private val snippetService: SnippetService,
-    private val restTemplate: RestTemplate,
 ) {
-    private val host = System.getenv().getOrDefault("HOST", "localhost")
-    private val permissionPort = System.getenv().getOrDefault("PERMISSION_SERVICE_PORT", "none")
+    private val logger = LoggerFactory.getLogger(SnippetController::class.java)
 
     @PostMapping("/create")
     fun create(
         @RequestBody snippetRequestCreate: SnippetRequestCreate,
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetEntity> {
-        val userId = jwt.claims["sub"] as String //si queremos mandarle el uId sino directo el jwt
-        //send userId to Perm service and create the snippet to its table (with owner perms)
-        try {
-            val snippetDTO = SnippetDTO(null, snippetRequestCreate.title, snippetRequestCreate.language)
-            val savedSnippet = snippetService.createSnippet(snippetDTO)
-            val permURL = "$BASE_URL$host:$permissionPort/$API_URL/create"
-            //TODO add the asset url
-        //val assetURL = "$BASE_URL$host:nose/"
-            val response = restTemplate.postForEntity(permURL,PermissionRequest(savedSnippet.id!!, snippetRequestCreate.userId), PermissionResponse::class.java)
-            if (response.body != null){
-                println(response.body!!.permissions)
-            } else {
-                ResponseEntity.status(400).body("Failed to create permissions!")
-            }
-            //then, create the snippet file bucket (the asset receives the title as key, but it would be better to create it
-            // with the snippet_id)
-            return ResponseEntity.ok(savedSnippet)
-        } catch (e: Exception){
-            println(e.message)
-            return ResponseEntity.status(500).body(null)
+        return try {
+            val savedSnippetResponse = snippetService.createAndSetPermissions(snippetRequestCreate, jwt)
+            return savedSnippetResponse
+        } catch (e: Exception) {
+            logger.error(e.message)
+            ResponseEntity.status(500).body(null)
         }
     }
 
     @PutMapping("/update")
-    fun update(@RequestBody userId:String, @RequestBody snippetId: Long, @RequestBody title: String): ResponseEntity<String> {
+    fun update(
+        @RequestBody snippetId: String,
+        @RequestBody updateSnippetDTO: UpdateSnippetDTO,
+        // falta el jwt
+    ): ResponseEntity<SnippetEntity> {
         // this sends the userId to the Perm service, check if the user can w, and then send the update
         // to the asset service
-        return ResponseEntity.ok("Snippet updated")
+        return try {
+            val updatedSnippet = snippetService.updateSnippet(snippetId, updateSnippetDTO)
+            ResponseEntity.ok(updatedSnippet)
+        } catch (e: Exception) {
+            logger.error("Error updating snippet: {}", e.message)
+            ResponseEntity.status(500).body(null)
+        }
     }
 
     @GetMapping("/get")
-    fun get(@RequestBody userId:String, @RequestBody snippetId: Long): ResponseEntity<SnippetEntity> {
-        val snippet = snippetService.findSnippetById(snippetId)
+    fun get(
+        @RequestBody userId: String,
+        @RequestBody snippetId: Long
+    ): ResponseEntity<SnippetEntity> {
         //val permURL = "$BASE_URL$host:$permissionPort/$API_URL/get"
         //check if the user can read the snippet
-        return ResponseEntity.ok(snippet)
+        return try {
+            val snippet = snippetService.findSnippetById(snippetId)
+            ResponseEntity.ok(snippet)
+        } catch (e: Exception) {
+            logger.error("Error getting snippet: {}", e.message)
+            ResponseEntity.status(500).body(null)
+        }
     }
 
     @DeleteMapping("/delete")
-    fun delete(@RequestBody userId:String, @RequestBody snippetId: String){
+    fun delete(
+        @RequestBody userId:String,
+        @RequestBody snippetId: String
+    ): ResponseEntity<Void> {
         // this sends the userId to the Perm service, check if the user can delete and if so
         // the Perm deletes the snippet from its db, the asset deletes de file
         // and the SnippetS deletes the snippet from its db
-        snippetService.deleteSnippet(snippetId)
+        return try {
+            snippetService.deleteSnippet(snippetId)
+            ResponseEntity.noContent().build()
+        } catch (e: Exception) {
+            logger.error("Error deleting snippet: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
     }
 }

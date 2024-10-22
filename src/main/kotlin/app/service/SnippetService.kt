@@ -1,19 +1,56 @@
 package com.example.springboot.app.service
 
+import com.example.springboot.app.auth.OAuth2ResourceServerSecurityConfiguration
 import com.example.springboot.app.dto.SnippetDTO
 import com.example.springboot.app.repository.SnippetRepository
 import com.example.springboot.app.repository.entity.SnippetEntity
-import org.springframework.beans.factory.annotation.Autowired
+import com.example.springboot.app.utils.PermissionRequest
+import com.example.springboot.app.utils.PermissionResponse
+import com.example.springboot.app.utils.SnippetRequestCreate
+import com.example.springboot.app.utils.URLs.API_URL
+import com.example.springboot.app.utils.URLs.BASE_URL
+import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties
+import org.springframework.http.ResponseEntity
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Service
+import org.springframework.web.client.RestTemplate
 
 
 @Service
-class SnippetService @Autowired constructor(
-    private val snippetRepository: SnippetRepository
+class SnippetService (
+    private val snippetRepository: SnippetRepository,
+    private val restTemplate: RestTemplate
 ) {
-    fun createSnippet(snippetDTO: SnippetDTO): SnippetEntity {
-        val snippetEntity = translate(snippetDTO)
-        return snippetRepository.save(snippetEntity)
+    private val host = System.getenv().getOrDefault("HOST", "localhost")
+    private val permissionPort = System.getenv().getOrDefault("PERMISSION_SERVICE_PORT", "none")
+
+    fun createAndSetPermissions(
+        snippetRequestCreate: SnippetRequestCreate,
+        jwt: Jwt
+    ): ResponseEntity<SnippetEntity> {
+        return try {
+            val snippetDTO = SnippetDTO(null, snippetRequestCreate.title, snippetRequestCreate.language)
+            val savedSnippet = snippetRepository.save(translateToEntity(snippetDTO)) //to return
+            val permUrl = "$BASE_URL$host:$permissionPort/$API_URL/create"
+            val assetUrl = "$BASE_URL$host:..." //TODO
+
+            val res = restTemplate.postForEntity(
+                permUrl,
+                PermissionRequest(savedSnippet.id, jwt),
+                PermissionResponse::class.java
+            )
+            if (res.body != null) {
+                println(res.body!!.permissions)
+            } else {
+                ResponseEntity.status(400).body("Failed to create permissions")
+            }
+            // TODO create the snippet file bucket (the asset recives the title as key
+            // TODO better to create it with the snippet_id
+            ResponseEntity.ok(savedSnippet)
+        } catch (e: Exception) {
+            println(e.message)
+            ResponseEntity.status(500).body(null)
+        }
     }
 
     fun deleteSnippet(snippetId: String){
@@ -24,7 +61,7 @@ class SnippetService @Autowired constructor(
         return snippetRepository.findById(id)
     }
 
-    private fun translate(snippetDTO: SnippetDTO): SnippetEntity{
+    private fun translateToEntity(snippetDTO: SnippetDTO): SnippetEntity{
         return SnippetEntity(null, snippetDTO.title, snippetDTO.language)
     }
 
