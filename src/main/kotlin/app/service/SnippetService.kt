@@ -1,5 +1,6 @@
 package com.example.springboot.app.service
 
+import com.example.springboot.app.auth.OAuth2ResourceServerSecurityConfiguration
 import com.example.springboot.app.dto.SnippetDTO
 import com.example.springboot.app.dto.UpdateSnippetDTO
 import com.example.springboot.app.repository.SnippetRepository
@@ -9,10 +10,14 @@ import com.example.springboot.app.utils.PermissionResponse
 import com.example.springboot.app.utils.SnippetRequestCreate
 import com.example.springboot.app.utils.URLs.API_URL
 import com.example.springboot.app.utils.URLs.BASE_URL
+import org.springframework.http.HttpEntity
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
+import java.util.*
 
 
 @Service
@@ -33,21 +38,37 @@ class SnippetService (
             val permUrl = "$BASE_URL$host:$permissionPort/$API_URL/create"
             val assetUrl = "$BASE_URL$host:..." //TODO
 
+            val headers = HttpHeaders().apply {
+                set("Authorization", "Bearer ${jwt.tokenValue}")
+                contentType = MediaType.APPLICATION_JSON
+            }
+
+            val requestEntity = HttpEntity(PermissionRequest(savedSnippet.id!!, jwt), headers)
             val res = restTemplate.postForEntity(
                 permUrl,
-                PermissionRequest(savedSnippet.id!!, jwt),
+                requestEntity,
                 PermissionResponse::class.java
             )
+
             if (res.body != null) {
+                println("naza ily")
                 println(res.body!!.permissions)
             } else {
-                ResponseEntity.status(400).body("Failed to create permissions")
+                throw Exception("Failed to create permissions")
+                //ResponseEntity.status(400).body("Failed to create permissions")
             }
+            val auth = OAuth2ResourceServerSecurityConfiguration(
+                System.getenv("AUTH0_AUDIENCE"),
+                System.getenv("AUTH_SERVER_URI")
+            ).jwtDecoder()
+
+            val userId = auth.decode(jwt.tokenValue).subject!!
+            println(userId)
             // TODO create the snippet file bucket (the asset recives the title as key
             // TODO better to create it with the snippet_id
             ResponseEntity.ok(savedSnippet)
         } catch (e: Exception) {
-            println(e.message)
+            println(e)
             ResponseEntity.status(500).body(null)
         }
     }
@@ -91,7 +112,7 @@ class SnippetService (
     }
 
     private fun translateToEntity(snippetDTO: SnippetDTO): SnippetEntity{
-        return SnippetEntity(null, snippetDTO.title, snippetDTO.language)
+        return SnippetEntity(snippetDTO.id ?: UUID.randomUUID().toString(), snippetDTO.title, snippetDTO.language)
     }
 
     private fun translate(snippetEntity: SnippetEntity): SnippetDTO{

@@ -23,7 +23,6 @@ class SnippetController(
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetEntity> {
         return try {
-
             val savedSnippetResponse = snippetService.createAndSetPermissions(snippetRequestCreate, jwt)
             return savedSnippetResponse
         } catch (e: Exception) {
