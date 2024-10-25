@@ -38,11 +38,7 @@ class SnippetService (
             val permUrl = "$BASE_URL$host:$permissionPort/$API_URL/create"
             val assetUrl = "$BASE_URL$host:..." //TODO
 
-            val headers = HttpHeaders().apply {
-                set("Authorization", "Bearer ${jwt.tokenValue}")
-                contentType = MediaType.APPLICATION_JSON
-            }
-
+            val headers = genHeaders(jwt)
             val requestEntity = HttpEntity(PermissionRequest(savedSnippet.id!!, jwt), headers)
             val res = restTemplate.postForEntity(
                 permUrl,
@@ -54,15 +50,8 @@ class SnippetService (
                 println(res.body!!.permissions)
             } else {
                 throw Exception("Failed to create permissions")
-
             }
-            val auth = OAuth2ResourceServerSecurityConfiguration(
-                System.getenv("AUTH0_AUDIENCE"),
-                System.getenv("AUTH_SERVER_URI")
-            ).jwtDecoder()
 
-            val userId = auth.decode(jwt.tokenValue).subject!!
-            println(userId)
             ResponseEntity.ok(savedSnippet)
             // TODO create the snippet file bucket (the asset recives the title as key
             // TODO better to create it with the snippet_id
@@ -73,29 +62,36 @@ class SnippetService (
     }
 
     fun updateSnippet(
-        snippetId: String,
         updateSnippetDTO: UpdateSnippetDTO,
         jwt: Jwt
     ): ResponseEntity<SnippetEntity> {
+        println("Entering service method")
         return try {
+            val snippetId = updateSnippetDTO.snippetId
             val snippet = snippetRepository.findSnippetEntityById(snippetId)
-            if (snippet != null) {
-                val permUrl = "$BASE_URL$host:$permissionPort/$API_URL/update"
-                //val assetUrl = "$BASE_URL$host:..." //TODO
-                val res = restTemplate.postForEntity(
-                    permUrl,
-                    PermissionRequest(snippetId, jwt),
-                    PermissionResponse::class.java
-                )
-                if (res.body != null) {
-                    println(res.body!!.permissions)
-                } else {
-                    ResponseEntity.status(400).body("Failed to create permissions")
-                }
-                ResponseEntity.ok(snippet)
+            val permUrl = "$BASE_URL$host:$permissionPort/$API_URL/get"
+            //val assetUrl = "$BASE_URL$host:..." //TODO
+
+            val header = genHeaders(jwt)
+            val requestEntity = HttpEntity(PermissionRequest(snippetId, jwt), header)
+            val res = restTemplate.postForEntity(
+                permUrl,
+                requestEntity,
+                PermissionResponse::class.java
+            )
+            println("got the perm res")
+            if (res.body!!.permissions.contains("WRITE")) {
+                snippetRepository.save(SnippetEntity(snippetId, snippet.title, updateSnippetDTO.code))
             } else {
-                ResponseEntity.status(404).body(null)
+                ResponseEntity.status(401).body(null)
             }
+            if (res.body != null) {
+                println(res.body!!.permissions)
+            } else {
+                ResponseEntity.status(400).body("Failed to create permissions")
+            }
+            ResponseEntity.ok(snippet)
+
         } catch (e: Exception) {
             println(e.message)
             ResponseEntity.status(500).body(null)
@@ -110,6 +106,8 @@ class SnippetService (
         return snippetRepository.findSnippetEntityById(id)
     }
 
+    //----------------------
+
     private fun translateToEntity(snippetDTO: SnippetDTO): SnippetEntity{
         return SnippetEntity(snippetDTO.id ?: UUID.randomUUID().toString(), snippetDTO.title, snippetDTO.language)
     }
@@ -121,4 +119,20 @@ class SnippetService (
     private fun generateSnippetDTO(snippetRequestCreate: SnippetRequestCreate): SnippetDTO {
         return SnippetDTO(UUID.randomUUID().toString(), snippetRequestCreate.title, snippetRequestCreate.language)
     }
+
+    private fun getUserIdFromJWT(jwt: Jwt): String {
+        val auth = OAuth2ResourceServerSecurityConfiguration(
+            System.getenv("AUTH0_AUDIENCE"),
+            System.getenv("AUTH_SERVER_URI")
+        ).jwtDecoder()
+        return auth.decode(jwt.tokenValue).subject!!
+    }
+    private fun genHeaders(jwt: Jwt): HttpHeaders {
+        return HttpHeaders().apply {
+            set("Authorization", "Bearer ${jwt.tokenValue}")
+            contentType = MediaType.APPLICATION_JSON
+        }
+    }
+
+
 }

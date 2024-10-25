@@ -38,16 +38,12 @@ class SnippetController(
 
     @PutMapping("/update")
     fun update(
-        @RequestBody snippetId: String,
-        @RequestBody code: String,
+        @RequestBody updateSnippetDTO: UpdateSnippetDTO,
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetEntity> {
-        // this sends the userId to the Perm service, check if the user can w, and then send the update
-        // to the asset service
         return try {
-            val updateSnippetDTO = UpdateSnippetDTO(snippetId, code)
-            val updatedSnippet = snippetService.updateSnippet(snippetId, updateSnippetDTO, jwt)
-            updatedSnippet
+            val updatedSnippet = snippetService.updateSnippet(updateSnippetDTO, jwt)
+            return updatedSnippet
         } catch (e: Exception) {
             logger.error("Error updating snippet: {}", e.message)
             ResponseEntity.status(500).body(null)
