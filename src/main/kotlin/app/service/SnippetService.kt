@@ -64,6 +64,8 @@ class SnippetService (
             val userId = auth.decode(jwt.tokenValue).subject!!
             println(userId)
             ResponseEntity.ok(savedSnippet)
+            // TODO create the snippet file bucket (the asset recives the title as key
+            // TODO better to create it with the snippet_id
         } catch (e: Exception) {
             println(e)
             ResponseEntity.status(500).body(null)
