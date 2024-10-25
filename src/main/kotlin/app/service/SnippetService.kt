@@ -33,8 +33,8 @@ class SnippetService (
         jwt: Jwt
     ): ResponseEntity<SnippetEntity> {
         return try {
-            val snippetDTO = SnippetDTO(null, snippetRequestCreate.title, snippetRequestCreate.language)
-            val savedSnippet = snippetRepository.save(translateToEntity(snippetDTO)) //to return
+            val snippetDTO = generateSnippetDTO(snippetRequestCreate)
+            val savedSnippet = snippetRepository.save(translateToEntity(snippetDTO))
             val permUrl = "$BASE_URL$host:$permissionPort/$API_URL/create"
             val assetUrl = "$BASE_URL$host:..." //TODO
 
@@ -81,7 +81,7 @@ class SnippetService (
             val snippet = snippetRepository.findSnippetEntityById(snippetId)
             if (snippet != null) {
                 val permUrl = "$BASE_URL$host:$permissionPort/$API_URL/update"
-                val assetUrl = "$BASE_URL$host:..." //TODO
+                //val assetUrl = "$BASE_URL$host:..." //TODO
                 val res = restTemplate.postForEntity(
                     permUrl,
                     PermissionRequest(snippetId, jwt),
@@ -116,5 +116,9 @@ class SnippetService (
 
     private fun translate(snippetEntity: SnippetEntity): SnippetDTO{
         return SnippetDTO(snippetEntity.id, snippetEntity.title, snippetEntity.language)
+    }
+
+    private fun generateSnippetDTO(snippetRequestCreate: SnippetRequestCreate): SnippetDTO {
+        return SnippetDTO(UUID.randomUUID().toString(), snippetRequestCreate.title, snippetRequestCreate.language)
     }
 }

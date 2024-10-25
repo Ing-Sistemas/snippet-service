@@ -17,6 +17,11 @@ class SnippetController(
 ) {
     private val logger = LoggerFactory.getLogger(SnippetController::class.java)
 
+    @GetMapping("/test")
+    fun test(): ResponseEntity<String> {
+        return ResponseEntity.ok("Snippet service is up and running")
+    }
+
     @PostMapping("/create")
     fun create(
         @RequestBody snippetRequestCreate: SnippetRequestCreate,
