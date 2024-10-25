@@ -37,8 +37,7 @@ class SnippetController(
         @RequestBody code: String,
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetEntity> {
-        // this sends the userId to the Perm service, check if the user can w, and then send the update
-        // to the asset service
+
         return try {
             val updateSnippetDTO = UpdateSnippetDTO(snippetId, code)
             val updatedSnippet = snippetService.updateSnippet(snippetId, updateSnippetDTO, jwt)
@@ -54,8 +53,7 @@ class SnippetController(
         @RequestBody userId: String,
         @RequestBody snippetId: String
     ): ResponseEntity<SnippetEntity> {
-        //val permURL = "$BASE_URL$host:$permissionPort/$API_URL/get"
-        //check if the user can read the snippet
+
         return try {
             val snippet = snippetService.findSnippetById(snippetId)
             ResponseEntity.ok(snippet)
@@ -70,9 +68,6 @@ class SnippetController(
         @RequestBody userId:String,
         @RequestBody snippetId: String
     ): ResponseEntity<Void> {
-        // this sends the userId to the Perm service, check if the user can delete and if so
-        // the Perm deletes the snippet from its db, the asset deletes de file
-        // and the SnippetS deletes the snippet from its db
         return try {
             snippetService.deleteSnippet(snippetId)
             ResponseEntity.noContent().build()

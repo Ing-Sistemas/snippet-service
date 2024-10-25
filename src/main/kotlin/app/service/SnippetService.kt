@@ -51,11 +51,10 @@ class SnippetService (
             )
 
             if (res.body != null) {
-                println("naza ily")
                 println(res.body!!.permissions)
             } else {
                 throw Exception("Failed to create permissions")
-                //ResponseEntity.status(400).body("Failed to create permissions")
+
             }
             val auth = OAuth2ResourceServerSecurityConfiguration(
                 System.getenv("AUTH0_AUDIENCE"),
@@ -64,8 +63,6 @@ class SnippetService (
 
             val userId = auth.decode(jwt.tokenValue).subject!!
             println(userId)
-            // TODO create the snippet file bucket (the asset recives the title as key
-            // TODO better to create it with the snippet_id
             ResponseEntity.ok(savedSnippet)
         } catch (e: Exception) {
             println(e)
