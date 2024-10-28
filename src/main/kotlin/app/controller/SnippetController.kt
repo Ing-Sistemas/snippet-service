@@ -83,29 +83,6 @@ class SnippetController(
         }
     }
 
-    // gets all snippets from the user
-    @GetMapping("/get")
-    fun getSnippets(
-        @AuthenticationPrincipal jwt: Jwt
-    ): ResponseEntity<SnippetEntity> {
-        //val permURL = "$BASE_URL$host:$permissionPort/$API_URL/get"
-        //check if the user can read the snippet
-        // should send the ids to the asset and get all snippets
-        TODO()
-    }
-
-    // gets a snippet by title
-    @GetMapping("/get/{title}")
-    fun getSnippet(
-        @PathVariable title: String,
-        @AuthenticationPrincipal jwt: Jwt
-    ): ResponseEntity<SnippetEntity> {
-        //val permURL = "$BASE_URL$host:$permissionPort/$API_URL/get"
-        //check if the user can read the snippet
-        // should send the ids to the asset and get all snippets
-        TODO()
-    }
-
     @PostMapping("/share")
     fun share(
         @RequestBody shareRequest: ShareRequest,
@@ -130,6 +107,7 @@ class SnippetController(
         }
     }
 
+
     @DeleteMapping("/delete")
     fun delete(
         @RequestBody userId:String,
@@ -145,6 +123,30 @@ class SnippetController(
             logger.error("Error deleting snippet: {}", e.message)
             ResponseEntity.status(500).build()
         }
+    }
+    //todo difference between get a snippet, get all my snippets and get all snippets i have access to
+
+    // gets all snippets from the user
+    @GetMapping("/get")
+    fun getSnippets(
+        @AuthenticationPrincipal jwt: Jwt
+    ): ResponseEntity<SnippetEntity> {
+        //val permURL = "$BASE_URL$host:$permissionPort/$API_URL/get"
+        //check if the user can read the snippet
+        // should send the ids to the asset and get all snippets
+        TODO()
+    }
+
+    // gets a snippet by title
+    @GetMapping("/get/{title}")
+    fun getSnippet(
+        @PathVariable title: String,
+        @AuthenticationPrincipal jwt: Jwt
+    ): ResponseEntity<SnippetEntity> {
+        //val permURL = "$BASE_URL$host:$permissionPort/$API_URL/get"
+        //check if the user can read the snippet
+        // should send the ids to the asset and get all snippets
+        TODO()
     }
 
     private fun shareSnippet(snippetTitle : String, friendId: String,headers: HttpHeaders): ResponseEntity<PermissionResponse> {
