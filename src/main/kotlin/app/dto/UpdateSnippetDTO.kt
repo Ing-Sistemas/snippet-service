@@ -1,6 +1,6 @@
 package com.example.springboot.app.dto
 
 class UpdateSnippetDTO(
-    val snippetId: String,
+    val title: String,
     val code: String,
 )
