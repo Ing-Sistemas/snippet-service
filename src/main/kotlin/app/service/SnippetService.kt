@@ -4,7 +4,6 @@ import com.example.springboot.app.dto.SnippetDTO
 import com.example.springboot.app.dto.UpdateSnippetDTO
 import com.example.springboot.app.repository.SnippetRepository
 import com.example.springboot.app.repository.entity.SnippetEntity
-import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Service
 
 
@@ -23,13 +22,6 @@ class SnippetService (
         }
     }
 
-    fun updateSnippet(
-        updateSnippetDTO: UpdateSnippetDTO,
-        jwt: Jwt
-    ): SnippetEntity {
-        TODO()
-    }
-
     fun deleteSnippet(snippetId: String){
         return snippetRepository.deleteById(snippetId)
     }
@@ -43,7 +35,7 @@ class SnippetService (
     }
 
     private fun translate(snippetDTO: SnippetDTO): SnippetEntity{
-        return SnippetEntity(snippetDTO.id, snippetDTO.title, snippetDTO.language, snippetDTO.version)
+        return SnippetEntity(snippetDTO.snippetId, snippetDTO.title, snippetDTO.language, snippetDTO.version)
     }
 
     private fun translate(snippetEntity: SnippetEntity): SnippetDTO {

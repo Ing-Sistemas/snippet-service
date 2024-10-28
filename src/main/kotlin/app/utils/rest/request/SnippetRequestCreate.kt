@@ -6,4 +6,4 @@ data class SnippetRequestCreate(
     val description : String,
     val code: String,
     val version: String
-)
+)//todo add extension
