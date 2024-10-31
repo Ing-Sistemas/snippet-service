@@ -21,5 +21,10 @@ spring:
           issuer-uri: ${AUTH_SERVER_URI}
           client-id: ${AUTH_CLIENT_ID}
           client-secret: ${AUTH_CLIENT_SECRET}
+  permission_url: "${BASE_URL}${HOST}:${PERMISSION_SERVICE_PORT}/${PERMISSION_URL}"
+  print_script_url: "${BASE_URL}${HOST}:${PRINT_SCRIPT_SERVICE_PORT}/${PRINT_SCRIPT_URL}"
+  asset_url: "${BASE_URL}${HOST}:${ASSET_SERVICE_PORT}/${ASSET_URL}"
+
 server:
   port: 8081
+

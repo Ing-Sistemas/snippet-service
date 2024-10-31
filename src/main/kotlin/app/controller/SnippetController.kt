@@ -1,13 +1,12 @@
 package com.example.springboot.app.controller
 
+import com.example.springboot.app.asset.AssetService
 import com.example.springboot.app.auth.OAuth2ResourceServerSecurityConfiguration
 import com.example.springboot.app.dto.SnippetDTO
 import com.example.springboot.app.dto.UpdateSnippetDTO
 import com.example.springboot.app.repository.entity.SnippetEntity
 import com.example.springboot.app.service.SnippetService
 import com.example.springboot.app.utils.PSRequest
-import com.example.springboot.app.utils.URLs.API_URL
-import com.example.springboot.app.utils.URLs.BASE_URL
 import com.example.springboot.app.utils.rest.request.PermissionRequest
 import com.example.springboot.app.utils.rest.request.PermissionShare
 import com.example.springboot.app.utils.rest.request.ShareRequest
@@ -15,7 +14,9 @@ import com.example.springboot.app.utils.rest.request.SnippetRequestCreate
 import com.example.springboot.app.utils.rest.response.PSValResponse
 import com.example.springboot.app.utils.rest.response.PermissionResponse
 import com.example.springboot.app.utils.rest.response.SnippetResponse
+import com.example.springboot.app.utils.rest.ui.SnippetData
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -33,11 +34,14 @@ class SnippetController(
     private val restTemplate: RestTemplate
 ) {
     private val logger = LoggerFactory.getLogger(SnippetController::class.java)
-    private val host = System.getenv().getOrDefault("HOST", "localhost")
-    private val permissionPort = System.getenv().getOrDefault("PERMISSION_SERVICE_PORT", "none")
-    private val psPort = System.getenv().getOrDefault("PRINT_SCRIPT_SERVICE_PORT", "none")
-    // TODO create the snippet file bucket (the asset receives the title as key
-    // TODO better to create it with the snippet_id as key
+    private val assetService = AssetService(restTemplate, bucketUrl)
+
+    @Value("\${asset_url")
+    private lateinit var bucketUrl: String
+    @Value("\${permission_url}")
+    private lateinit var permUrl: String
+    @Value("\${print_script_url}")
+    private lateinit var psUrl: String
 
     @PostMapping("/create")
     fun create(
@@ -48,7 +52,7 @@ class SnippetController(
             val snippetDTO = generateSnippetDTO(snippetRequestCreate)
             val headers = generateHeaders(jwt)
 
-            val validation  = validateSnippet(snippetDTO.snippetId, snippetDTO.version ,headers)
+            val validation  = validateSnippet(snippetDTO.snippetId, snippetDTO.version, headers)
             if (validation.statusCode.is4xxClientError) {
                 return ResponseEntity.status(400).body(SnippetResponse(null, validation.body?.error))
             } else if (validation.statusCode.is5xxServerError) {
@@ -142,49 +146,65 @@ class SnippetController(
     fun getSnippet(
         @PathVariable title: String,
         @AuthenticationPrincipal jwt: Jwt
-    ): ResponseEntity<SnippetEntity> {
-        //val permURL = "$BASE_URL$host:$permissionPort/$API_URL/get"
-        //check if the user can read the snippet
+    ): ResponseEntity<SnippetData> {
+        // val permURL = "$BASE_URL$host:$permissionPort/$API_URL/get"
+        // check if the user can read the snippet
         // should send the ids to the asset and get all snippets
-        TODO()
+
+        val headers = generateHeaders(jwt)
+        val hasPermission = hasPermission("READ", title, headers)
+        if (hasPermission) {
+            val snippet = snippetService.findSnippetByTitle(title)
+            val code = assetService.getSnippet(snippet.snippetId)
+            val snippetData = SnippetData(snippet.snippetId, snippet.title, snippet.language, snippet.version, code.body!!)
+            return ResponseEntity.ok(snippetData)
+        } else {
+            return ResponseEntity.status(400).body(null)
+        }
     }
 
-    private fun shareSnippet(snippetTitle : String, friendId: String,headers: HttpHeaders): ResponseEntity<PermissionResponse> {
-        val permURL = "$BASE_URL$host:$permissionPort/$API_URL/share"
+    private fun shareSnippet(snippetTitle : String, friendId: String, headers: HttpHeaders): ResponseEntity<PermissionResponse> {
+        val url = "$permUrl/share"
         val shareRequest = PermissionShare(snippetService.findSnippetByTitle(snippetTitle).snippetId, friendId)
-        val response = restTemplate.postForEntity(permURL, shareRequest, PermissionResponse::class.java)
+        val response = restTemplate.postForEntity(url, shareRequest, PermissionResponse::class.java)
         if (response.body == null) {
             throw Exception("Failed to share snippet")
         }
         return response
     }
 
-    private fun validateSnippet(snippetId: String, version: String, headers: HttpHeaders): ResponseEntity<PSValResponse> {
-        val psUrl = "$BASE_URL$host:$psPort/$API_URL/validate"
+    private fun validateSnippet(
+        snippetId: String, version: String, headers: HttpHeaders
+    ): ResponseEntity<PSValResponse> {
+        val url = "$psUrl/validate"
         val requestPSEntity = HttpEntity(PSRequest(version, snippetId), headers)
         println("before")
-        val resPrintsript = restTemplate.postForEntity(psUrl, requestPSEntity, PSValResponse::class.java)
-        println(resPrintsript.statusCode.is4xxClientError)
-        println(resPrintsript.statusCode.is5xxServerError)
+        val resPrintScript = restTemplate.postForEntity(url, requestPSEntity, PSValResponse::class.java)
+        println(resPrintScript.statusCode.is4xxClientError)
+        println(resPrintScript.statusCode.is5xxServerError)
         return when {
-            resPrintsript.statusCode.is4xxClientError -> ResponseEntity.status(400).body(resPrintsript.body)
-            resPrintsript.statusCode.is5xxServerError -> throw Exception("Failed to validate snippet in service")
-            else -> resPrintsript
+            resPrintScript.statusCode.is4xxClientError -> ResponseEntity.status(400).body(resPrintScript.body)
+            resPrintScript.statusCode.is5xxServerError -> throw Exception("Failed to validate snippet in service")
+            else -> resPrintScript
         }
     }
-    private fun hasPermission(permission :String, snippetTitle: String, headers: HttpHeaders): Boolean {
-        val permUrl = "$BASE_URL$host:$permissionPort/$API_URL/get"
+
+    private fun hasPermission(
+        permission: String,
+        snippetTitle: String,
+        headers: HttpHeaders
+    ): Boolean {
+        val url = "$permUrl/get"
         val snippetId = snippetService.findSnippetByTitle(snippetTitle).snippetId
         val requestPermEntity = HttpEntity(PermissionRequest(snippetId), headers)
-        val response = restTemplate.postForEntity(permUrl, requestPermEntity, PermissionResponse::class.java)
+        val response = restTemplate.postForEntity(url, requestPermEntity, PermissionResponse::class.java)
         return response.body!!.permissions.contains(permission)
     }
 
     private fun createPermissions(snippetId: String, headers: HttpHeaders) {
-        val permUrl = "$BASE_URL$host:$permissionPort/$API_URL/create"
+        val url = "$permUrl/create"
         val requestPermEntity = HttpEntity(PermissionRequest(snippetId), headers)
-        val resPermission = restTemplate.postForEntity(permUrl, requestPermEntity, PermissionResponse::class.java)
-
+        val resPermission = restTemplate.postForEntity(url, requestPermEntity, PermissionResponse::class.java)
         if (resPermission.body == null) {
             throw Exception("Failed to create permissions")
         }
