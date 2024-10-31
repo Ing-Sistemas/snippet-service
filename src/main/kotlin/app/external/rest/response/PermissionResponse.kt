@@ -1,4 +1,4 @@
-package com.example.springboot.app.utils.rest.response
+package com.example.springboot.app.external.rest.response
 
 import java.io.Serializable
 

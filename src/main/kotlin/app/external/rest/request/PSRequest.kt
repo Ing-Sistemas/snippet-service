@@ -1,4 +1,4 @@
-package com.example.springboot.app.utils
+package com.example.springboot.app.external.rest.request
 
 class PSRequest(
     val version: String,
