@@ -12,6 +12,7 @@ import com.example.springboot.app.external.rest.request.SnippetRequestCreate
 import com.example.springboot.app.external.rest.response.SnippetResponse
 import com.example.springboot.app.external.rest.ui.SnippetData
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -21,14 +22,14 @@ import org.springframework.web.client.RestTemplate
 
 @RestController
 @RequestMapping("/api")
-class SnippetController(
+class SnippetController @Autowired constructor(
     private val snippetService: SnippetService,
     private val restTemplate: RestTemplate,
     private val externalService: ExternalService
 ) {
     private val logger = LoggerFactory.getLogger(SnippetController::class.java)
     @Value("\${asset_url}")
-    private lateinit var bucketUrl: String
+    private var bucketUrl: String = System.getenv("ASSET_URL")
     private val assetService = AssetService(restTemplate, bucketUrl)
 
 

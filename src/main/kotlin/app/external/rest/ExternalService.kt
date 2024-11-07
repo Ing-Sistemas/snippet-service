@@ -6,13 +6,16 @@ import com.example.springboot.app.external.rest.request.PermissionShare
 import com.example.springboot.app.external.rest.response.PSValResponse
 import com.example.springboot.app.external.rest.response.PermissionResponse
 import com.example.springboot.app.service.SnippetService
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
+import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 
-class ExternalService(
+@Service
+class ExternalService @Autowired constructor(
     private val restTemplate: RestTemplate,
     private val snippetService: SnippetService,
     @Value("\${permission_url}")
