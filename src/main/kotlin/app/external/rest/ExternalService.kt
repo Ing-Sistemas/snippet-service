@@ -6,6 +6,7 @@ import com.example.springboot.app.external.rest.request.PermissionShare
 import com.example.springboot.app.external.rest.response.PSValResponse
 import com.example.springboot.app.external.rest.response.PermissionResponse
 import com.example.springboot.app.service.SnippetService
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
@@ -13,9 +14,13 @@ import org.springframework.web.client.RestTemplate
 
 class ExternalService(
     private val restTemplate: RestTemplate,
+    private val snippetService: SnippetService,
+    @Value("\${permission_url}")
     private val permUrl: String,
+    @Value("\${print_script_url}")
     private val psUrl: String,
-    private val snippetService: SnippetService
+    @Value("\${asset_url")
+    private val assetUrl: String
 ) {
     fun hasPermission(
         permission: String,
@@ -65,7 +70,7 @@ class ExternalService(
         headers: HttpHeaders
     ): ResponseEntity<PermissionResponse> {
         val url = "$permUrl/share"
-        val shareRequest = PermissionShare(snippetService.findSnippetByTitle(snippetTitle).snippetId, friendId)
+        val shareRequest = HttpEntity(PermissionShare(snippetService.findSnippetByTitle(snippetTitle).snippetId, friendId), headers)
         val response = restTemplate.postForEntity(url, shareRequest, PermissionResponse::class.java)
         if (response.body == null) {
             throw Exception("Failed to share snippet")

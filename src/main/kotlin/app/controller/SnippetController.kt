@@ -27,14 +27,10 @@ class SnippetController(
     private val externalService: ExternalService
 ) {
     private val logger = LoggerFactory.getLogger(SnippetController::class.java)
+    @Value("\${asset_url}")
+    private lateinit var bucketUrl: String
     private val assetService = AssetService(restTemplate, bucketUrl)
 
-    @Value("\${asset_url")
-    private lateinit var bucketUrl: String
-    @Value("\${permission_url}")
-    private lateinit var permUrl: String
-    @Value("\${print_script_url}")
-    private lateinit var psUrl: String
 
     @PostMapping("/create")
     fun create(
