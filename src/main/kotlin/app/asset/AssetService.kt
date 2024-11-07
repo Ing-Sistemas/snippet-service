@@ -13,7 +13,7 @@ class AssetService
     @Autowired
     constructor(
         private val restTemplate: RestTemplate,
-        @Value("\${bucket_url")
+        @Value("\${asset_url")
         private val bucketUrl: String
     ) {
         fun saveSnippet(snippetId: String, code: String): ResponseEntity<String> {
