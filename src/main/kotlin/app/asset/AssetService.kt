@@ -20,9 +20,9 @@ class AssetService
             try {
                 val request = HttpEntity(code, HttpHeaders())
                 restTemplate.put("$bucketUrl/$snippetId", request)
-                return ResponseEntity.ok(null)
+                return ResponseEntity.ok("Snippet saved successfully")
             } catch (e: Exception) {
-                return ResponseEntity.badRequest().build()
+                return ResponseEntity.status(500).body("Failed to save snippet")
             }
         }
 

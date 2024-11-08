@@ -58,20 +58,33 @@ class SnippetController @Autowired constructor(
         }
     }
 
-    @PutMapping("/update")
+    @PutMapping("/update/{snippetId}")
     fun update(
+        @PathVariable snippetId: String,
         @RequestBody updateSnippetDTO: UpdateSnippetDTO,
         @AuthenticationPrincipal jwt: Jwt
-    ): ResponseEntity<SnippetResponse> {
+    ): ResponseEntity<SnippetData> {
         return try {
             val hasPermission = externalService.hasPermission("WRITE", updateSnippetDTO.title , generateHeaders(jwt))
             if(!hasPermission) {
                 ResponseEntity.status(400).body(SnippetResponse(null, "User does not have permission to write snippet"))
             }
-            val temp = SnippetEntity("a","a","a", "a", "1.1")//snippetService.updateSnippet(updateSnippetDTO) not necessary to handle update in service since the values of the snippet are not updated
-            // because the snippet file is handled by the asset service, the update is sent there
-
-            ResponseEntity.ok(SnippetResponse(temp, null))
+            val updatedSnippet = assetService.saveSnippet(snippetId, updateSnippetDTO.code)
+            if (updatedSnippet.statusCode.is5xxServerError) {
+                throw Exception("Failed to update snippet in asset service")
+            }
+            val headers = generateHeaders(jwt)
+            val compliance = externalService.validateSnippet(snippetId, "1.1", headers).body?.message ?: "not-compliant"
+            val snippet = snippetService.findSnippetById(snippetId)
+            val snippetData = SnippetData(
+                snippetId,
+                updateSnippetDTO.title,
+                updateSnippetDTO.code,
+                snippet.extension,
+                compliance,
+                jwt.claims["name"].toString()
+            )
+            ResponseEntity.ok(snippetData)
         } catch (e: Exception) {
             logger.error("Error updating snippet: {}", e.message)
             ResponseEntity.status(500).body(null)
@@ -125,7 +138,6 @@ class SnippetController @Autowired constructor(
             ResponseEntity.status(500).build()
         }
     }
-    //todo difference between get a snippet, get all my snippets and get all snippets i have access to
 
     // gets all snippets from the user
     @GetMapping("/get")
