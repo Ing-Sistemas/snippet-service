@@ -103,7 +103,7 @@ class SnippetController @Autowired constructor(
     }
 
 
-    @DeleteMapping("/delete/:{snippetId}")
+    @DeleteMapping("/delete/{snippetId}")
     fun delete(
         @AuthenticationPrincipal jwt: Jwt,
         @PathVariable snippetId: String
@@ -138,10 +138,9 @@ class SnippetController @Autowired constructor(
         TODO()
     }
 
-    // gets a snippet by title
-    @GetMapping("/get/{title}")
+    @GetMapping("/get/{snippetId}")
     fun getSnippet(
-        @PathVariable title: String,
+        @PathVariable snippetId: String,
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetData> {
         // val permURL = "$BASE_URL$host:$permissionPort/$API_URL/get"
@@ -149,11 +148,20 @@ class SnippetController @Autowired constructor(
         // should send the ids to the asset and get all snippets
 
         val headers = generateHeaders(jwt)
-        val hasPermission = externalService.hasPermission("READ", title, headers)
+        val hasPermission = externalService.hasPermissionBySnippetId("READ", snippetId, headers)
         if (hasPermission) {
-            val snippet = snippetService.findSnippetByTitle(title)
-            val code = assetService.getSnippet(snippet.snippetId)
-            val snippetData = SnippetData(snippet.snippetId, snippet.title, snippet.language, snippet.version, code.body!!)
+            val snippet = snippetService.findSnippetById(snippetId)
+            val code = assetService.getSnippet(snippetId)
+            val author = jwt.claims["name"].toString()
+            val compliance = externalService.validateSnippet(snippetId, snippet.version, headers).body?.message ?: "not-compliant"
+            val snippetData = SnippetData(
+                snippet.snippetId,
+                snippet.title,
+                code.body!!,
+                snippet.extension,
+                compliance,
+                author,
+            )
             return ResponseEntity.ok(snippetData)
         } else {
             return ResponseEntity.status(400).body(null)
