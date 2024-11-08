@@ -12,9 +12,11 @@ object ControllerUtils {
     fun generateSnippetDTO(snippetRequestCreate: SnippetRequestCreate): SnippetDTO {
         return SnippetDTO(
             UUID.randomUUID().toString(),
-            snippetRequestCreate.version ,
             snippetRequestCreate.title,
-            snippetRequestCreate.language
+            snippetRequestCreate.language,
+            snippetRequestCreate.extension,
+            snippetRequestCreate.code,
+            snippetRequestCreate.version,
         )
     }
 

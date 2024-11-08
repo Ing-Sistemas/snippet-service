@@ -68,7 +68,7 @@ class SnippetController @Autowired constructor(
             if(!hasPermission) {
                 ResponseEntity.status(400).body(SnippetResponse(null, "User does not have permission to write snippet"))
             }
-            val temp = SnippetEntity("a","a","a", "a")//snippetService.updateSnippet(updateSnippetDTO) not necessary to handle update in service since the values of the snippet are not updated
+            val temp = SnippetEntity("a","a","a", "a", "1.1")//snippetService.updateSnippet(updateSnippetDTO) not necessary to handle update in service since the values of the snippet are not updated
             // because the snippet file is handled by the asset service, the update is sent there
 
             ResponseEntity.ok(SnippetResponse(temp, null))
@@ -103,16 +103,22 @@ class SnippetController @Autowired constructor(
     }
 
 
-    @DeleteMapping("/delete")
+    @DeleteMapping("/delete/:{snippetId}")
     fun delete(
-        @RequestBody userId:String,
-        @RequestBody snippetId: String
+        @AuthenticationPrincipal jwt: Jwt,
+        @PathVariable snippetId: String
     ): ResponseEntity<Void> {
         // this sends the userId to the Perm service, check if the user can delete and if so
         // the Perm deletes the snippet from its db, the asset deletes de file
         // and the SnippetS deletes the snippet from its db
         return try {
+            val hasPermission = externalService.hasPermissionBySnippetId("WRITE", snippetId, generateHeaders(jwt))
+            if (!hasPermission) {
+                return ResponseEntity.status(400).build()
+            }
             snippetService.deleteSnippet(snippetId)
+            externalService.deleteFromPermission(snippetId, generateHeaders(jwt))
+            assetService.deleteSnippet(snippetId)
             ResponseEntity.noContent().build()
         } catch (e: Exception) {
             logger.error("Error deleting snippet: {}", e.message)

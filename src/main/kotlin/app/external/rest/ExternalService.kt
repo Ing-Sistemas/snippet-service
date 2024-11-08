@@ -37,6 +37,29 @@ class ExternalService @Autowired constructor(
         return response.body!!.permissions.contains(permission)
     }
 
+    fun hasPermissionBySnippetId(
+        permission: String,
+        snippetId: String,
+        headers: HttpHeaders
+    ): Boolean {
+        val url = "$permUrl/get"
+        val requestPermEntity = HttpEntity(PermissionRequest(snippetId), headers)
+        val response = restTemplate.postForEntity(url, requestPermEntity, PermissionResponse::class.java)
+        return response.body!!.permissions.contains(permission)
+    }
+
+    fun deleteFromPermission(
+        snippetId: String,
+        headers: HttpHeaders
+    ) {
+        val url = "$permUrl/delete"
+        val requestPermEntity = HttpEntity(PermissionRequest(snippetId), headers)
+        val response = restTemplate.postForEntity(url, requestPermEntity, PermissionResponse::class.java)
+        if (response.body == null) {
+            throw Exception("Failed to delete permission")
+        }
+    }
+
     fun createPermissions(
         snippetId: String,
         headers: HttpHeaders

@@ -33,4 +33,13 @@ class AssetService
                 ).body!!
             )
         }
+
+        fun deleteSnippet(snippetId: String): ResponseEntity<String> {
+            try {
+                restTemplate.delete("$bucketUrl/$snippetId")
+                return ResponseEntity.ok(null)
+            } catch (e: Exception) {
+                return ResponseEntity.badRequest().build()
+            }
+        }
     }
