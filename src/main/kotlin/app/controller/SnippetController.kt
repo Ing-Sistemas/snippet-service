@@ -58,20 +58,33 @@ class SnippetController @Autowired constructor(
         }
     }
 
-    @PutMapping("/update")
+    @PutMapping("/update/{snippetId}")
     fun update(
+        @PathVariable snippetId: String,
         @RequestBody updateSnippetDTO: UpdateSnippetDTO,
         @AuthenticationPrincipal jwt: Jwt
-    ): ResponseEntity<SnippetResponse> {
+    ): ResponseEntity<SnippetData> {
         return try {
             val hasPermission = externalService.hasPermission("WRITE", updateSnippetDTO.title , generateHeaders(jwt))
             if(!hasPermission) {
                 ResponseEntity.status(400).body(SnippetResponse(null, "User does not have permission to write snippet"))
             }
-            val temp = SnippetEntity("a","a","a", "a")//snippetService.updateSnippet(updateSnippetDTO) not necessary to handle update in service since the values of the snippet are not updated
-            // because the snippet file is handled by the asset service, the update is sent there
-
-            ResponseEntity.ok(SnippetResponse(temp, null))
+            val updatedSnippet = assetService.saveSnippet(snippetId, updateSnippetDTO.code)
+            if (updatedSnippet.statusCode.is5xxServerError) {
+                throw Exception("Failed to update snippet in asset service")
+            }
+            val headers = generateHeaders(jwt)
+            val compliance = externalService.validateSnippet(snippetId, "1.1", headers).body?.message ?: "not-compliant"
+            val snippet = snippetService.findSnippetById(snippetId)
+            val snippetData = SnippetData(
+                snippetId,
+                updateSnippetDTO.title,
+                updateSnippetDTO.code,
+                snippet.extension,
+                compliance,
+                jwt.claims["name"].toString()
+            )
+            ResponseEntity.ok(snippetData)
         } catch (e: Exception) {
             logger.error("Error updating snippet: {}", e.message)
             ResponseEntity.status(500).body(null)
@@ -103,23 +116,28 @@ class SnippetController @Autowired constructor(
     }
 
 
-    @DeleteMapping("/delete")
+    @DeleteMapping("/delete/{snippetId}")
     fun delete(
-        @RequestBody userId:String,
-        @RequestBody snippetId: String
+        @AuthenticationPrincipal jwt: Jwt,
+        @PathVariable snippetId: String
     ): ResponseEntity<Void> {
         // this sends the userId to the Perm service, check if the user can delete and if so
         // the Perm deletes the snippet from its db, the asset deletes de file
         // and the SnippetS deletes the snippet from its db
         return try {
+            val hasPermission = externalService.hasPermissionBySnippetId("WRITE", snippetId, generateHeaders(jwt))
+            if (!hasPermission) {
+                return ResponseEntity.status(400).build()
+            }
             snippetService.deleteSnippet(snippetId)
+            externalService.deleteFromPermission(snippetId, generateHeaders(jwt))
+            assetService.deleteSnippet(snippetId)
             ResponseEntity.noContent().build()
         } catch (e: Exception) {
             logger.error("Error deleting snippet: {}", e.message)
             ResponseEntity.status(500).build()
         }
     }
-    //todo difference between get a snippet, get all my snippets and get all snippets i have access to
 
     // gets all snippets from the user
     @GetMapping("/get")
@@ -132,10 +150,9 @@ class SnippetController @Autowired constructor(
         TODO()
     }
 
-    // gets a snippet by title
-    @GetMapping("/get/{title}")
+    @GetMapping("/get/{snippetId}")
     fun getSnippet(
-        @PathVariable title: String,
+        @PathVariable snippetId: String,
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetData> {
         // val permURL = "$BASE_URL$host:$permissionPort/$API_URL/get"
@@ -143,11 +160,20 @@ class SnippetController @Autowired constructor(
         // should send the ids to the asset and get all snippets
 
         val headers = generateHeaders(jwt)
-        val hasPermission = externalService.hasPermission("READ", title, headers)
+        val hasPermission = externalService.hasPermissionBySnippetId("READ", snippetId, headers)
         if (hasPermission) {
-            val snippet = snippetService.findSnippetByTitle(title)
-            val code = assetService.getSnippet(snippet.snippetId)
-            val snippetData = SnippetData(snippet.snippetId, snippet.title, snippet.language, snippet.version, code.body!!)
+            val snippet = snippetService.findSnippetById(snippetId)
+            val code = assetService.getSnippet(snippetId)
+            val author = jwt.claims["name"].toString()
+            val compliance = externalService.validateSnippet(snippetId, snippet.version, headers).body?.message ?: "not-compliant"
+            val snippetData = SnippetData(
+                snippet.snippetId,
+                snippet.title,
+                code.body!!,
+                snippet.extension,
+                compliance,
+                author,
+            )
             return ResponseEntity.ok(snippetData)
         } else {
             return ResponseEntity.status(400).body(null)

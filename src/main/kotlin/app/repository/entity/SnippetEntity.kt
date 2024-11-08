@@ -9,9 +9,13 @@ data class SnippetEntity(
     @GeneratedValue(strategy = GenerationType.UUID)
     val id: String,
     @NotNull
-    val title: String,
+    val name: String,
+    @NotNull
+    val extension: String,
     @NotNull
     val language: String,
     @NotNull
     val version: String,
 )
+
+// TODO missing properties: content, compliance, author

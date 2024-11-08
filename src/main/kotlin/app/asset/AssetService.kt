@@ -20,9 +20,9 @@ class AssetService
             try {
                 val request = HttpEntity(code, HttpHeaders())
                 restTemplate.put("$bucketUrl/$snippetId", request)
-                return ResponseEntity.ok(null)
+                return ResponseEntity.ok("Snippet saved successfully")
             } catch (e: Exception) {
-                return ResponseEntity.badRequest().build()
+                return ResponseEntity.status(500).body("Failed to save snippet")
             }
         }
 
@@ -32,5 +32,14 @@ class AssetService
                     "$bucketUrl/$snippetId", String::class.java
                 ).body!!
             )
+        }
+
+        fun deleteSnippet(snippetId: String): ResponseEntity<String> {
+            try {
+                restTemplate.delete("$bucketUrl/$snippetId")
+                return ResponseEntity.ok(null)
+            } catch (e: Exception) {
+                return ResponseEntity.badRequest().build()
+            }
         }
     }
