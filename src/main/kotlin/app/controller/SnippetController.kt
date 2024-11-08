@@ -95,16 +95,15 @@ class SnippetController @Autowired constructor(
     fun share(
         @RequestBody shareRequest: ShareRequest,
         @AuthenticationPrincipal jwt: Jwt
-    ): ResponseEntity<SnippetResponse> {
+    ): ResponseEntity<SnippetData> {
         // this sends the userId to the Perm service, check if the user can share and if so
         // the Perm adds the user to the snippet permissions
         return try {
-            val hasPermission = externalService.hasPermission("SHARE", shareRequest.title, generateHeaders(jwt))
+            val hasPermission = externalService.hasPermissionBySnippetId("SHARE", shareRequest.snippetId, generateHeaders(jwt))
             if(!hasPermission) {
                 ResponseEntity.status(400).body(SnippetResponse(null, "User does not have permission to share snippet"))
             }
-
-            val response = externalService.shareSnippet(shareRequest.title, shareRequest.friendId, generateHeaders(jwt))
+            val response = externalService.shareSnippet(shareRequest.snippetId, shareRequest.userId, generateHeaders(jwt))
             if (response.body == null) {
                 throw Exception("Failed to share snippet")
             }
