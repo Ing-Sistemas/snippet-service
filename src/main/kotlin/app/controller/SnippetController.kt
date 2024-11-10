@@ -200,4 +200,17 @@ class SnippetController @Autowired constructor(
         )
         return ResponseEntity.ok(rules)
     }
+
+    @GetMapping("/format/rules")
+    fun getFormatRules(): ResponseEntity<List<Rule>> {
+        val rules = listOf(
+            Rule(id = "4", name = "spaceAfterColon", isActive = false, value = false),
+            Rule(id = "5", name = "spaceAroundEquals", isActive = false, value = false),
+            Rule(id = "6", name = "lineJumpBeforePrintln", isActive = false, value = 0),
+            Rule(id = "7", name = "lineJumpAfterSemicolon", isActive = false, value = true),
+            Rule(id = "8", name = "singleSpaceBetweenTokens", isActive = false, value = true),
+            Rule(id = "9", name = "spaceAroundOperators", isActive = false, value = true)
+        )
+        return ResponseEntity.ok(rules)
+    }
 }
