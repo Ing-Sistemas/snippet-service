@@ -107,7 +107,18 @@ class SnippetController @Autowired constructor(
             if (response.body == null) {
                 throw Exception("Failed to share snippet")
             }
-            ResponseEntity.noContent().build()
+            val snippet = snippetService.findSnippetById(shareRequest.snippetId)
+            val snippetCode = assetService.getSnippet(shareRequest.snippetId)
+            val compliance = externalService.validateSnippet(shareRequest.snippetId, snippet.version, generateHeaders(jwt)).body?.message ?: "not-compliant"
+            val snippetData = SnippetData(
+                shareRequest.snippetId,
+                snippet.title,
+                snippetCode.body!!,
+                snippet.extension,
+                compliance,
+                jwt.claims["name"].toString()
+            )
+            ResponseEntity.ok(snippetData)
         } catch (e: Exception) {
             logger.error("Error sharing snippet: {}", e.message)
             ResponseEntity.status(500).build()
