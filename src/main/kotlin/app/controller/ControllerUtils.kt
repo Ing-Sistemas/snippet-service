@@ -15,7 +15,6 @@ object ControllerUtils {
             snippetRequestCreate.title,
             snippetRequestCreate.language,
             snippetRequestCreate.extension,
-            snippetRequestCreate.code,
             snippetRequestCreate.version,
         )
     }
