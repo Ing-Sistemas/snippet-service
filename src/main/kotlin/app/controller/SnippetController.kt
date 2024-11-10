@@ -11,6 +11,7 @@ import com.example.springboot.app.external.rest.request.ShareRequest
 import com.example.springboot.app.external.rest.request.SnippetRequestCreate
 import com.example.springboot.app.external.rest.response.SnippetResponse
 import com.example.springboot.app.external.rest.ui.SnippetData
+import com.example.springboot.app.utils.Rule
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -190,4 +191,13 @@ class SnippetController @Autowired constructor(
         }
     }
 
+    @GetMapping("/lint/rules")
+    fun getLintRules(): ResponseEntity<List<Rule>> {
+        val rules = listOf(
+            Rule(id = "1", name = "identifierFormat", isActive = false, value = "camel case"),
+            Rule(id = "2", name = "mandatory-variable-or-literal-in-println", isActive = false, value = false),
+            Rule(id = "3", name = "mandatory-variable-or-literal-in-readInput", isActive = false, value = false)
+        )
+        return ResponseEntity.ok(rules)
+    }
 }
