@@ -49,6 +49,29 @@ class ExternalService @Autowired constructor(
         return response.body!!.permissions.contains(permission)
     }
 
+    fun hasPermissionBySnippetId(
+        permission: String,
+        snippetId: String,
+        headers: HttpHeaders
+    ): Boolean {
+        val url = "$permUrl/get"
+        val requestPermEntity = HttpEntity(PermissionRequest(snippetId), headers)
+        val response = restTemplate.postForEntity(url, requestPermEntity, PermissionResponse::class.java)
+        return response.body!!.permissions.contains(permission)
+    }
+
+    fun deleteFromPermission(
+        snippetId: String,
+        headers: HttpHeaders
+    ) {
+        val url = "$permUrl/delete"
+        val requestPermEntity = HttpEntity(PermissionRequest(snippetId), headers)
+        val response = restTemplate.postForEntity(url, requestPermEntity, PermissionResponse::class.java)
+        if (response.body == null) {
+            throw Exception("Failed to delete permission")
+        }
+    }
+
     fun createPermissions(
         snippetId: String,
         headers: HttpHeaders
@@ -81,12 +104,12 @@ class ExternalService @Autowired constructor(
     }
 
     fun shareSnippet(
-        snippetTitle: String,
+        snippetId: String,
         friendId: String,
         headers: HttpHeaders
     ): ResponseEntity<PermissionResponse> {
         val url = "$permUrl/share"
-        val shareRequest = HttpEntity(PermissionShare(snippetService.findSnippetByTitle(snippetTitle).snippetId, friendId), headers)
+        val shareRequest = HttpEntity(PermissionShare(snippetId, friendId), headers)
         val response = restTemplate.postForEntity(url, shareRequest, PermissionResponse::class.java)
         if (response.body == null) {
             throw Exception("Failed to share snippet")

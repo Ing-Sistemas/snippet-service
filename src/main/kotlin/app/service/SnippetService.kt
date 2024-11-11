@@ -33,11 +33,23 @@ class SnippetService (
         return translate(snippetRepository.findSnippetEntityByTitle(title))
     }
 
-    private fun translate(snippetDTO: SnippetDTO): SnippetEntity{
-        return SnippetEntity(snippetDTO.snippetId, snippetDTO.title, snippetDTO.language, snippetDTO.version)
+    private fun translate(snippetDTO: SnippetDTO): SnippetEntity {
+        return SnippetEntity(
+            snippetDTO.snippetId,
+            snippetDTO.title,
+            snippetDTO.extension,
+            snippetDTO.language,
+            snippetDTO.version
+        )
     }
 
     private fun translate(snippetEntity: SnippetEntity): SnippetDTO {
-        return SnippetDTO(snippetEntity.id,  snippetEntity.version ,snippetEntity.title, snippetEntity.language)
+        return SnippetDTO(
+            snippetEntity.id,
+            snippetEntity.name,
+            snippetEntity.extension,
+            snippetEntity.language,
+            snippetEntity.version,
+        )
     }
 }
