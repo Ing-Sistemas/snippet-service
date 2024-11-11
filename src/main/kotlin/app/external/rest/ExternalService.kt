@@ -91,12 +91,12 @@ class ExternalService @Autowired constructor(
     }
 
     fun shareSnippet(
-        snippetTitle: String,
+        snippetId: String,
         friendId: String,
         headers: HttpHeaders
     ): ResponseEntity<PermissionResponse> {
         val url = "$permUrl/share"
-        val shareRequest = HttpEntity(PermissionShare(snippetService.findSnippetByTitle(snippetTitle).snippetId, friendId), headers)
+        val shareRequest = HttpEntity(PermissionShare(snippetId, friendId), headers)
         val response = restTemplate.postForEntity(url, shareRequest, PermissionResponse::class.java)
         if (response.body == null) {
             throw Exception("Failed to share snippet")

@@ -11,6 +11,7 @@ import com.example.springboot.app.external.rest.request.ShareRequest
 import com.example.springboot.app.external.rest.request.SnippetRequestCreate
 import com.example.springboot.app.external.rest.response.SnippetResponse
 import com.example.springboot.app.external.rest.ui.SnippetData
+import com.example.springboot.app.utils.Rule
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -95,20 +96,30 @@ class SnippetController @Autowired constructor(
     fun share(
         @RequestBody shareRequest: ShareRequest,
         @AuthenticationPrincipal jwt: Jwt
-    ): ResponseEntity<SnippetResponse> {
+    ): ResponseEntity<SnippetData> {
         // this sends the userId to the Perm service, check if the user can share and if so
         // the Perm adds the user to the snippet permissions
         return try {
-            val hasPermission = externalService.hasPermission("SHARE", shareRequest.title, generateHeaders(jwt))
+            val hasPermission = externalService.hasPermissionBySnippetId("SHARE", shareRequest.snippetId, generateHeaders(jwt))
             if(!hasPermission) {
                 ResponseEntity.status(400).body(SnippetResponse(null, "User does not have permission to share snippet"))
             }
-
-            val response = externalService.shareSnippet(shareRequest.title, shareRequest.friendId, generateHeaders(jwt))
+            val response = externalService.shareSnippet(shareRequest.snippetId, shareRequest.userId, generateHeaders(jwt))
             if (response.body == null) {
                 throw Exception("Failed to share snippet")
             }
-            ResponseEntity.noContent().build()
+            val snippet = snippetService.findSnippetById(shareRequest.snippetId)
+            val snippetCode = assetService.getSnippet(shareRequest.snippetId)
+            val compliance = externalService.validateSnippet(shareRequest.snippetId, snippet.version, generateHeaders(jwt)).body?.message ?: "not-compliant"
+            val snippetData = SnippetData(
+                shareRequest.snippetId,
+                snippet.title,
+                snippetCode.body!!,
+                snippet.extension,
+                compliance,
+                jwt.claims["name"].toString()
+            )
+            ResponseEntity.ok(snippetData)
         } catch (e: Exception) {
             logger.error("Error sharing snippet: {}", e.message)
             ResponseEntity.status(500).build()
@@ -180,4 +191,26 @@ class SnippetController @Autowired constructor(
         }
     }
 
+    @GetMapping("/lint/rules")
+    fun getLintRules(): ResponseEntity<List<Rule>> {
+        val rules = listOf(
+            Rule(id = "1", name = "identifierFormat", isActive = false, value = "camel case"),
+            Rule(id = "2", name = "mandatory-variable-or-literal-in-println", isActive = false, value = false),
+            Rule(id = "3", name = "mandatory-variable-or-literal-in-readInput", isActive = false, value = false)
+        )
+        return ResponseEntity.ok(rules)
+    }
+
+    @GetMapping("/format/rules")
+    fun getFormatRules(): ResponseEntity<List<Rule>> {
+        val rules = listOf(
+            Rule(id = "4", name = "spaceAfterColon", isActive = false, value = false),
+            Rule(id = "5", name = "spaceAroundEquals", isActive = false, value = false),
+            Rule(id = "6", name = "lineJumpBeforePrintln", isActive = false, value = 0),
+            Rule(id = "7", name = "lineJumpAfterSemicolon", isActive = false, value = true),
+            Rule(id = "8", name = "singleSpaceBetweenTokens", isActive = false, value = true),
+            Rule(id = "9", name = "spaceAroundOperators", isActive = false, value = true)
+        )
+        return ResponseEntity.ok(rules)
+    }
 }
