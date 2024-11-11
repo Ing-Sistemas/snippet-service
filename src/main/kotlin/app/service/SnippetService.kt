@@ -1,7 +1,6 @@
 package com.example.springboot.app.service
 
 import com.example.springboot.app.dto.SnippetDTO
-import com.example.springboot.app.dto.UpdateSnippetDTO
 import com.example.springboot.app.repository.SnippetRepository
 import com.example.springboot.app.repository.entity.SnippetEntity
 import org.springframework.stereotype.Service

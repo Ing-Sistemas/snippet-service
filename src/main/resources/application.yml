@@ -21,10 +21,32 @@ spring:
           issuer-uri: ${AUTH_SERVER_URI}
           client-id: ${AUTH_CLIENT_ID}
           client-secret: ${AUTH_CLIENT_SECRET}
-  permission_url: "${BASE_URL}${HOST}:${PERMISSION_SERVICE_PORT}/${PERMISSION_URL}"
-  print_script_url: "${BASE_URL}${HOST}:${PRINT_SCRIPT_SERVICE_PORT}/${PRINT_SCRIPT_URL}"
-  asset_url: "${BASE_URL}${HOST}:${ASSET_SERVICE_PORT}/${ASSET_URL}"
-
+  data:
+    redis:
+      jedis:
+        pool:
+          enabled: false
+      lettuce:
+        pool:
+          enabled: false
+      repositories:
+        enabled: false
+      host: ${HOST}
+      port: ${REDIS_PORT}
 server:
   port: 8081
 
+# streamKeys to be used by producers
+stream:
+  key:
+    formatter: ${FORMATTER_STREAM_KEY}
+    linter: ${LINTER_STREAM_KEY}
+
+# groupIds to be used by consumers
+groups:
+  formatter: ${FORMATTER_GROUP}
+  linter: ${LINTER_GROUP}
+
+permission_url: ${BASE_URL}${HOST}:${PERMISSION_PORT}/${PERMISSION_URL}
+print_script_url: ${BASE_URL}${HOST}:${PRINT_SCRIPT_PORT}/${PRINT_SCRIPT_URL}
+asset_url: ${BASE_URL}${HOST}:${ASSET_SERVICE_PORT}/${ASSET_URL}
