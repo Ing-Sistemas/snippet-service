@@ -43,6 +43,7 @@ jobs:
         with:
           context: .
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
             ghcr.io/ing-sistemas/snippet-service:dev-latest
 
@@ -53,5 +54,6 @@ jobs:
         with:
           context: .
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
             ghcr.io/ing-sistemas/snippet-service:prod-latest
