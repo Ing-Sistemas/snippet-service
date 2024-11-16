@@ -42,16 +42,15 @@ class SnippetController @Autowired constructor(
         return try {
             val snippetDTO = generateSnippetDTO(snippetRequestCreate)
             val headers = generateHeaders(jwt)
-
+            System.out.println("got to the headers")
             val validation = externalService.validateSnippet(snippetDTO.snippetId, snippetDTO.version, headers)
             if (validation.statusCode.is4xxClientError) {
                 return ResponseEntity.status(400).body(SnippetResponse(null, validation.body?.error))
             } else if (validation.statusCode.is5xxServerError) {
                 throw Exception("Failed to validate snippet in service")
             }
-
+            System.out.println("got to the external services")
             externalService.createPermissions(snippetDTO.snippetId, headers)
-            ResponseEntity.ok().body(snippetService.createSnippet(snippetDTO))
             return  ResponseEntity.ok().body(SnippetResponse(snippetService.createSnippet(snippetDTO), null))
         } catch (e: Exception) {
             logger.error(" The error is: {}", e.message)
