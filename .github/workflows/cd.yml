@@ -44,7 +44,7 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/ing-sistemas/snippet-service:dev
+            ghcr.io/ing-sistemas/snippet-service:dev-latest
 
       - name: Build and push Docker image for production
         id: docker_build_prod
@@ -54,4 +54,4 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/ing-sistemas/snippet-service:latest
+            ghcr.io/ing-sistemas/snippet-service:prod-latest
