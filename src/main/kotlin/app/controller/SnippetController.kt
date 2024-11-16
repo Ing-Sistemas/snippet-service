@@ -64,6 +64,7 @@ class SnippetController @Autowired constructor(
             }
 
             externalService.createPermissions(snippetDTO.snippetId, headers)
+            assetService.saveSnippet(snippetDTO.snippetId, snippetRequestCreate.code)
             ResponseEntity.ok().body(snippetService.createSnippet(snippetDTO))
             return  ResponseEntity.ok().body(SnippetResponse(snippetService.createSnippet(snippetDTO), null))
         } catch (e: Exception) {

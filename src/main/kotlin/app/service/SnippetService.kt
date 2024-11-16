@@ -46,7 +46,7 @@ class SnippetService (
     private fun translate(snippetEntity: SnippetEntity): SnippetDTO {
         return SnippetDTO(
             snippetEntity.id,
-            snippetEntity.name,
+            snippetEntity.title,
             snippetEntity.extension,
             snippetEntity.language,
             snippetEntity.version,
