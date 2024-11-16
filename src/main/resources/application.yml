@@ -4,7 +4,7 @@ spring:
   application:
     name: snippet-service
   datasource:
-    url: jdbc:postgresql://${SNIPPET_DB_HOST}:${DB_PORT}/${POSTGRES_DB}
+    url: jdbc:postgresql://${SNIPPET_DB_HOST}:${SNIPPET_DB_PORT}/${POSTGRES_DB}
     driver-class-name: org.postgresql.Driver
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
