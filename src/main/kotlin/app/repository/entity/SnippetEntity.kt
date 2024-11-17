@@ -1,5 +1,8 @@
 package com.example.springboot.app.repository.entity
 
+//import com.example.springboot.app.repository.converter.RuleListConverter
+//import com.example.springboot.app.utils.Rule
+import com.example.springboot.app.repository.converter.RuleListConverter
 import com.example.springboot.app.utils.Rule
 import jakarta.persistence.*
 import org.jetbrains.annotations.NotNull
@@ -10,15 +13,16 @@ data class SnippetEntity(
     @GeneratedValue(strategy = GenerationType.UUID)
     val id: String,
     @NotNull
-    val name: String,
+    val title: String,
     @NotNull
     val extension: String,
     @NotNull
     val language: String,
     @NotNull
     val version: String,
-    @ElementCollection
-    @CollectionTable(name = "snippet_rules", joinColumns = [JoinColumn(name = "snippet_id")])
+    @Lob
+    @Column(name = "rules", columnDefinition = "TEXT")
+    @Convert(converter = RuleListConverter::class)
     val rules: List<Rule> = emptyList()
 )
 

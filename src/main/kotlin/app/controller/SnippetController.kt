@@ -12,6 +12,16 @@ import com.example.springboot.app.external.rest.request.SnippetRequestCreate
 import com.example.springboot.app.external.rest.response.SnippetResponse
 import com.example.springboot.app.external.rest.ui.SnippetData
 import com.example.springboot.app.utils.Rule
+import com.example.springboot.app.redis.consumer.FormatEventConsumer
+import com.example.springboot.app.redis.consumer.LintEventConsumer
+import com.example.springboot.app.redis.events.FormatEvent
+import com.example.springboot.app.redis.events.LintEvent
+import com.example.springboot.app.redis.producer.FormatEventProd
+import com.example.springboot.app.redis.producer.LintEventProducer
+import com.example.springboot.app.utils.FormatRule
+import com.example.springboot.app.utils.LintRule
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -26,7 +36,11 @@ import org.springframework.web.client.RestTemplate
 class SnippetController @Autowired constructor(
     private val snippetService: SnippetService,
     private val restTemplate: RestTemplate,
-    private val externalService: ExternalService
+    private val externalService: ExternalService,
+    private val formatEventProducer: FormatEventProd,
+    private val formatEventConsumer: FormatEventConsumer,
+    private val lintEventProducer: LintEventProducer,
+    private val lintEventConsumer: LintEventConsumer,
 ) {
     private val logger = LoggerFactory.getLogger(SnippetController::class.java)
     @Value("\${asset_url}")
@@ -42,15 +56,16 @@ class SnippetController @Autowired constructor(
         return try {
             val snippetDTO = generateSnippetDTO(snippetRequestCreate)
             val headers = generateHeaders(jwt)
-            System.out.println("got to the headers")
             val validation = externalService.validateSnippet(snippetDTO.snippetId, snippetDTO.version, headers)
             if (validation.statusCode.is4xxClientError) {
                 return ResponseEntity.status(400).body(SnippetResponse(null, validation.body?.error))
             } else if (validation.statusCode.is5xxServerError) {
                 throw Exception("Failed to validate snippet in service")
             }
-            System.out.println("got to the external services")
+
             externalService.createPermissions(snippetDTO.snippetId, headers)
+            assetService.saveSnippet(snippetDTO.snippetId, snippetRequestCreate.code)
+            ResponseEntity.ok().body(snippetService.createSnippet(snippetDTO))
             return  ResponseEntity.ok().body(SnippetResponse(snippetService.createSnippet(snippetDTO), null))
         } catch (e: Exception) {
             logger.error(" The error is: {}", e.message)
@@ -148,6 +163,7 @@ class SnippetController @Autowired constructor(
             ResponseEntity.status(500).build()
         }
     }
+    //todo difference between get a snippet, get all my snippets and get all snippets i have access to
 
     // gets all snippets from the user
     @GetMapping("/get")
@@ -211,5 +227,107 @@ class SnippetController @Autowired constructor(
             Rule(id = "9", name = "spaceAroundOperators", isActive = false, value = true)
         )
         return ResponseEntity.ok(rules)
+    }
+    @PostMapping("/format")
+    fun formatSnippet(
+        @RequestBody snippet: SnippetRequestCreate,//TODO change request body class
+        @AuthenticationPrincipal jwt: Jwt
+    ): ResponseEntity<String> {
+        val snippetId = snippetService.findSnippetByTitle(snippet.title).snippetId
+        return try {
+            val hasPermission = externalService.hasPermission("WRITE", snippetId, generateHeaders(jwt))
+
+            if(!hasPermission) {
+                ResponseEntity.status(400).body(SnippetResponse(null, "User does not have permission to format snippet"))
+            }
+            val response = externalService.format(snippetId, generateHeaders(jwt))
+
+            if (response.body == null) {
+                throw Exception("Failed to format snippet")
+            }
+            ResponseEntity.ok().body(response.body!!.status)
+        } catch (e: Exception) {
+            logger.error("Error formatting snippet: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
+    }
+
+    @PostMapping("/lint")
+    fun lintSnippet(
+        @RequestBody snippet: SnippetRequestCreate,//TODO change request body class
+        @AuthenticationPrincipal jwt: Jwt
+    ): ResponseEntity<String> {
+        val snippetId = snippetService.findSnippetByTitle(snippet.title).snippetId
+        return try {
+            val hasPermission = externalService.hasPermission("WRITE", snippetId, generateHeaders(jwt))
+
+            if(!hasPermission) {
+                ResponseEntity.status(400).body(SnippetResponse(null, "User does not have permission to lint snippet"))
+            }
+            val response = externalService.lint(snippetId, generateHeaders(jwt))
+
+            if (response.body == null) {
+                throw Exception("Failed to lint snippet")
+            }
+            ResponseEntity.ok().body(response.body!!.status)
+        } catch (e: Exception) {
+            logger.error("Error linting snippet: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
+    }
+
+
+    @PostMapping("/format_all")
+    suspend fun formatAllSnippets(
+        @AuthenticationPrincipal jwt: Jwt
+    ): ResponseEntity<String> {
+        return try {
+            val snippetIds = externalService.getAllSnippetsIdsForUser(generateHeaders(jwt)).body?.snippets ?: emptyList()
+            formatEventConsumer.subscription()
+            coroutineScope {
+                snippetIds.map { snippetId ->
+                    launch {
+                        val event = FormatEvent(
+                            snippetId = snippetId,
+                            rule = FormatRule("TEMP_RULE"),
+                            timestamp = System.currentTimeMillis()
+                        )
+                        formatEventProducer.publish(event)
+                    }
+                }.forEach { it.join() }
+            }
+
+            ResponseEntity.ok().body("Started formatting all snippets")
+        } catch (e: Exception) {
+            logger.error("Error formatting all snippets: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
+    }
+
+    @PostMapping("/lint_all")
+    suspend fun lintAllSnippets(
+        @AuthenticationPrincipal jwt: Jwt
+    ): ResponseEntity<String> {
+        return try {
+            val snippetIds = externalService.getAllSnippetsIdsForUser(generateHeaders(jwt)).body?.snippets ?: emptyList()
+            lintEventConsumer.subscription()
+            coroutineScope {
+                snippetIds.map { snippetId ->
+                    launch {
+                        val event = LintEvent(
+                            snippetId = snippetId,
+                            rule = LintRule("TEMP_RULE"),
+                            timestamp = System.currentTimeMillis()
+                        )
+                        lintEventProducer.publish(event)
+                    }
+                }.forEach { it.join() }
+            }
+
+            ResponseEntity.ok().body("Started linting all snippets")
+        } catch (e: Exception) {
+            logger.error("Error linting all snippets: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
     }
 }
