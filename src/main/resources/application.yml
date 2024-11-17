@@ -34,7 +34,7 @@ spring:
       host: ${HOST}
       port: ${REDIS_PORT}
 server:
-  port: 8081
+  port: ${SNIPPET_PORT}
 
 # streamKeys to be used by producers
 stream:
