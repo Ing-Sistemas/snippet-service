@@ -6,4 +6,7 @@ class SnippetDTO(
     val language: String,
     val extension: String,
     val version: String,
+    val content: String,
+    val compliance: String,
+    val author: String,
 )
