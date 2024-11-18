@@ -14,13 +14,18 @@ import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.JwtValidators
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
 @EnableWebSecurity
 class OAuth2ResourceServerSecurityConfiguration(@Value("\${auth0.audience}")
                                                 val audience: String,
-                                                @Value("\${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
-                                                val issuer: String,) {
+                                                @Value("\${spring.security.oauth2.resource-server.jwt.issuer-uri}")
+                                                val issuer: String,
+                                                @Value("\${ui.url}")
+                                                val uiUrl: String,
+) {
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http.authorizeHttpRequests {
@@ -34,14 +39,26 @@ class OAuth2ResourceServerSecurityConfiguration(@Value("\${auth0.audience}")
                 .anyRequest().authenticated()
         }
             .oauth2ResourceServer { it.jwt(withDefaults()) }
-            .cors {
-                it.disable()
-            }
+            .cors { it.configurationSource(corsConfigurationSource()) }
             .csrf {
                 it.disable()
             }
         return http.build()
     }
+
+    @Bean
+    fun corsConfigurationSource(): UrlBasedCorsConfigurationSource {
+        val corsConfiguration = CorsConfiguration()
+        corsConfiguration.allowedOrigins = listOf(uiUrl)
+        corsConfiguration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
+        corsConfiguration.allowedHeaders = listOf("*")
+        corsConfiguration.allowCredentials = false
+
+        val source = UrlBasedCorsConfigurationSource()
+        source.registerCorsConfiguration("/**", corsConfiguration)
+        return source
+    }
+
 
     @Bean
     fun jwtDecoder(): JwtDecoder {

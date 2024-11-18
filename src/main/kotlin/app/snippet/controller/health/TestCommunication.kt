@@ -1,4 +1,4 @@
-package com.example.springboot.app.controller.health
+package com.example.springboot.app.snippet.controller.health
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping

@@ -1,7 +1,7 @@
-package com.example.springboot.app.controller
+package com.example.springboot.app.snippet.controller
 
 import com.example.springboot.app.auth.OAuth2ResourceServerSecurityConfiguration
-import com.example.springboot.app.dto.SnippetDTO
+import com.example.springboot.app.snippet.model.dto.SnippetDTO
 import com.example.springboot.app.external.rest.request.SnippetRequestCreate
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -26,7 +26,8 @@ object ControllerUtils {
     fun getUserIdFromJWT(jwt: Jwt): String {
         val auth = OAuth2ResourceServerSecurityConfiguration(
             System.getenv("AUTH0_AUDIENCE"),
-            System.getenv("AUTH_SERVER_URI")
+            System.getenv("AUTH_SERVER_URI"),
+            System.getenv("UI_URL")
         ).jwtDecoder()
         return auth.decode(jwt.tokenValue).subject!!
     }

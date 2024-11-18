@@ -1,4 +1,4 @@
-package com.example.springboot.app.repository.converter
+package com.example.springboot.app.snippet.repository.converter
 
 import com.example.springboot.app.utils.Rule
 import com.fasterxml.jackson.core.type.TypeReference

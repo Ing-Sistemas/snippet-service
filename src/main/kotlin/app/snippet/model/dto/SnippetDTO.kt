@@ -1,4 +1,4 @@
-package com.example.springboot.app.dto
+package com.example.springboot.app.snippet.model.dto
 
 class SnippetDTO(
     val snippetId: String,

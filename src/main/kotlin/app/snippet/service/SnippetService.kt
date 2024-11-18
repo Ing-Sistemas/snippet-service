@@ -1,8 +1,8 @@
-package com.example.springboot.app.service
+package com.example.springboot.app.snippet.service
 
-import com.example.springboot.app.dto.SnippetDTO
-import com.example.springboot.app.repository.SnippetRepository
-import com.example.springboot.app.repository.entity.SnippetEntity
+import com.example.springboot.app.snippet.model.dto.SnippetDTO
+import com.example.springboot.app.snippet.repository.SnippetRepository
+import com.example.springboot.app.snippet.model.entity.SnippetEntity
 import org.springframework.stereotype.Service
 
 

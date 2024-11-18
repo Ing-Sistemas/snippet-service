@@ -1,12 +1,12 @@
-package com.example.springboot.app.controller
+package com.example.springboot.app.snippet.controller
 
 import com.example.springboot.app.asset.AssetService
-import com.example.springboot.app.controller.ControllerUtils.generateHeaders
-import com.example.springboot.app.controller.ControllerUtils.generateSnippetDTO
-import com.example.springboot.app.dto.UpdateSnippetDTO
+import com.example.springboot.app.snippet.controller.ControllerUtils.generateHeaders
+import com.example.springboot.app.snippet.controller.ControllerUtils.generateSnippetDTO
+import com.example.springboot.app.snippet.model.dto.UpdateSnippetDTO
 import com.example.springboot.app.external.rest.ExternalService
-import com.example.springboot.app.repository.entity.SnippetEntity
-import com.example.springboot.app.service.SnippetService
+import com.example.springboot.app.snippet.model.entity.SnippetEntity
+import com.example.springboot.app.snippet.service.SnippetService
 import com.example.springboot.app.external.rest.request.ShareRequest
 import com.example.springboot.app.external.rest.request.SnippetRequestCreate
 import com.example.springboot.app.external.rest.response.SnippetResponse

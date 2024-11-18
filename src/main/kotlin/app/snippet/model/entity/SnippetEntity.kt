@@ -1,6 +1,6 @@
-package com.example.springboot.app.repository.entity
+package com.example.springboot.app.snippet.model.entity
 
-import com.example.springboot.app.repository.converter.RuleListConverter
+import com.example.springboot.app.snippet.repository.converter.RuleListConverter
 import com.example.springboot.app.utils.Rule
 import jakarta.persistence.*
 import org.jetbrains.annotations.NotNull

@@ -16,7 +16,7 @@ spring:
       ddl-auto: update
   security:
     oauth2:
-      resourceserver:
+      resource-server:
         jwt:
           issuer-uri: ${AUTH_SERVER_URI}
           client-id: ${AUTH_CLIENT_ID}
@@ -36,7 +36,10 @@ spring:
 server:
   port: ${SNIPPET_PORT}
 
+ui:
+  url: ${UI_URL}
 # streamKeys to be used by producers
+
 stream:
   key:
     formatter: ${FORMATTER_STREAM_KEY}
