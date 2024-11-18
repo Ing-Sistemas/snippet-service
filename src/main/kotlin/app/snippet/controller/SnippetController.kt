@@ -35,7 +35,7 @@ import org.springframework.web.client.RestTemplate
 @RequestMapping("/api")
 class SnippetController @Autowired constructor(
     private val snippetService: SnippetService,
-    private val restTemplate: RestTemplate,
+    private val restTemplate: RestTemplate, //no se usa
     private val externalService: ExternalService,
     private val formatEventProducer: FormatEventProd,
     private val formatEventConsumer: FormatEventConsumer,

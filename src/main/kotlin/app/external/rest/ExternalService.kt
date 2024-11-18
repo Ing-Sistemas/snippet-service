@@ -10,7 +10,6 @@ import com.example.springboot.app.external.rest.response.PermissionResponse
 import com.example.springboot.app.external.rest.ui.SnippetsGroup
 import com.example.springboot.app.snippet.service.SnippetService
 import com.example.springboot.app.utils.FormatRule
-import jakarta.annotation.PostConstruct
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
@@ -19,8 +18,6 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
-import org.springframework.web.client.getForEntity
-import org.springframework.web.client.getForObject
 
 @Service
 class ExternalService @Autowired constructor(
