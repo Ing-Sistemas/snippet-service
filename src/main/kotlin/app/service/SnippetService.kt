@@ -67,4 +67,18 @@ class SnippetService (
             ?: throw IllegalStateException("No Ruleset found for userId: $userId and type: $type")
         return ruleset.rules
     }
+
+    fun modifyRules(
+        userId: String,
+        type: RulesetType,
+        newRules: List<Rule>
+    ): List<Rule> {
+        val ruleset = rulesetRepository.findByUserIdAndType(userId, type)
+            ?: throw IllegalStateException("No Ruleset found for userId: $userId and type: $type")
+
+        val updatedRuleset = ruleset.copy(rules = newRules)
+        rulesetRepository.save(updatedRuleset)
+
+        return updatedRuleset.rules
+    }
 }

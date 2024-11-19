@@ -383,20 +383,32 @@ class SnippetController @Autowired constructor(
         }
     }
 
+    @PostMapping("/{type}")
+    fun modifyRules(
+        @AuthenticationPrincipal jwt: Jwt,
+        @PathVariable type: RulesetType,
+        @RequestBody newRules: List<Rule>
+    ): ResponseEntity<List<Rule>> {
+        return try {
+            val userId = jwt.subject
 
+            val updatedRules = snippetService.modifyRules(userId, type, newRules)
+            ResponseEntity.ok(updatedRules)
+        } catch (e: Exception) {
+            logger.error("Error modifying ${type.name.lowercase()} rules: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
+    }
 
 
     private fun convertSnippetDtoToSnippetData(snippetDto: SnippetDTO, headers: HttpHeaders): SnippetData {
         val content = assetService.getSnippet(snippetDto.snippetId)
-
         val compliance = externalService.validateSnippet(snippetDto.snippetId, snippetDto.version, headers).body?.message ?: "not-compliant"
-
         val author = if (externalService.hasPermissionBySnippetId("WRITE", snippetDto.snippetId, headers)) {
             "you"
         } else {
             "other"
         }
-
         return SnippetData(
             snippetId = snippetDto.snippetId,
             name = snippetDto.title,
