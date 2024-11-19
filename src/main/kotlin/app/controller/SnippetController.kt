@@ -3,28 +3,27 @@ package com.example.springboot.app.controller
 import com.example.springboot.app.asset.AssetService
 import com.example.springboot.app.controller.ControllerUtils.generateHeaders
 import com.example.springboot.app.controller.ControllerUtils.generateSnippetDTO
+import com.example.springboot.app.dto.SnippetDTO
 import com.example.springboot.app.dto.UpdateSnippetDTO
 import com.example.springboot.app.external.rest.ExternalService
-import com.example.springboot.app.repository.entity.SnippetEntity
 import com.example.springboot.app.service.SnippetService
 import com.example.springboot.app.external.rest.request.ShareRequest
 import com.example.springboot.app.external.rest.request.SnippetRequestCreate
 import com.example.springboot.app.external.rest.response.SnippetResponse
 import com.example.springboot.app.external.rest.ui.SnippetData
-import com.example.springboot.app.utils.Rule
 import com.example.springboot.app.redis.consumer.FormatEventConsumer
 import com.example.springboot.app.redis.consumer.LintEventConsumer
 import com.example.springboot.app.redis.events.FormatEvent
 import com.example.springboot.app.redis.events.LintEvent
 import com.example.springboot.app.redis.producer.FormatEventProd
 import com.example.springboot.app.redis.producer.LintEventProducer
-import com.example.springboot.app.utils.FormatRule
-import com.example.springboot.app.utils.LintRule
+import com.example.springboot.app.utils.*
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
@@ -95,6 +94,7 @@ class SnippetController @Autowired constructor(
                 snippetId,
                 updateSnippetDTO.title,
                 updateSnippetDTO.code,
+                snippet.language,
                 snippet.extension,
                 compliance,
                 jwt.claims["name"].toString()
@@ -129,6 +129,7 @@ class SnippetController @Autowired constructor(
                 shareRequest.snippetId,
                 snippet.title,
                 snippetCode.body!!,
+                snippet.language,
                 snippet.extension,
                 compliance,
                 jwt.claims["name"].toString()
@@ -166,14 +167,37 @@ class SnippetController @Autowired constructor(
     //todo difference between get a snippet, get all my snippets and get all snippets i have access to
 
     // gets all snippets from the user
-    @GetMapping("/get")
+    @GetMapping("/get_all")
     fun getSnippets(
-        @AuthenticationPrincipal jwt: Jwt
-    ): ResponseEntity<SnippetEntity> {
+        @AuthenticationPrincipal jwt: Jwt,
+        @RequestParam(required = true) page: Int,
+        @RequestParam(required = true) pageSize: Int,
+        @RequestParam(required = false) snippetName: String?
+    ): ResponseEntity<PaginatedSnippets> {
         //val permURL = "$BASE_URL$host:$permissionPort/$API_URL/get"
         //check if the user can read the snippet
         // should send the ids to the asset and get all snippets
-        TODO()
+        return try {
+            val headers = generateHeaders(jwt)
+            val snippetIds = externalService.getAllSnippetsIdsForUser(headers).body?.snippets ?: emptyList()
+
+            val snippets = if (snippetName != null) {
+                snippetIds
+                    .map { snippetService.findSnippetById(it) }
+                    .filter { it.title.contains(snippetName, ignoreCase = true) }
+            } else {
+                snippetIds.map { snippetService.findSnippetById(it) }
+            }
+
+            val resSnippets = snippets.map { convertSnippetDtoToSnippetData(it, headers) }
+
+            val pag = Pagination(page, pageSize, pageSize)
+            val paginatedSnippets = PaginatedSnippets( pag, resSnippets)
+            ResponseEntity.ok(paginatedSnippets)
+        } catch (e: Exception) {
+            logger.error("Error getting snippets: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
     }
 
     @GetMapping("/get/{snippetId}")
@@ -196,6 +220,7 @@ class SnippetController @Autowired constructor(
                 snippet.snippetId,
                 snippet.title,
                 code.body!!,
+                snippet.language,
                 snippet.extension,
                 compliance,
                 author,
@@ -330,4 +355,27 @@ class SnippetController @Autowired constructor(
             ResponseEntity.status(500).build()
         }
     }
+
+    private fun convertSnippetDtoToSnippetData(snippetDto: SnippetDTO, headers: HttpHeaders): SnippetData {
+        val content = assetService.getSnippet(snippetDto.snippetId)
+
+        val compliance = externalService.validateSnippet(snippetDto.snippetId, snippetDto.version, headers).body?.message ?: "not-compliant"
+
+        val author = if (externalService.hasPermissionBySnippetId("WRITE", snippetDto.snippetId, headers)) {
+            "you"
+        } else {
+            "other"
+        }
+
+        return SnippetData(
+            snippetId = snippetDto.snippetId,
+            name = snippetDto.title,
+            content = content.body!!,
+            language = snippetDto.language,
+            extension = snippetDto.extension,
+            compliance = compliance,
+            author = author
+        )
+    }
+
 }
