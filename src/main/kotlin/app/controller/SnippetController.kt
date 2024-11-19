@@ -356,6 +356,30 @@ class SnippetController @Autowired constructor(
         }
     }
 
+    @GetMapping("/get_users")
+    fun getUserFriends(
+        @AuthenticationPrincipal jwt: Jwt,
+        @RequestParam(required = false) name: String,
+        @RequestParam(required = false) page: Int,
+        @RequestParam(required = false) pageSize: Int,
+    ): ResponseEntity<PaginatedUsers> {
+        return try {
+            // TODO
+            val userFriends = emptyList<User>()
+            val pag = Pagination(page, pageSize, pageSize)
+            val res = PaginatedUsers(pag, userFriends)
+            ResponseEntity.ok(res)
+        } catch (e: Exception) {
+            logger.error("Error getting user friends: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
+    }
+
+
+
+
+
+
     private fun convertSnippetDtoToSnippetData(snippetDto: SnippetDTO, headers: HttpHeaders): SnippetData {
         val content = assetService.getSnippet(snippetDto.snippetId)
 
