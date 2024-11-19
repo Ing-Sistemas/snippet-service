@@ -1,7 +1,5 @@
 package com.example.springboot.app.repository.entity
 
-//import com.example.springboot.app.repository.converter.RuleListConverter
-//import com.example.springboot.app.utils.Rule
 import com.example.springboot.app.repository.converter.RuleListConverter
 import com.example.springboot.app.utils.Rule
 import jakarta.persistence.*

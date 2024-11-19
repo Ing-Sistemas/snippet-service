@@ -10,6 +10,7 @@ import com.example.springboot.app.external.rest.response.PermissionResponse
 import com.example.springboot.app.external.rest.ui.SnippetsGroup
 import com.example.springboot.app.service.SnippetService
 import com.example.springboot.app.utils.FormatRule
+import com.example.springboot.app.utils.Rule
 import jakarta.annotation.PostConstruct
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value

@@ -3,6 +3,7 @@ package com.example.springboot.app.controller
 import com.example.springboot.app.asset.AssetService
 import com.example.springboot.app.controller.ControllerUtils.generateHeaders
 import com.example.springboot.app.controller.ControllerUtils.generateSnippetDTO
+import com.example.springboot.app.controller.ControllerUtils.getUserIdFromJWT
 import com.example.springboot.app.dto.SnippetDTO
 import com.example.springboot.app.dto.UpdateSnippetDTO
 import com.example.springboot.app.external.rest.ExternalService
@@ -17,6 +18,7 @@ import com.example.springboot.app.redis.events.FormatEvent
 import com.example.springboot.app.redis.events.LintEvent
 import com.example.springboot.app.redis.producer.FormatEventProd
 import com.example.springboot.app.redis.producer.LintEventProducer
+import com.example.springboot.app.repository.entity.RulesetType
 import com.example.springboot.app.utils.*
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -232,27 +234,33 @@ class SnippetController @Autowired constructor(
     }
 
     @GetMapping("/lint/rules")
-    fun getLintRules(): ResponseEntity<List<Rule>> {
-        val rules = listOf(
-            Rule(id = "1", name = "identifierFormat", isActive = false, value = "camel case"),
-            Rule(id = "2", name = "mandatory-variable-or-literal-in-println", isActive = false, value = false),
-            Rule(id = "3", name = "mandatory-variable-or-literal-in-readInput", isActive = false, value = false)
-        )
-        return ResponseEntity.ok(rules)
+    fun getLintRules(
+        @AuthenticationPrincipal jwt: Jwt
+    ): ResponseEntity<List<Rule>> {
+        return try {
+            val userId = getUserIdFromJWT(jwt)
+            val rules = snippetService.getRules(RulesetType.LINT, userId)
+            ResponseEntity.ok(rules)
+        } catch (e: Exception) {
+            logger.error("Error getting lint rules: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
     }
 
     @GetMapping("/format/rules")
-    fun getFormatRules(): ResponseEntity<List<Rule>> {
-        val rules = listOf(
-            Rule(id = "4", name = "spaceAfterColon", isActive = false, value = false),
-            Rule(id = "5", name = "spaceAroundEquals", isActive = false, value = false),
-            Rule(id = "6", name = "lineJumpBeforePrintln", isActive = false, value = 0),
-            Rule(id = "7", name = "lineJumpAfterSemicolon", isActive = false, value = true),
-            Rule(id = "8", name = "singleSpaceBetweenTokens", isActive = false, value = true),
-            Rule(id = "9", name = "spaceAroundOperators", isActive = false, value = true)
-        )
-        return ResponseEntity.ok(rules)
+    fun getFormatRules(
+        @AuthenticationPrincipal jwt: Jwt
+    ): ResponseEntity<List<Rule>> {
+        return try {
+            val userId = getUserIdFromJWT(jwt)
+            val rules = snippetService.getRules(RulesetType.FORMAT, userId)
+            ResponseEntity.ok(rules)
+        } catch (e: Exception) {
+            logger.error("Error getting format rules: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
     }
+
     @PostMapping("/format")
     fun formatSnippet(
         @RequestBody snippet: SnippetRequestCreate,//TODO change request body class
@@ -374,8 +382,6 @@ class SnippetController @Autowired constructor(
             ResponseEntity.status(500).build()
         }
     }
-
-
 
 
 

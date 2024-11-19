@@ -1,14 +1,20 @@
 package com.example.springboot.app.service
 
 import com.example.springboot.app.dto.SnippetDTO
+import com.example.springboot.app.repository.RulesetRepository
 import com.example.springboot.app.repository.SnippetRepository
+import com.example.springboot.app.repository.entity.RulesetType
 import com.example.springboot.app.repository.entity.SnippetEntity
+import com.example.springboot.app.utils.Rule
+import org.springframework.http.HttpHeaders
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 
 
 @Service
 class SnippetService (
     private val snippetRepository: SnippetRepository,
+    private val rulesetRepository: RulesetRepository,
 ) {
     fun createSnippet(
         snippetDTO: SnippetDTO
@@ -51,5 +57,14 @@ class SnippetService (
             snippetEntity.language,
             snippetEntity.version,
         )
+    }
+
+    fun getRules(
+        type: RulesetType,
+        userId: String
+    ): List<Rule> {
+        val ruleset = rulesetRepository.findByUserIdAndType(userId, type)
+            ?: throw IllegalStateException("No Ruleset found for userId: $userId and type: $type")
+        return ruleset.rules
     }
 }
