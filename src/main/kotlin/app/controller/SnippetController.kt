@@ -400,6 +400,22 @@ class SnippetController @Autowired constructor(
         }
     }
 
+    @GetMapping("/test/{snippetId}")
+    fun getTestCases(
+        @AuthenticationPrincipal jwt: Jwt,
+        @PathVariable snippetId: String
+    ): ResponseEntity<List<TestCase>> {
+        return try {
+            val hasPermission = externalService.hasPermissionBySnippetId("EXECUTE", snippetId, generateHeaders(jwt))
+            if (!hasPermission) return ResponseEntity.status(403).build()
+            val testList = snippetService.getAllTests(snippetId)
+            ResponseEntity.ok(testList)
+        } catch (e: Exception) {
+            logger.error("Error getting test cases: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
+    }
+
 
     private fun convertSnippetDtoToSnippetData(snippetDto: SnippetDTO, headers: HttpHeaders): SnippetData {
         val content = assetService.getSnippet(snippetDto.snippetId)

@@ -1,12 +1,13 @@
 package com.example.springboot.app.repository.entity
 
+import com.example.springboot.app.repository.converter.RuleListConverter
 import com.example.springboot.app.utils.Rule
 import jakarta.persistence.*
 import java.util.*
 
 @Entity
 @Table(name = "rulesets")
-data class Ruleset(
+data class RulesetEntity(
     @Id
     @Column(name = "id", nullable = false, unique = true)
     val id: String = UUID.randomUUID().toString(),
@@ -17,12 +18,10 @@ data class Ruleset(
     @Column(nullable = false)
     val type: RulesetType,
 
-    @ElementCollection
-    @CollectionTable(
-        name = "rules",
-        joinColumns = [JoinColumn(name = "ruleset_id")]
-    )
-    var rules: List<Rule> = emptyList()
+    @Lob
+    @Column(name = "rules", columnDefinition = "TEXT")
+    @Convert(converter = RuleListConverter::class)
+    val rules: List<Rule> = emptyList()
 )
 
 enum class RulesetType {

@@ -51,7 +51,7 @@ class ExternalService @Autowired constructor(
     }
 
     fun hasPermissionBySnippetId(
-        permission: String,
+        permission: String, // rwxs
         snippetId: String,
         headers: HttpHeaders
     ): Boolean {
