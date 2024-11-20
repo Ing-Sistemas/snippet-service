@@ -6,6 +6,4 @@ data class SnippetRequestCreate(
     val extension : String,
     val code: String,
     val version: String,
-    val compliance: String,
-    val author: String,
 )

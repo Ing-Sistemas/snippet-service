@@ -18,17 +18,6 @@ data class SnippetEntity(
     val language: String,
     @NotNull
     val version: String,
-
-    @Lob
-    @NotNull
-    val content: String,
-
-    @NotNull
-    val compliance: String,
-
-    @NotNull
-    val author: String,
-
     @Lob
     @Column(name = "rules", columnDefinition = "TEXT")
     @Convert(converter = RuleListConverter::class)
