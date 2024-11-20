@@ -40,10 +40,6 @@ class SnippetService (
             snippetDTO.extension,
             snippetDTO.language,
             snippetDTO.version,
-            snippetDTO.content,
-            snippetDTO.compliance,
-            snippetDTO.author,
-
         )
     }
 
@@ -54,9 +50,6 @@ class SnippetService (
             snippetEntity.extension,
             snippetEntity.language,
             snippetEntity.version,
-            snippetEntity.content,
-            snippetEntity.compliance,
-            snippetEntity.author,
         )
     }
 }
