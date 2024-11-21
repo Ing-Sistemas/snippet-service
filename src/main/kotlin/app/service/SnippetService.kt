@@ -86,4 +86,21 @@ class SnippetService (
     fun getAllTests(snippetId: String): List<TestCase> {
         return testRepository.findTestEntityBySnippetId(snippetId).tests
     }
+
+    fun addTest(test: TestCase, userId: String): TestCase {
+        val testEntity = testRepository.findTestEntityById(test.id)
+
+        val updatedTests = testEntity.tests.toMutableList().apply { add(test) }
+        val updatedTestEntity = testEntity.copy(tests = updatedTests)
+        testRepository.save(updatedTestEntity)
+
+        return test
+    }
+
+    fun deleteTest(testId: String, userId: String) {
+        val testEntity = testRepository.findTestEntityById(testId)
+        val updatedTests = testEntity.tests.toMutableList().apply { removeIf { it.id == testId } }
+        val updatedTestEntity = testEntity.copy(tests = updatedTests)
+        testRepository.save(updatedTestEntity)
+    }
 }

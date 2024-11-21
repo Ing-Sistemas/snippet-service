@@ -416,6 +416,48 @@ class SnippetController @Autowired constructor(
         }
     }
 
+    @PostMapping("/test")
+    fun postTestCase(
+        @AuthenticationPrincipal jwt: Jwt,
+        @RequestBody testCase: TestCase
+    ): ResponseEntity<TestCase> {
+        return try {
+            val userId = getUserIdFromJWT(jwt)
+            val test = snippetService.addTest(testCase, userId)
+            ResponseEntity.ok(test)
+        } catch (e: Exception) {
+            logger.error("Error adding test case: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
+    }
+
+    @DeleteMapping("/test/{id}")
+    fun deleteTestCase(
+        @AuthenticationPrincipal jwt: Jwt,
+        @PathVariable id: String
+    ): ResponseEntity<Void> {
+        return try {
+            val userId = getUserIdFromJWT(jwt)
+            snippetService.deleteTest(id, userId)
+            ResponseEntity.noContent().build()
+        } catch (e: Exception) {
+            logger.error("Error deleting test case: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
+    }
+
+    @GetMapping("/test")
+    fun runTests(
+        @AuthenticationPrincipal jwt: Jwt,
+    ): ResponseEntity<TestCaseResult> {
+        return try {
+
+        } catch (e: Exception) {
+            logger.error("Error running tests: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
+    }
+
 
     private fun convertSnippetDtoToSnippetData(snippetDto: SnippetDTO, headers: HttpHeaders): SnippetData {
         val content = assetService.getSnippet(snippetDto.snippetId)
