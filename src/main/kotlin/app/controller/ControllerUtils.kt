@@ -6,7 +6,9 @@ import com.example.springboot.app.external.rest.request.SnippetRequestCreate
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.web.multipart.MultipartFile
 import java.util.*
+import org.springframework.mock.web.MockMultipartFile
 
 object ControllerUtils {
     fun generateSnippetDTO(snippetRequestCreate: SnippetRequestCreate): SnippetDTO {
@@ -32,6 +34,19 @@ object ControllerUtils {
             set("Authorization", "Bearer ${jwt.tokenValue}")
             contentType = MediaType.APPLICATION_JSON
         }
+    }
+
+    fun generateFile(snippetRequestCreate: SnippetRequestCreate): MultipartFile {
+        return MockMultipartFile(
+            snippetRequestCreate.title,
+            snippetRequestCreate.title,
+            snippetRequestCreate.extension,
+            snippetRequestCreate.code.toByteArray()
+        )
+    }
+
+    fun getFileContent(file: MultipartFile): String {
+        return String(file.bytes)
     }
 
 }

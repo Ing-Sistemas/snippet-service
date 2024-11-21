@@ -10,7 +10,6 @@ import com.example.springboot.app.external.rest.response.PermissionResponse
 import com.example.springboot.app.external.rest.ui.SnippetsGroup
 import com.example.springboot.app.service.SnippetService
 import com.example.springboot.app.utils.FormatRule
-import jakarta.annotation.PostConstruct
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
@@ -19,22 +18,14 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
-import org.springframework.web.client.getForEntity
-import org.springframework.web.client.getForObject
 
 @Service
 class ExternalService @Autowired constructor(
     private val restTemplate: RestTemplate,
     private val snippetService: SnippetService,
 ) {
-    @Value("\${permission_url}")
-    private lateinit var permUrl: String
-
-    @Value("\${print_script_url}")
-    private lateinit var psUrl: String
-
-    @Value("\${asset_url}")
-    private lateinit var assetUrl: String
+    @Value("\${spring.constants.permission_url}") private lateinit var permUrl: String
+    @Value("\${spring.constants.print_script_url}") private lateinit var psUrl: String
 
     //CHANGE, these methods shouldn't return a response entity
     fun hasPermission(
@@ -76,9 +67,7 @@ class ExternalService @Autowired constructor(
         snippetId: String,
         headers: HttpHeaders
     ) {
-        println(psUrl)
-        println(permUrl)
-        val url = "http://host.docker.internal:8080/api/create"
+        val url = "$permUrl/create"
         val requestPermEntity = HttpEntity(PermissionRequest(snippetId), headers)
         val resPermission = restTemplate.postForEntity(url, requestPermEntity, PermissionResponse::class.java)
         if (resPermission.body == null) {
@@ -91,7 +80,7 @@ class ExternalService @Autowired constructor(
         version: String,
         headers: HttpHeaders
     ): ResponseEntity<PSValResponse> {
-        val url = "http://host.docker.internal:8082/api/validate"
+        val url = "$psUrl/validate"
         val requestPSEntity = HttpEntity(PSRequest(version, snippetId), headers)
         val resPrintScript = restTemplate.postForEntity(url, requestPSEntity, PSValResponse::class.java)
         println(resPrintScript.statusCode.is4xxClientError)
@@ -120,7 +109,7 @@ class ExternalService @Autowired constructor(
     fun getAllSnippetsIdsForUser(
         headers: HttpHeaders
     ): ResponseEntity<SnippetsGroup> {
-        val url = "http://host.docker.internal:8080/api/get_all"
+        val url = "$permUrl/get_all"
         val response = restTemplate.exchange(url, HttpMethod.GET, HttpEntity<Any>(headers), SnippetsGroup::class.java)//todo, change request to exchange
         if (response.statusCode.is4xxClientError) {
             throw Exception("Failed to get all snippets")

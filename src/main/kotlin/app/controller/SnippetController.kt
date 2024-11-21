@@ -1,8 +1,10 @@
 package com.example.springboot.app.controller
 
 import com.example.springboot.app.asset.AssetService
+import com.example.springboot.app.controller.ControllerUtils.generateFile
 import com.example.springboot.app.controller.ControllerUtils.generateHeaders
 import com.example.springboot.app.controller.ControllerUtils.generateSnippetDTO
+import com.example.springboot.app.controller.ControllerUtils.getFileContent
 import com.example.springboot.app.dto.UpdateSnippetDTO
 import com.example.springboot.app.external.rest.ExternalService
 import com.example.springboot.app.repository.entity.SnippetEntity
@@ -29,27 +31,24 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.client.RestTemplate
 
+
+//TODO add format linting to separate controller
 @RestController
 @RequestMapping("/api")
 class SnippetController @Autowired constructor(
     private val snippetService: SnippetService,
-    private val restTemplate: RestTemplate,
     private val externalService: ExternalService,
+    private val assetService: AssetService,
     private val formatEventProducer: FormatEventProd,
     private val formatEventConsumer: FormatEventConsumer,
     private val lintEventProducer: LintEventProducer,
     private val lintEventConsumer: LintEventConsumer,
 ) {
     private val logger = LoggerFactory.getLogger(SnippetController::class.java)
-    @Value("\${asset_url}")
-    private var bucketUrl: String = System.getenv("ASSET_URL")
-    private val assetService = AssetService(restTemplate, bucketUrl)
-
 
     @PostMapping("/create")
-    fun create(
+    suspend fun create(
         @RequestBody snippetRequestCreate: SnippetRequestCreate,
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetResponse> {
@@ -63,10 +62,14 @@ class SnippetController @Autowired constructor(
                 throw Exception("Failed to validate snippet in service")
             }
 
+            val a = assetService.saveSnippet(snippetDTO.snippetId, snippetRequestCreate.code)
+            logger.info("Snippet saved in asset service {}", a.body)
             externalService.createPermissions(snippetDTO.snippetId, headers)
-            assetService.saveSnippet(snippetDTO.snippetId, snippetRequestCreate.code)
-            ResponseEntity.ok().body(snippetService.createSnippet(snippetDTO))
-            return  ResponseEntity.ok().body(SnippetResponse(snippetService.createSnippet(snippetDTO), null))
+            val stringCode = assetService.getSnippet(snippetDTO.snippetId,jwt)
+            logger.info("File content: {}", stringCode.body!!)
+
+            //ResponseEntity.ok().body(snippetService.createSnippet(snippetDTO))
+            ResponseEntity.ok().body(SnippetResponse(snippetService.createSnippet(snippetDTO), null))
         } catch (e: Exception) {
             logger.error(" The error is: {}", e.message)
             ResponseEntity.status(500).body(null)
@@ -84,10 +87,10 @@ class SnippetController @Autowired constructor(
             if(!hasPermission) {
                 ResponseEntity.status(400).body(SnippetResponse(null, "User does not have permission to write snippet"))
             }
-            val updatedSnippet = assetService.saveSnippet(snippetId, updateSnippetDTO.code)
-            if (updatedSnippet.statusCode.is5xxServerError) {
-                throw Exception("Failed to update snippet in asset service")
-            }
+            //val updatedSnippet = assetService.saveSnippet(snippetId, updateSnippetDTO.code)
+//            if (updatedSnippet.statusCode.is5xxServerError) {
+//                throw Exception("Failed to update snippet in asset service")
+//            }
             val headers = generateHeaders(jwt)
             val compliance = externalService.validateSnippet(snippetId, "1.1", headers).body?.message ?: "not-compliant"
             val snippet = snippetService.findSnippetById(snippetId)
@@ -107,7 +110,7 @@ class SnippetController @Autowired constructor(
     }
 
     @PostMapping("/share")
-    fun share(
+    suspend fun share(
         @RequestBody shareRequest: ShareRequest,
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetData> {
@@ -123,12 +126,12 @@ class SnippetController @Autowired constructor(
                 throw Exception("Failed to share snippet")
             }
             val snippet = snippetService.findSnippetById(shareRequest.snippetId)
-            val snippetCode = assetService.getSnippet(shareRequest.snippetId)
+            val snippetCode = assetService.getSnippet(shareRequest.snippetId, jwt).body!!
             val compliance = externalService.validateSnippet(shareRequest.snippetId, snippet.version, generateHeaders(jwt)).body?.message ?: "not-compliant"
             val snippetData = SnippetData(
                 shareRequest.snippetId,
                 snippet.title,
-                snippetCode.body!!,
+                snippetCode,
                 snippet.extension,
                 compliance,
                 jwt.claims["name"].toString()
@@ -177,7 +180,7 @@ class SnippetController @Autowired constructor(
     }
 
     @GetMapping("/get/{snippetId}")
-    fun getSnippet(
+    suspend fun getSnippet(
         @PathVariable snippetId: String,
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetData> {
@@ -189,18 +192,19 @@ class SnippetController @Autowired constructor(
         val hasPermission = externalService.hasPermissionBySnippetId("READ", snippetId, headers)
         if (hasPermission) {
             val snippet = snippetService.findSnippetById(snippetId)
-            val code = assetService.getSnippet(snippetId)
+            val code = assetService.getSnippet(snippetId, jwt)
             val author = jwt.claims["name"].toString()
             val compliance = externalService.validateSnippet(snippetId, snippet.version, headers).body?.message ?: "not-compliant"
-            val snippetData = SnippetData(
-                snippet.snippetId,
-                snippet.title,
-                code.body!!,
-                snippet.extension,
-                compliance,
-                author,
-            )
-            return ResponseEntity.ok(snippetData)
+//            val snippetData = SnippetData(
+//                snippet.snippetId,
+//                snippet.title,
+//                code.body!!,
+//                snippet.extension,
+//                compliance,
+//                author,
+//            )
+//            return ResponseEntity.ok(snippetData)
+            TODO()
         } else {
             return ResponseEntity.status(400).body(null)
         }
