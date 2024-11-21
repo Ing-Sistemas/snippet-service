@@ -8,6 +8,7 @@ import com.example.springboot.app.repository.entity.RulesetType
 import com.example.springboot.app.repository.entity.SnippetEntity
 import com.example.springboot.app.utils.Rule
 import com.example.springboot.app.utils.TestCase
+import com.example.springboot.app.utils.TestCaseResult
 import org.springframework.stereotype.Service
 
 

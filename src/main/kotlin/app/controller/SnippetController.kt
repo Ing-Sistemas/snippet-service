@@ -449,9 +449,12 @@ class SnippetController @Autowired constructor(
     @GetMapping("/test")
     fun runTests(
         @AuthenticationPrincipal jwt: Jwt,
+        @RequestParam testCase: TestCase
     ): ResponseEntity<TestCaseResult> {
         return try {
-
+            val userId = getUserIdFromJWT(jwt)
+            val result = externalService.runTests(testCase, userId)
+            ResponseEntity.ok(result)
         } catch (e: Exception) {
             logger.error("Error running tests: {}", e.message)
             ResponseEntity.status(500).build()
