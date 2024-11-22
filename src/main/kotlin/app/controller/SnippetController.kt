@@ -53,20 +53,19 @@ class SnippetController @Autowired constructor(
         return try {
             val snippetDTO = generateSnippetDTO(snippetRequestCreate)
             val headers = generateHeaders(jwt)
+            val snippetFile = generateFile(snippetRequestCreate)
+            logger.info("saving snippet file: $snippetFile")
+            assetService.saveSnippet(snippetDTO.snippetId, snippetFile)
+            logger.info("saved snippet file!")
+
             val validation = externalService.validateSnippet(snippetDTO.snippetId, snippetDTO.version, headers)
             if (validation.statusCode.is4xxClientError) {
                 return ResponseEntity.status(400).body(SnippetResponse(null, validation.body?.error))
             } else if (validation.statusCode.is5xxServerError) {
                 throw Exception("Failed to validate snippet in service")
             }
-            val snippetFile = generateFile(snippetRequestCreate)
-            val a = assetService.saveSnippet(snippetDTO.snippetId, snippetFile)
-            logger.info("Snippet saved in asset service {}", a.body)
             externalService.createPermissions(snippetDTO.snippetId, headers)
-            val stringCode = assetService.getSnippet(snippetDTO.snippetId)
-            logger.info("File content: {}", String(stringCode.body!!.bytes))
 
-            //ResponseEntity.ok().body(snippetService.createSnippet(snippetDTO))
             ResponseEntity.ok().body(SnippetResponse(snippetService.createSnippet(snippetDTO), null))
         } catch (e: Exception) {
             logger.error(" The error is: {}", e.message)
