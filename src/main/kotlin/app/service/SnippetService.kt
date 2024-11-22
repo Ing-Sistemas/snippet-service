@@ -13,12 +13,7 @@ class SnippetService (
     fun createSnippet(
         snippetDTO: SnippetDTO
     ): SnippetEntity {
-        try{
-            return  snippetRepository.save(translate(snippetDTO))
-        } catch (e: Exception) {
-            println(e.message)
-           throw Exception("Failed to create snippet with error: ${e.message}")
-        }
+        return  snippetRepository.save(translate(snippetDTO))
     }
 
     fun deleteSnippet(snippetId: String){
