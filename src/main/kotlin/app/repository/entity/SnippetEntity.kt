@@ -10,7 +10,6 @@ import org.jetbrains.annotations.NotNull
 @Entity
 data class SnippetEntity(
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     val id: String,
     @NotNull
     val title: String,
