@@ -12,7 +12,7 @@ import org.springframework.web.reactive.function.client.WebClient
 
 
 @Component
-class AssetService{
+class AssetService {
     private val logger = LoggerFactory.getLogger(SnippetController::class.java)
     private val client: WebClient = WebClient.builder()
         .baseUrl("http://host.docker.internal:8083")

@@ -83,8 +83,6 @@ class ExternalService @Autowired constructor(
         val url = "$psUrl/validate"
         val requestPSEntity = HttpEntity(PSRequest(version, snippetId), headers)
         val resPrintScript = restTemplate.postForEntity(url, requestPSEntity, PSValResponse::class.java)
-        println(resPrintScript.statusCode.is4xxClientError)
-        println(resPrintScript.statusCode.is5xxServerError)
         return when {
             resPrintScript.statusCode.is4xxClientError -> ResponseEntity.status(400).body(resPrintScript.body)
             resPrintScript.statusCode.is5xxServerError -> throw Exception("Failed to validate snippet in service")
