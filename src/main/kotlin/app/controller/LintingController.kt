@@ -1,9 +1,10 @@
 package com.example.springboot.app.controller
 import com.example.springboot.app.controller.ControllerUtils.generateHeaders
 import com.example.springboot.app.controller.ControllerUtils.getUserIdFromJWT
-import com.example.springboot.app.external.rest.ExternalService
-import com.example.springboot.app.external.rest.request.SnippetRequestCreate
-import com.example.springboot.app.external.rest.response.SnippetResponse
+import com.example.springboot.app.external.permission.PermissionService
+import com.example.springboot.app.external.printscript.PrintScriptService
+import com.example.springboot.app.external.request.SnippetRequestCreate
+import com.example.springboot.app.external.response.SnippetResponse
 import com.example.springboot.app.redis.consumer.LintEventConsumer
 import com.example.springboot.app.redis.events.LintEvent
 import com.example.springboot.app.redis.producer.LintEventProducer
@@ -27,7 +28,8 @@ class LintingController @Autowired constructor(
     private val lintEventProducer: LintEventProducer,
     private val lintEventConsumer: LintEventConsumer,
     private val snippetService: SnippetService,
-    private val externalService: ExternalService
+    private val permissionService: PermissionService,
+    private val printScriptService: PrintScriptService
 ) {
 	private val logger = LoggerFactory.getLogger(LintingController::class.java)
 
@@ -48,12 +50,12 @@ class LintingController @Autowired constructor(
     ): ResponseEntity<String> {
         val snippetId = snippetService.findSnippetByTitle(snippet.title).snippetId
         return try {
-            val hasPermission = externalService.hasPermission("WRITE", snippetId, generateHeaders(jwt))
+            val hasPermission = permissionService.hasPermission("WRITE", snippetId, generateHeaders(jwt))
 
             if(!hasPermission) {
                 ResponseEntity.status(400).body(SnippetResponse(null, "User does not have permission to lint snippet"))
             }
-            val response = externalService.lint(snippetId, generateHeaders(jwt))
+            val response = printScriptService.lint(snippetId, generateHeaders(jwt))
 
             if (response.body == null) {
                 throw Exception("Failed to lint snippet")
@@ -70,7 +72,7 @@ class LintingController @Autowired constructor(
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<String> {
         return try {
-            val snippetIds = externalService.getAllSnippetsIdsForUser(generateHeaders(jwt)).body?.snippets ?: emptyList()
+            val snippetIds = permissionService.getAllSnippetsIdsForUser(generateHeaders(jwt)).snippets
             val userId = getUserIdFromJWT(jwt)
             lintEventConsumer.subscription()
             coroutineScope {

@@ -1,4 +1,4 @@
-package com.example.springboot.app.external.rest.request
+package com.example.springboot.app.external.request
 
 import com.example.springboot.app.utils.FormatRule
 

@@ -1,6 +1,6 @@
 package com.example.springboot.app.redis.consumer
 
-import com.example.springboot.app.external.rest.ExternalService
+import com.example.springboot.app.external.printscript.PrintScriptService
 import com.example.springboot.app.redis.events.LintEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,7 +16,7 @@ class LintEventConsumer @Autowired constructor(
     redis: ReactiveRedisTemplate<String, String>,
     @Value("\${stream.key.linter}") streamKey: String,
     @Value("\${groups.linter}") groupId: String,
-    private val externalService: ExternalService
+    private val printScriptService: PrintScriptService
 ) : RedisStreamConsumer<LintEvent>(streamKey, groupId, redis){
 
     private val logger = LoggerFactory.getLogger(LintEventConsumer::class.java)

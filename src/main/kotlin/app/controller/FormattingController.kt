@@ -2,9 +2,10 @@ package com.example.springboot.app.controller
 
 import com.example.springboot.app.controller.ControllerUtils.generateHeaders
 import com.example.springboot.app.controller.ControllerUtils.getUserIdFromJWT
-import com.example.springboot.app.external.rest.ExternalService
-import com.example.springboot.app.external.rest.request.SnippetRequestCreate
-import com.example.springboot.app.external.rest.response.SnippetResponse
+import com.example.springboot.app.external.permission.PermissionService
+import com.example.springboot.app.external.printscript.PrintScriptService
+import com.example.springboot.app.external.request.SnippetRequestCreate
+import com.example.springboot.app.external.response.SnippetResponse
 import com.example.springboot.app.redis.consumer.FormatEventConsumer
 import com.example.springboot.app.redis.events.FormatEvent
 import com.example.springboot.app.redis.producer.FormatEventProducer
@@ -26,7 +27,8 @@ class FormattingController @Autowired constructor(
 	private val formatEventConsumer: FormatEventConsumer,
 	private val formatEventProducer: FormatEventProducer,
 	private val snippetService: SnippetService,
-    private val externalService: ExternalService
+    private val printScriptService: PrintScriptService,
+    private val permissionService: PermissionService
 ) {
 	private val logger = LoggerFactory.getLogger(FormattingController::class.java)
 
@@ -51,12 +53,13 @@ class FormattingController @Autowired constructor(
     ): ResponseEntity<String> {
         val snippetId = snippetService.findSnippetByTitle(snippet.title).snippetId
         return try {
-            val hasPermission = externalService.hasPermission("WRITE", snippetId, generateHeaders(jwt))
+            val hasPermission = permissionService.hasPermission("WRITE", snippetId, generateHeaders(jwt))
 
             if(!hasPermission) {
                 ResponseEntity.status(400).body(SnippetResponse(null, "User does not have permission to format snippet"))
             }
-            val response = externalService.format(snippetId, generateHeaders(jwt))
+
+            val response = printScriptService.format(snippetId, generateHeaders(jwt))
 
             if (response.body == null) {
                 throw Exception("Failed to format snippet")
@@ -73,7 +76,7 @@ class FormattingController @Autowired constructor(
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<String> {
         return try {
-            val snippetIds = externalService.getAllSnippetsIdsForUser(generateHeaders(jwt)).body?.snippets ?: emptyList()
+            val snippetIds = permissionService.getAllSnippetsIdsForUser(generateHeaders(jwt)).snippets
             val userId = getUserIdFromJWT(jwt)
             formatEventConsumer.subscription()
             coroutineScope {

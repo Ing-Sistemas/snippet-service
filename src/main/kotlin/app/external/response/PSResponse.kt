@@ -1,4 +1,4 @@
-package com.example.springboot.app.external.rest.response
+package com.example.springboot.app.external.response
 
 data class PSResponse(
     val status: String?,

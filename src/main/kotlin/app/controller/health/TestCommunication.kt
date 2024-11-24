@@ -22,7 +22,7 @@ class TestCommunication(private val restTemplate: RestTemplate) {
             return ResponseEntity.ok(response)
         } catch (e: Exception) {
             println(e.message)
-            return ResponseEntity.status(500).body("Permission service is down")
+            return ResponseEntity.status(500).body("PermissionService service is down")
         }
     }
 

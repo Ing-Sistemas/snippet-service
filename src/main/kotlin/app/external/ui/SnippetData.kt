@@ -1,4 +1,4 @@
-package com.example.springboot.app.external.rest.ui
+package com.example.springboot.app.external.ui
 
 data class SnippetData(
     val snippetId: String,
