@@ -1,4 +1,4 @@
-package com.example.springboot.app.repository
+package app.snippet.repository
 
 import com.example.springboot.app.repository.entity.TestEntity
 import org.springframework.data.jpa.repository.JpaRepository
