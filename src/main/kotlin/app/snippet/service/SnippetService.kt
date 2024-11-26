@@ -1,18 +1,19 @@
 package com.example.springboot.app.snippet.service
 
-import app.snippet.repository.RulesetRepository
+import com.example.springboot.app.snippet.repository.RulesetRepository
 import com.example.springboot.app.snippet.dto.SnippetDTO
 import com.example.springboot.app.snippet.repository.SnippetRepository
 import com.example.springboot.app.snippet.repository.entity.SnippetEntity
-import app.snippet.repository.TestRepository
-import app.snippet.repository.entity.RulesetType
+import com.example.springboot.app.snippet.repository.TestRepository
+import com.example.springboot.app.snippet.repository.entity.RulesetType
 import com.example.springboot.app.rule.Rule
 import com.example.springboot.app.testing.TestCase
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 
 @Service
-class SnippetService (
+class SnippetService @Autowired constructor(
     private val snippetRepository: SnippetRepository,
     private val rulesetRepository: RulesetRepository,
     private val testRepository: TestRepository,

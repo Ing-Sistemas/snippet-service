@@ -1,6 +1,6 @@
 package com.example.springboot.app.snippet.controller
 
-import app.snippet.repository.entity.RulesetType
+import com.example.springboot.app.snippet.repository.entity.RulesetType
 import com.example.springboot.app.external.services.asset.AssetService
 import com.example.springboot.app.snippet.controller.ControllerUtils.generateFile
 import com.example.springboot.app.snippet.controller.ControllerUtils.generateHeaders

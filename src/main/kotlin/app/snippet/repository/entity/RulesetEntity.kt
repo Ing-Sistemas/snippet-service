@@ -1,4 +1,4 @@
-package app.snippet.repository.entity
+package com.example.springboot.app.snippet.repository.entity
 
 import com.example.springboot.app.rule.Rule
 import com.example.springboot.app.snippet.repository.converter.RuleListConverter
