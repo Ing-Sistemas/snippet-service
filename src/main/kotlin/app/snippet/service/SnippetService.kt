@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service
 
 
 @Service
-class SnippetService @Autowired constructor(
+class SnippetService(
     private val snippetRepository: SnippetRepository,
     private val rulesetRepository: RulesetRepository,
     private val testRepository: TestRepository,
