@@ -1,6 +1,6 @@
 package com.example.springboot.app.repository.converter
 
-import com.example.springboot.app.utils.TestCase
+import com.example.springboot.app.testing.TestCase
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import jakarta.persistence.AttributeConverter

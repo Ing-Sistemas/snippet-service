@@ -1,4 +1,4 @@
-package com.example.springboot.app.external.response
+package com.example.springboot.app.external.services.permission.response
 
 import java.io.Serializable
 

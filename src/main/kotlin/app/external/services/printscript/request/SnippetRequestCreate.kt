@@ -1,4 +1,4 @@
-package com.example.springboot.app.external.request
+package com.example.springboot.app.external.services.printscript.request
 
 data class SnippetRequestCreate(
     val title: String,

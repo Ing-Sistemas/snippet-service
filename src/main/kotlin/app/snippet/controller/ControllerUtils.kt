@@ -1,8 +1,8 @@
 package com.example.springboot.app.snippet.controller
 
-import com.example.springboot.app.auth.OAuth2ResourceServerSecurityConfiguration
+import com.example.springboot.app.external.auth.OAuth2ResourceServerSecurityConfiguration
 import com.example.springboot.app.snippet.dto.SnippetDTO
-import com.example.springboot.app.external.request.SnippetRequestCreate
+import com.example.springboot.app.external.services.printscript.request.SnippetRequestCreate
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.security.oauth2.jwt.Jwt

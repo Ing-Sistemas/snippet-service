@@ -1,10 +1,12 @@
 package com.example.springboot.app.external.services.printscript
 
-import com.example.springboot.app.external.request.FormatRequest
-import com.example.springboot.app.external.request.PSRequest
-import com.example.springboot.app.external.response.PSResponse
-import com.example.springboot.app.external.response.PSValResponse
-import com.example.springboot.app.utils.FormatRule
+import com.example.springboot.app.external.services.printscript.request.FormatRequest
+import com.example.springboot.app.external.services.printscript.request.PSRequest
+import com.example.springboot.app.external.services.printscript.response.PSResponse
+import com.example.springboot.app.external.services.printscript.response.PSValResponse
+import com.example.springboot.app.rule.FormatRule
+import com.example.springboot.app.testing.TestCase
+import com.example.springboot.app.testing.TestCaseResult
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
@@ -83,6 +85,20 @@ class PrintScriptService @Autowired constructor (
         val response = restTemplate.postForEntity(url, requestEntity, PSResponse::class.java)
         if (response.body == null) {
             throw Exception("Failed to lint snippet")//todo same as above jijiji
+        }
+    }
+
+    fun runTests(test: TestCase, userId: String): TestCaseResult {
+        val url = "$psUrl/run_tests"
+        val requestEntity = HttpEntity(test)
+        val response = restTemplate.postForEntity(url, requestEntity, String::class.java)
+        if (response.body == null) {
+            throw Exception("Failed to run tests")
+        }
+        return if (response.body == "success") {
+            TestCaseResult.SUCCESS
+        } else {
+            TestCaseResult.FAIL
         }
     }
 }

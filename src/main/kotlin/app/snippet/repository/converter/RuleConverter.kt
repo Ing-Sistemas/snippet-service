@@ -1,6 +1,6 @@
 package com.example.springboot.app.snippet.repository.converter
 
-import com.example.springboot.app.utils.Rule
+import com.example.springboot.app.rule.Rule
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import jakarta.persistence.AttributeConverter

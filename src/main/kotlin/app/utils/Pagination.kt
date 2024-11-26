@@ -1,6 +1,7 @@
 package com.example.springboot.app.utils
 
-import com.example.springboot.app.external.rest.ui.SnippetData
+import com.example.springboot.app.external.ui.SnippetData
+
 
 data class Pagination(
     val page: Int,

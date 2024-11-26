@@ -1,4 +1,4 @@
-package com.example.springboot.app.auth
+package com.example.springboot.app.external.auth
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean

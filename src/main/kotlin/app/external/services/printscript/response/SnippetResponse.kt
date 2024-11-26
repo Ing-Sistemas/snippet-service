@@ -1,4 +1,4 @@
-package com.example.springboot.app.external.response
+package com.example.springboot.app.external.services.printscript.response
 
 import com.example.springboot.app.snippet.repository.entity.SnippetEntity
 

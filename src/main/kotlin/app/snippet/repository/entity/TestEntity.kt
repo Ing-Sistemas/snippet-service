@@ -1,7 +1,7 @@
 package com.example.springboot.app.repository.entity
 
 import com.example.springboot.app.repository.converter.TestListConverter
-import com.example.springboot.app.utils.TestCase
+import com.example.springboot.app.testing.TestCase
 import jakarta.persistence.Column
 import jakarta.persistence.Convert
 import jakarta.persistence.Entity

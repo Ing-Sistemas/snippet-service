@@ -1,17 +1,13 @@
 package com.example.springboot.app.snippet.service
 
+import app.snippet.repository.RulesetRepository
 import com.example.springboot.app.snippet.dto.SnippetDTO
 import com.example.springboot.app.snippet.repository.SnippetRepository
 import com.example.springboot.app.snippet.repository.entity.SnippetEntity
-import com.example.springboot.app.dto.SnippetDTO
-import com.example.springboot.app.repository.RulesetRepository
-import com.example.springboot.app.repository.SnippetRepository
-import com.example.springboot.app.repository.TestRepository
-import com.example.springboot.app.repository.entity.RulesetType
-import com.example.springboot.app.repository.entity.SnippetEntity
-import com.example.springboot.app.utils.Rule
-import com.example.springboot.app.utils.TestCase
-import com.example.springboot.app.utils.TestCaseResult
+import app.snippet.repository.TestRepository
+import app.snippet.repository.entity.RulesetType
+import com.example.springboot.app.rule.Rule
+import com.example.springboot.app.testing.TestCase
 import org.springframework.stereotype.Service
 
 

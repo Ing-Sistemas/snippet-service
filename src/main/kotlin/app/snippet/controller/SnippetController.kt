@@ -1,5 +1,6 @@
 package com.example.springboot.app.snippet.controller
 
+import app.snippet.repository.entity.RulesetType
 import com.example.springboot.app.external.services.asset.AssetService
 import com.example.springboot.app.snippet.controller.ControllerUtils.generateFile
 import com.example.springboot.app.snippet.controller.ControllerUtils.generateHeaders
@@ -9,12 +10,21 @@ import com.example.springboot.app.external.services.permission.PermissionService
 import com.example.springboot.app.external.services.printscript.PrintScriptService
 import com.example.springboot.app.snippet.repository.entity.SnippetEntity
 import com.example.springboot.app.snippet.service.SnippetService
-import com.example.springboot.app.external.request.ShareRequest
-import com.example.springboot.app.external.request.SnippetRequestCreate
-import com.example.springboot.app.external.response.SnippetResponse
+import com.example.springboot.app.external.services.permission.request.ShareRequest
+import com.example.springboot.app.external.services.printscript.request.SnippetRequestCreate
+import com.example.springboot.app.external.services.printscript.response.SnippetResponse
 import com.example.springboot.app.external.ui.SnippetData
+import com.example.springboot.app.rule.Rule
+import com.example.springboot.app.snippet.controller.ControllerUtils.getUserIdFromJWT
+import com.example.springboot.app.snippet.dto.SnippetDTO
+import com.example.springboot.app.testing.TestCase
+import com.example.springboot.app.testing.TestCaseResult
+import com.example.springboot.app.utils.PaginatedUsers
+import com.example.springboot.app.utils.Pagination
+import com.example.springboot.app.utils.User
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
@@ -81,10 +91,12 @@ class SnippetController @Autowired constructor(
                 snippetId,
                 updateSnippetDTO.title,
                 updateSnippetDTO.code,
+                "prinscript",
                 snippet.extension,
                 compliance,
-                jwt.claims["name"].toString()
+                author = jwt.claims["email"].toString()
             )
+
             ResponseEntity.ok(snippetData)
         } catch (e: Exception) {
             logger.error("Error updating snippet: {}", e.message)
@@ -112,9 +124,10 @@ class SnippetController @Autowired constructor(
                 shareRequest.snippetId,
                 snippet.title,
                 String(snippetCode.bytes),
+                "prinscript",
                 snippet.extension,
                 compliance,
-                jwt.claims["name"].toString()
+                jwt.claims["email"].toString()
             )
             ResponseEntity.ok(snippetData)
         } catch (e: Exception) {
@@ -188,5 +201,122 @@ class SnippetController @Autowired constructor(
         } else {
             return ResponseEntity.status(400).body(null)
         }
-    }   
+    }
+
+    @GetMapping("/get_users")
+    fun getUserFriends(
+        @AuthenticationPrincipal jwt: Jwt,
+        @RequestParam(required = false) name: String,
+        @RequestParam(required = false) page: Int,
+        @RequestParam(required = false) pageSize: Int,
+    ): ResponseEntity<PaginatedUsers> {
+        return try {
+            // TODO
+            val userFriends = emptyList<User>()
+            val pag = Pagination(page, pageSize, pageSize)
+            val res = PaginatedUsers(pag, userFriends)
+            ResponseEntity.ok(res)
+        } catch (e: Exception) {
+            logger.error("Error getting user friends: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
+    }
+
+    @PostMapping("/{type}")
+    fun modifyRules(
+        @AuthenticationPrincipal jwt: Jwt,
+        @PathVariable type: RulesetType,
+        @RequestBody newRules: List<Rule>
+    ): ResponseEntity<List<Rule>> {
+        return try {
+            val userId = jwt.subject
+
+            val updatedRules = snippetService.modifyRules(userId, type, newRules)
+            ResponseEntity.ok(updatedRules)
+        } catch (e: Exception) {
+            logger.error("Error modifying ${type.name.lowercase()} rules: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
+    }
+
+    @GetMapping("/test/{snippetId}")
+    fun getTestCases(
+        @AuthenticationPrincipal jwt: Jwt,
+        @PathVariable snippetId: String
+    ): ResponseEntity<List<TestCase>> {
+        return try {
+            val hasPermission = permissionService.hasPermissionBySnippetId("EXECUTE", snippetId, generateHeaders(jwt))
+            if (!hasPermission) return ResponseEntity.status(403).build()
+            val testList = snippetService.getAllTests(snippetId)
+            ResponseEntity.ok(testList)
+        } catch (e: Exception) {
+            logger.error("Error getting test cases: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
+    }
+
+    @PostMapping("/test")
+    fun postTestCase(
+        @AuthenticationPrincipal jwt: Jwt,
+        @RequestBody testCase: TestCase
+    ): ResponseEntity<TestCase> {
+        return try {
+            val userId = getUserIdFromJWT(jwt)
+            val test = snippetService.addTest(testCase, userId)
+            ResponseEntity.ok(test)
+        } catch (e: Exception) {
+            logger.error("Error adding test case: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
+    }
+
+    @DeleteMapping("/test/{id}")
+    fun deleteTestCase(
+        @AuthenticationPrincipal jwt: Jwt,
+        @PathVariable id: String
+    ): ResponseEntity<Void> {
+        return try {
+            val userId = getUserIdFromJWT(jwt)
+            snippetService.deleteTest(id, userId)
+            ResponseEntity.noContent().build()
+        } catch (e: Exception) {
+            logger.error("Error deleting test case: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
+    }
+
+    @GetMapping("/test")
+    fun runTests(
+        @AuthenticationPrincipal jwt: Jwt,
+        @RequestParam testCase: TestCase
+    ): ResponseEntity<TestCaseResult> {
+        return try {
+            val userId = getUserIdFromJWT(jwt)
+            val result = printScriptService.runTests(testCase, userId)
+            ResponseEntity.ok(result)
+        } catch (e: Exception) {
+            logger.error("Error running tests: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
+    }
+
+
+    private fun convertSnippetDtoToSnippetData(snippetDto: SnippetDTO, headers: HttpHeaders): SnippetData {
+        val content = assetService.getSnippet(snippetDto.snippetId)
+        val compliance = printScriptService.validateSnippet(snippetDto.snippetId, snippetDto.version, headers).body?.message ?: "not-compliant"
+        val author = if (permissionService.hasPermissionBySnippetId("WRITE", snippetDto.snippetId, headers)) {
+            "you"
+        } else {
+            "other"
+        }
+        return SnippetData(
+            snippetId = snippetDto.snippetId,
+            name = snippetDto.title,
+            content = String(content.body!!.bytes),
+            language = snippetDto.language,
+            extension = snippetDto.extension,
+            compliance = compliance,
+            author = author
+        )
+    }
 }
