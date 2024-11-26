@@ -33,6 +33,11 @@ spring:
         enabled: false
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
+
+  constants:
+    permission_url: "${BASE_URL}${HOST}:${PERMISSION_PORT}/${PERMISSION_URL}"
+    print_script_url: "${BASE_URL}${HOST}:${PRINT_SCRIPT_PORT}/${PRINT_SCRIPT_URL}"
+    asset_url: "${BASE_URL}${HOST}:${ASSET_PORT}/${ASSET_URL}"
 server:
   port: ${SNIPPET_PORT}
 
@@ -46,7 +51,3 @@ stream:
 groups:
   formatter: ${FORMATTER_GROUP}
   linter: ${LINTER_GROUP}
-
-permission_url: ${BASE_URL}${HOST}:${PERMISSION_PORT}/${PERMISSION_URL}
-print_script_url: ${BASE_URL}${HOST}:${PRINT_SCRIPT_PORT}/${PRINT_SCRIPT_URL}
-asset_url: ${BASE_URL}${HOST}:${ASSET_SERVICE_PORT}/${ASSET_URL}
