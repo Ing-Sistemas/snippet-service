@@ -1,7 +1,5 @@
 package com.example.springboot.app.snippet.repository.entity
 
-//import com.example.springboot.app.repository.converter.RuleListConverter
-//import com.example.springboot.app.utils.Rule
 import com.example.springboot.app.snippet.repository.converter.RuleListConverter
 import com.example.springboot.app.utils.Rule
 import jakarta.persistence.*
@@ -24,5 +22,3 @@ data class SnippetEntity(
     @Convert(converter = RuleListConverter::class)
     val rules: List<Rule> = emptyList()
 )
-
-// TODO missing properties: content, compliance, author
