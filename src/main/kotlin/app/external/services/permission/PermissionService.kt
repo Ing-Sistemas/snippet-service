@@ -82,7 +82,7 @@ class PermissionService @Autowired constructor(
         headers: HttpHeaders
     ): SnippetsGroup {
         val url = "$permissionURL/get_all"
-        val response = restTemplate.exchange(url, HttpMethod.GET, HttpEntity<Any>(headers), SnippetsGroup::class.java)//todo, change request to exchange
+        val response = restTemplate.exchange(url, HttpMethod.GET, HttpEntity<Any>(headers), SnippetsGroup::class.java)
         if (response.statusCode.is4xxClientError) {
             throw Exception("Failed to get all snippets")
         } else if (response.statusCode.is5xxServerError) {

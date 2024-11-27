@@ -19,6 +19,7 @@ import com.example.springboot.app.snippet.controller.ControllerUtils.getUserIdFr
 import com.example.springboot.app.snippet.dto.SnippetDTO
 import com.example.springboot.app.testing.TestCase
 import com.example.springboot.app.testing.TestCaseResult
+import com.example.springboot.app.utils.PaginatedSnippets
 import com.example.springboot.app.utils.PaginatedUsers
 import com.example.springboot.app.utils.Pagination
 import com.example.springboot.app.utils.User
@@ -300,6 +301,38 @@ class SnippetController @Autowired constructor(
         }
     }
 
+    @GetMapping("/get_all")
+    fun getSnippets(
+        @AuthenticationPrincipal jwt: Jwt,
+        @RequestParam(required = true) page: Int,
+        @RequestParam(required = true) pageSize: Int,
+        @RequestParam(required = false) snippetName: String?
+    ): ResponseEntity<PaginatedSnippets> {
+        //val permURL = "$BASE_URL$host:$permissionPort/$API_URL/get"
+        //check if the user can read the snippet
+        // should send the ids to the asset and get all snippets
+        return try {
+            val headers = generateHeaders(jwt)
+            val snippetIds = permissionService.getAllSnippetsIdsForUser(headers).snippets
+
+            val snippets = if (snippetName != null) {
+                snippetIds
+                    .map { snippetService.findSnippetById(it) }
+                    .filter { it.title.contains(snippetName, ignoreCase = true) }
+            } else {
+                snippetIds.map { snippetService.findSnippetById(it) }
+            }
+
+            val resSnippets = snippets.map { convertSnippetDtoToSnippetData(it, headers) }
+
+            val pag = Pagination(page, pageSize, pageSize)
+            val paginatedSnippets = PaginatedSnippets( pag, resSnippets)
+            ResponseEntity.ok(paginatedSnippets)
+        } catch (e: Exception) {
+            logger.error("Error getting snippets: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
+    }
 
     private fun convertSnippetDtoToSnippetData(snippetDto: SnippetDTO, headers: HttpHeaders): SnippetData {
         val content = assetService.getSnippet(snippetDto.snippetId)
