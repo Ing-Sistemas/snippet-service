@@ -14,6 +14,9 @@ import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.JwtValidators
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource
+import org.springframework.web.cors.reactive.CorsWebFilter
 
 @Configuration
 @EnableWebSecurity
@@ -35,7 +38,7 @@ class OAuth2ResourceServerSecurityConfiguration(@Value("\${auth0.audience}")
         }
             .oauth2ResourceServer { it.jwt(withDefaults()) }
             .cors {
-                it.disable()
+                it.configurationSource(corsConfigurationSource())
             }
             .csrf {
                 it.disable()
@@ -51,5 +54,17 @@ class OAuth2ResourceServerSecurityConfiguration(@Value("\${auth0.audience}")
         val withAudience: OAuth2TokenValidator<Jwt> = DelegatingOAuth2TokenValidator(withIssuer, audienceValidator)
         jwtDecoder.setJwtValidator(withAudience)
         return jwtDecoder
+    }
+
+    @Bean
+    fun corsConfigurationSource(): UrlBasedCorsConfigurationSource {
+        val configuration = CorsConfiguration().apply {
+            allowedOrigins = listOf("http://localhost:5173", "https://fantoche.duckdns.org")
+            allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            allowedHeaders = listOf("*")
+        }
+        val source = UrlBasedCorsConfigurationSource()
+        source.registerCorsConfiguration("/**", configuration)
+        return source
     }
 }
