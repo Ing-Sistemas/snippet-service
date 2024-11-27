@@ -315,6 +315,10 @@ class SnippetController @Autowired constructor(
             val headers = generateHeaders(jwt)
             val snippetIds = permissionService.getAllSnippetsIdsForUser(headers).snippets
 
+            if (snippetIds.isEmpty()) {
+                return ResponseEntity.ok(PaginatedSnippets(Pagination(page, pageSize, 0), emptyList()))
+            }
+
             val snippets = if (snippetName != null) {
                 snippetIds
                     .map { snippetService.findSnippetById(it) }
@@ -322,11 +326,20 @@ class SnippetController @Autowired constructor(
             } else {
                 snippetIds.map { snippetService.findSnippetById(it) }
             }
+            if (snippets.isEmpty()) {
+                return ResponseEntity.ok(PaginatedSnippets(Pagination(page, pageSize, 0), emptyList()))
+            }
 
             val resSnippets = snippets.map { convertSnippetDtoToSnippetData(it, headers) }
+            if (resSnippets.isEmpty()) {
+                return ResponseEntity.ok(PaginatedSnippets(Pagination(page, pageSize, 0), emptyList()))
+            }
 
-            val pag = Pagination(page, pageSize, pageSize)
-            val paginatedSnippets = PaginatedSnippets( pag, resSnippets)
+            val totalCount = snippets.size
+            val paginatedSnippets = PaginatedSnippets(
+                pagination = Pagination(page, pageSize, totalCount),
+                snippets = resSnippets
+            )
             ResponseEntity.ok(paginatedSnippets)
         } catch (e: Exception) {
             logger.error("Error getting snippets: {}", e.message)
