@@ -11,7 +11,9 @@ import com.example.springboot.app.external.redis.events.LintEvent
 import com.example.springboot.app.external.redis.producer.LintEventProducer
 import com.example.springboot.app.snippet.service.SnippetService
 import com.example.springboot.app.rule.LintRule
+import com.example.springboot.app.rule.RulesService
 import com.example.springboot.app.snippet.dto.RuleDTO
+import com.example.springboot.app.snippet.repository.RulesetType
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
@@ -30,23 +32,23 @@ class LintingController @Autowired constructor(
     private val lintEventConsumer: LintEventConsumer,
     private val snippetService: SnippetService,
     private val permissionService: PermissionService,
-    private val printScriptService: PrintScriptService
+    private val printScriptService: PrintScriptService,
+    private val rulesService: RulesService
 ) {
 	private val logger = LoggerFactory.getLogger(LintingController::class.java)
 
-	@GetMapping("/lint/rules")
-    fun getLintRules(): ResponseEntity<List<RuleDTO>> {
-        val rules = listOf(
-            RuleDTO(id = "1", name = "identifierFormat", isActive = false, value = "camel case"),
-            RuleDTO(id = "2", name = "mandatory-variable-or-literal-in-println", isActive = false, value = false),
-            RuleDTO(id = "3", name = "mandatory-variable-or-literal-in-readInput", isActive = false, value = false)
-        )
-        return ResponseEntity.ok(rules)
+	@GetMapping("/{ruleType}/rules")
+    fun getLintRules(
+        @PathVariable ruleType: RulesetType,
+        @AuthenticationPrincipal jwt: Jwt
+    ): ResponseEntity<List<RuleDTO>> {
+        //getallrules from Rule of RulesetType == LINT or FORMAT
+        return ResponseEntity.ok(rulesService.getRules(ruleType, jwt.subject))
     }
 
 	@PostMapping("/lint")
     fun lintSnippet(
-        @RequestBody snippet: SnippetRequestCreate,//TODO change request body class
+        @RequestBody snippet: SnippetRequestCreate, // TODO change request body class
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<String> {
         val snippetId = snippetService.findSnippetByTitle(snippet.title).snippetId

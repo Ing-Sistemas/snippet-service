@@ -1,11 +1,10 @@
 package com.example.springboot.app.snippet.service
 
-import RuleEntity
+import Rule
 import com.example.springboot.app.snippet.dto.RuleDTO
 import com.example.springboot.app.snippet.dto.SnippetDTO
 import com.example.springboot.app.snippet.repository.*
 import com.example.springboot.app.snippet.repository.entity.SnippetEntity
-import com.example.springboot.app.snippet.repository.entity.RulesetType
 import com.example.springboot.app.snippet.repository.entity.TestEntity
 import com.example.springboot.app.testing.TestCase
 import org.springframework.stereotype.Service
@@ -60,7 +59,7 @@ class SnippetService(
     fun getLintingRules(
         type: RulesetType,
         userId: String
-    ): List<RuleEntity> {
+    ): List<Rule> {
         val ruleset = ruleUserRepository.findByUserIdAndType(userId, type)
             ?: throw IllegalStateException("No Ruleset found for userId: $userId and type: $type")
         val lintingRules = ruleset.lintingRules.map { ruleRepository.findRuleById(it) }
@@ -71,7 +70,7 @@ class SnippetService(
     fun getFormattingRules(
         type: RulesetType,
         userId: String
-    ): List<RuleEntity> {
+    ): List<Rule> {
         val ruleset = ruleUserRepository.findByUserIdAndType(userId, type)
             ?: throw IllegalStateException("No Ruleset found for userId: $userId and type: $type")
         val formattingRules = ruleset.formattingRules.map { ruleRepository.findRuleById(it) }
@@ -89,7 +88,7 @@ class SnippetService(
 
         // Crear y guardar las nuevas reglas
         val savedRules = newRuleset.map { rule ->
-            val ofTypeRuleEntity = RuleEntity(
+            val ofTypeRuleEntity = Rule(
                 rule.id,
                 rule.name,
                 rule.isActive,
@@ -116,7 +115,7 @@ class SnippetService(
 
         // Crear y guardar las nuevas reglas
         val savedRules = newRuleset.map { rule ->
-            val ofTypeRuleEntity = RuleEntity(
+            val ofTypeRuleEntity = Rule(
                 rule.id,
                 rule.name,
                 rule.isActive,

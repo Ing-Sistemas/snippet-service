@@ -32,18 +32,19 @@ class FormattingController @Autowired constructor(
 ) {
 	private val logger = LoggerFactory.getLogger(FormattingController::class.java)
 
-	@GetMapping("/format/rules")
-    fun getFormatRules(): ResponseEntity<List<RuleDTO>> {
-        val rules = listOf(
-            RuleDTO(id = "4", name = "spaceAfterColon", isActive = false, value = false),
-            RuleDTO(id = "5", name = "spaceAroundEquals", isActive = false, value = false),
-            RuleDTO(id = "6", name = "lineJumpBeforePrintln", isActive = false, value = 0),
-            RuleDTO(id = "7", name = "lineJumpAfterSemicolon", isActive = false, value = true),
-            RuleDTO(id = "8", name = "singleSpaceBetweenTokens", isActive = false, value = true),
-            RuleDTO(id = "9", name = "spaceAroundOperators", isActive = false, value = true)
-        )
-        return ResponseEntity.ok(rules)
-    }
+//  TODO esto esta unificado en lintingController
+//	@GetMapping("/format/rules")
+//    fun getFormatRules(): ResponseEntity<List<RuleDTO>> {
+//        val rules = listOf(
+//            RuleDTO(id = "4", name = "spaceAfterColon", isActive = false, value = false),
+//            RuleDTO(id = "5", name = "spaceAroundEquals", isActive = false, value = false),
+//            RuleDTO(id = "6", name = "lineJumpBeforePrintln", isActive = false, value = 0),
+//            RuleDTO(id = "7", name = "lineJumpAfterSemicolon", isActive = false, value = true),
+//            RuleDTO(id = "8", name = "singleSpaceBetweenTokens", isActive = false, value = true),
+//            RuleDTO(id = "9", name = "spaceAroundOperators", isActive = false, value = true)
+//        )
+//        return ResponseEntity.ok(rules)
+//    }
 
 
 	@PostMapping("/format")

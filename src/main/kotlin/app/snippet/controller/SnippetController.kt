@@ -1,6 +1,5 @@
 package com.example.springboot.app.snippet.controller
 
-import com.example.springboot.app.snippet.repository.entity.RulesetType
 import com.example.springboot.app.external.services.asset.AssetService
 import com.example.springboot.app.snippet.controller.ControllerUtils.generateFile
 import com.example.springboot.app.snippet.controller.ControllerUtils.generateHeaders
@@ -17,6 +16,7 @@ import com.example.springboot.app.external.ui.SnippetData
 import com.example.springboot.app.snippet.controller.ControllerUtils.getUserIdFromJWT
 import com.example.springboot.app.snippet.dto.RuleDTO
 import com.example.springboot.app.snippet.dto.SnippetDTO
+import com.example.springboot.app.snippet.repository.RulesetType
 import com.example.springboot.app.testing.TestCase
 import com.example.springboot.app.testing.TestCaseResult
 import com.example.springboot.app.utils.PaginatedSnippets

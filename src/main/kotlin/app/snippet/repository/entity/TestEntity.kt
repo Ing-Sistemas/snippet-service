@@ -1,7 +1,6 @@
 package com.example.springboot.app.snippet.repository.entity
 
 import jakarta.persistence.*
-import org.jetbrains.annotations.NotNull
 
 @Entity
 data class TestEntity(
