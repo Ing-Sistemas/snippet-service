@@ -3,8 +3,8 @@ package com.example.springboot.app.external.services.permission
 import com.example.springboot.app.external.services.permission.request.PermissionRequest
 import com.example.springboot.app.external.services.permission.request.PermissionShare
 import com.example.springboot.app.external.services.permission.response.PermissionResponse
-import com.example.springboot.app.external.ui.SnippetsGroup
-import com.example.springboot.app.snippet.service.SnippetService
+import com.example.springboot.app.snippets.dto.SnippetsGroup
+import com.example.springboot.app.snippets.SnippetService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
