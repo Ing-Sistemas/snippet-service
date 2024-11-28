@@ -15,6 +15,7 @@ import com.example.springboot.app.external.ui.SnippetData
 import com.example.springboot.app.snippet.controller.ControllerUtils.getUserIdFromJWT
 import com.example.springboot.app.snippet.dto.*
 import com.example.springboot.app.snippet.repository.RulesetType
+import com.example.springboot.app.snippet.repository.TestStatus
 import com.example.springboot.app.testing.TestCaseResult
 import com.example.springboot.app.utils.PaginatedSnippets
 import com.example.springboot.app.utils.PaginatedUsers
@@ -266,7 +267,14 @@ class SnippetController @Autowired constructor(
         return try {
             val userId = getUserIdFromJWT(jwt)
             val test = snippetService.addTest(testCase, userId, sId)
-            ResponseEntity.ok(test)
+            val testCaseDTO = TestCaseDTO(
+                id = test.id,
+                name = test.name,
+                input = test.input,
+                output = test.output,
+                status = test.snippetTests.firstOrNull()?.status ?: TestStatus.PENDING
+            )
+            ResponseEntity.ok(testCaseDTO)
         } catch (e: Exception) {
             logger.error("Error adding test case: {}", e.message)
             ResponseEntity.status(500).build()
