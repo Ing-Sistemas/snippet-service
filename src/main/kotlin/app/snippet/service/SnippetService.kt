@@ -1,6 +1,8 @@
 package com.example.springboot.app.snippet.service
 
 import Rule
+import SnippetTest
+import com.example.springboot.app.snippet.dto.AddTestCaseDTO
 import com.example.springboot.app.snippet.dto.RuleDTO
 import com.example.springboot.app.snippet.dto.SnippetDTO
 import com.example.springboot.app.snippet.dto.TestCaseDTO
@@ -9,6 +11,7 @@ import com.example.springboot.app.snippet.repository.entity.SnippetEntity
 import com.example.springboot.app.snippet.repository.entity.TestCase
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.util.*
 
 
 @Service
@@ -17,7 +20,6 @@ class SnippetService(
     private val ruleUserRepository: RuleUserRepository,
     private val testSnippetRepository: TestSnippetRepository,
     private val ruleRepository: RuleRepository,
-    private val testRepository: TestRepository,
     private val testCaseRepository: TestCaseRepository
 ) {
     private val logger = LoggerFactory.getLogger(SnippetService::class.java)
@@ -117,11 +119,12 @@ class SnippetService(
         val rulesUserEntity = ruleUserRepository.findByUserIdAndType(userId, type)
             ?: throw IllegalStateException("No Ruleset found for userId: $userId and type: $type")
 
-        // Crear y guardar las nuevas reglas
+        //TODO revisar
         val savedRules = newRuleset.map { rule ->
             val ofTypeRuleEntity = Rule(
                 rule.id,
                 rule.name,
+                rule.ruleType,
                 rule.isActive,
                 rule.value
             )
@@ -153,24 +156,20 @@ class SnippetService(
         }
     }
 
-    fun addTest(test: TestCase, userId: String, sId: String): TestCase {
-        val testSnippetEntity = testSnippetRepository.findTestEntityBySnippetId(sId)
-        val testSnippetIds = testSnippetEntity.tests
+    fun addTest(test: AddTestCaseDTO, userId: String, sId: String): TestCase {
+        logger.info("Adding test to snippet with id: $sId")
+        val snippet = snippetRepository.findSnippetEntityById(sId)
 
         val toSaveTest = TestCase(
-            test.id,
-            test.name,
-            test.input,
-            test.output
+            id = UUID.randomUUID().toString(),
+            name = test.name,
+            input = test.input ?: emptyList(),
+            output =  test.output ?: emptyList(),
+            snippet = snippet,
         )
-
-        testRepository.save(toSaveTest)
-
-        val updatedTestsIdList = testSnippetIds.toMutableList().apply { add(test.id) }
-        val updatedTestSnippetEntity = testSnippetEntity.copy(tests = updatedTestsIdList)
-        testSnippetRepository.save(updatedTestSnippetEntity)
-
-        return test
+        val savedTest = testCaseRepository.save(toSaveTest)
+        relateWithSnippetTest(savedTest)
+        return savedTest
     }
 
     fun deleteTest(testId: String, userId: String) {
@@ -180,4 +179,13 @@ class SnippetService(
         testSnippetRepository.save(updatedTestEntity)
     }
 
+    private fun relateWithSnippetTest(testCase: TestCase) {
+        testSnippetRepository.save(
+            SnippetTest(
+                id = UUID.randomUUID().toString(),
+                status = TestStatus.PENDING,
+                testCase = testCase,
+            )
+        )
+    }
 }

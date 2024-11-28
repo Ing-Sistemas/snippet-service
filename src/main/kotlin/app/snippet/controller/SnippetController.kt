@@ -4,7 +4,6 @@ import com.example.springboot.app.external.services.asset.AssetService
 import com.example.springboot.app.snippet.controller.ControllerUtils.generateFile
 import com.example.springboot.app.snippet.controller.ControllerUtils.generateHeaders
 import com.example.springboot.app.snippet.controller.ControllerUtils.generateSnippetDTO
-import com.example.springboot.app.snippet.dto.UpdateSnippetDTO
 import com.example.springboot.app.external.services.permission.PermissionService
 import com.example.springboot.app.external.services.printscript.PrintScriptService
 import com.example.springboot.app.snippet.repository.entity.SnippetEntity
@@ -14,9 +13,7 @@ import com.example.springboot.app.external.services.printscript.request.SnippetR
 import com.example.springboot.app.external.services.printscript.response.SnippetResponse
 import com.example.springboot.app.external.ui.SnippetData
 import com.example.springboot.app.snippet.controller.ControllerUtils.getUserIdFromJWT
-import com.example.springboot.app.snippet.dto.RuleDTO
-import com.example.springboot.app.snippet.dto.SnippetDTO
-import com.example.springboot.app.snippet.dto.TestCaseDTO
+import com.example.springboot.app.snippet.dto.*
 import com.example.springboot.app.snippet.repository.RulesetType
 import com.example.springboot.app.testing.TestCaseResult
 import com.example.springboot.app.utils.PaginatedSnippets
@@ -263,9 +260,9 @@ class SnippetController @Autowired constructor(
     @PostMapping("/test")
     fun postTestCase(
         @AuthenticationPrincipal jwt: Jwt,
-        @RequestBody testCase: TestCase,
+        @RequestBody testCase: AddTestCaseDTO,
         @RequestParam sId: String
-    ): ResponseEntity<TestCase> {
+    ): ResponseEntity<TestCaseDTO> {
         return try {
             val userId = getUserIdFromJWT(jwt)
             val test = snippetService.addTest(testCase, userId, sId)
