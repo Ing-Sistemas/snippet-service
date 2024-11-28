@@ -18,7 +18,7 @@ import java.util.*
 class SnippetService(
     private val snippetRepository: SnippetRepository,
     private val ruleUserRepository: RuleUserRepository,
-    private val testSnippetRepository: TestSnippetRepository,
+    private val snippetTestRepository: SnippetTestRepository,
     private val ruleRepository: RuleRepository,
     private val testCaseRepository: TestCaseRepository
 ) {
@@ -173,14 +173,16 @@ class SnippetService(
     }
 
     fun deleteTest(testId: String, userId: String) {
-        val testEntity = testSnippetRepository.findTestEntityById(testId)
-        val updatedTests = testEntity.tests.toMutableList().apply { removeIf { it == testId } }
-        val updatedTestEntity = testEntity.copy(tests = updatedTests)
-        testSnippetRepository.save(updatedTestEntity)
+        logger.info("Deleting test with id: $testId")
+        val findTest = testCaseRepository.findById(testId)
+            .orElseThrow { IllegalStateException("Test with id: $testId not found") }
+        val sId = findTest.snippet?.id
+        testCaseRepository.deleteById(testId)
+
     }
 
     private fun relateWithSnippetTest(testCase: TestCase) {
-        testSnippetRepository.save(
+        snippetTestRepository.save(
             SnippetTest(
                 id = UUID.randomUUID().toString(),
                 status = TestStatus.PENDING,
