@@ -10,6 +10,7 @@ import com.example.springboot.app.tests.entity.TestCase
 import com.example.springboot.app.tests.enums.TestCaseResult
 import com.example.springboot.app.tests.enums.TestStatus
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api")
-class TestController(
+class TestController @Autowired constructor(
     private val printScriptService: PrintScriptService,
     private val permissionService: PermissionService,
     private val testService: TestService,

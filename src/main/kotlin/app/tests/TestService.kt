@@ -10,9 +10,12 @@ import com.example.springboot.app.tests.enums.TestStatus
 import com.example.springboot.app.tests.repository.SnippetTestRepository
 import com.example.springboot.app.tests.repository.TestCaseRepository
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 import java.util.*
 
-class TestService(
+@Service
+class TestService @Autowired constructor(
     private val testCaseRepository: TestCaseRepository,
     private val snippetRepository: SnippetRepository,
     private val snippetTestRepository: SnippetTestRepository,

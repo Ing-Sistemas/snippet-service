@@ -2,12 +2,12 @@ package com.example.springboot.app.snippets
 
 import com.example.springboot.app.snippets.dto.SnippetDTO
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class SnippetService(
+class SnippetService @Autowired constructor(
     private val snippetRepository: SnippetRepository,
-
 ) {
     private val logger = LoggerFactory.getLogger(SnippetService::class.java)
 

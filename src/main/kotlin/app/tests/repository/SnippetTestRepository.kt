@@ -6,6 +6,5 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface SnippetTestRepository: JpaRepository<SnippetTest, String> {
-    fun findTestEntityBySnippetId(snippetId: String): SnippetTest
     fun findTestEntityById(id: String): SnippetTest
 }

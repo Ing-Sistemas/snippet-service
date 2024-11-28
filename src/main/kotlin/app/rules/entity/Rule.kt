@@ -2,22 +2,22 @@ package com.example.springboot.app.rules.entity
 
 import com.example.springboot.app.rules.enums.RulesetType
 import jakarta.persistence.*
+import org.jetbrains.annotations.NotNull
 
 @Entity
 data class Rule (
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @NotNull
     val id: String,
 
-    @Column(name = "name", nullable = false)
+    @NotNull
     val name: String,
 
     @Enumerated(EnumType.STRING)
     val type: RulesetType = RulesetType.LINT,
 
-    @Column(name = "value")
-    val value: Any? = null,
+    val value: String? = null,
 
     @OneToMany(cascade = [CascadeType.REMOVE], mappedBy = "rule")
     val userRules: List<RulesUserEntity> = listOf(),

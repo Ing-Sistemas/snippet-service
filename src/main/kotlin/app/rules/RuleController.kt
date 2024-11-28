@@ -19,6 +19,7 @@ import com.example.springboot.app.snippets.SnippetService
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
@@ -26,7 +27,7 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api")
-class RuleController(
+class RuleController @Autowired constructor(
     private val rulesService: RulesService,
     private val snippetService: SnippetService,
     private val permissionService: PermissionService,
