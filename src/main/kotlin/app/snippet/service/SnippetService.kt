@@ -3,10 +3,11 @@ package com.example.springboot.app.snippet.service
 import Rule
 import com.example.springboot.app.snippet.dto.RuleDTO
 import com.example.springboot.app.snippet.dto.SnippetDTO
+import com.example.springboot.app.snippet.dto.TestCaseDTO
 import com.example.springboot.app.snippet.repository.*
 import com.example.springboot.app.snippet.repository.entity.SnippetEntity
-import com.example.springboot.app.snippet.repository.entity.TestEntity
-import com.example.springboot.app.testing.TestCase
+import com.example.springboot.app.snippet.repository.entity.TestCase
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 
@@ -16,8 +17,11 @@ class SnippetService(
     private val ruleUserRepository: RuleUserRepository,
     private val testSnippetRepository: TestSnippetRepository,
     private val ruleRepository: RuleRepository,
-    private val testRepository: TestRepository
+    private val testRepository: TestRepository,
+    private val testCaseRepository: TestCaseRepository
 ) {
+    private val logger = LoggerFactory.getLogger(SnippetService::class.java)
+
     fun createSnippet(
         snippetDTO: SnippetDTO
     ): SnippetEntity {
@@ -133,17 +137,27 @@ class SnippetService(
     }
 
 
-    fun getAllTests(snippetId: String): List<TestCase> {
-        val testsId = testSnippetRepository.findTestEntityBySnippetId(snippetId).tests
-        val testSnippetEntity = testsId.map { testRepository.findTestEntityById(it) }
-        return testSnippetEntity.map { TestCase(it.id, it.name, it.input, it.output) }
+    fun getAllTests(snippetId: String): List<TestCaseDTO> {
+        logger.info("Getting all tests for snippet with id: $snippetId")
+
+        return testCaseRepository.findBySnippetId(snippetId).map { testCase ->
+            val currentStatus = testCase.snippetTests.firstOrNull()?.status ?: TestStatus.PENDING
+
+            TestCaseDTO(
+                id = testCase.id,
+                name = testCase.name,
+                input = testCase.input,
+                output = testCase.output,
+                status = currentStatus,
+            )
+        }
     }
 
     fun addTest(test: TestCase, userId: String, sId: String): TestCase {
         val testSnippetEntity = testSnippetRepository.findTestEntityBySnippetId(sId)
         val testSnippetIds = testSnippetEntity.tests
 
-        val toSaveTest = TestEntity(
+        val toSaveTest = TestCase(
             test.id,
             test.name,
             test.input,

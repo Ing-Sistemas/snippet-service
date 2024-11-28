@@ -16,8 +16,8 @@ import com.example.springboot.app.external.ui.SnippetData
 import com.example.springboot.app.snippet.controller.ControllerUtils.getUserIdFromJWT
 import com.example.springboot.app.snippet.dto.RuleDTO
 import com.example.springboot.app.snippet.dto.SnippetDTO
+import com.example.springboot.app.snippet.dto.TestCaseDTO
 import com.example.springboot.app.snippet.repository.RulesetType
-import com.example.springboot.app.testing.TestCase
 import com.example.springboot.app.testing.TestCaseResult
 import com.example.springboot.app.utils.PaginatedSnippets
 import com.example.springboot.app.utils.PaginatedUsers
@@ -248,9 +248,9 @@ class SnippetController @Autowired constructor(
     fun getTestCases(
         @AuthenticationPrincipal jwt: Jwt,
         @PathVariable snippetId: String
-    ): ResponseEntity<List<TestCase>> {
+    ): ResponseEntity<List<TestCaseDTO>> {
         return try {
-            val hasPermission = permissionService.hasPermissionBySnippetId("EXECUTE", snippetId, generateHeaders(jwt))
+            val hasPermission = permissionService.hasPermissionBySnippetId("READ", snippetId, generateHeaders(jwt))
             if (!hasPermission) return ResponseEntity.status(403).build()
             val testList = snippetService.getAllTests(snippetId)
             ResponseEntity.ok(testList)

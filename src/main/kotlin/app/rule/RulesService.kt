@@ -18,7 +18,7 @@ class RulesService
     private val ruleUserRepository: RuleUserRepository
 
 ) {
-    private val logger = LoggerFactory.getLogger(SnippetController::class.java)
+    private val logger = LoggerFactory.getLogger(RulesService::class.java)
 
     fun getRules(ruleType: RulesetType, userId: String): List<RuleDTO> {
         logger.info("Getting rules for $ruleType")
