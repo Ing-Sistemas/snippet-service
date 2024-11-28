@@ -14,8 +14,8 @@ import com.example.springboot.app.external.services.permission.request.ShareRequ
 import com.example.springboot.app.external.services.printscript.request.SnippetRequestCreate
 import com.example.springboot.app.external.services.printscript.response.SnippetResponse
 import com.example.springboot.app.external.ui.SnippetData
-import com.example.springboot.app.rule.Rule
 import com.example.springboot.app.snippet.controller.ControllerUtils.getUserIdFromJWT
+import com.example.springboot.app.snippet.dto.RuleDTO
 import com.example.springboot.app.snippet.dto.SnippetDTO
 import com.example.springboot.app.testing.TestCase
 import com.example.springboot.app.testing.TestCaseResult
@@ -227,13 +227,17 @@ class SnippetController @Autowired constructor(
     fun modifyRules(
         @AuthenticationPrincipal jwt: Jwt,
         @PathVariable type: RulesetType,
-        @RequestBody newRules: List<Rule>
-    ): ResponseEntity<List<Rule>> {
+        @RequestBody newRules: List<RuleDTO>
+    ): ResponseEntity<List<RuleDTO>> {
         return try {
             val userId = jwt.subject
-
-            val updatedRules = snippetService.modifyRules(userId, type, newRules)
-            ResponseEntity.ok(updatedRules)
+            if (type == RulesetType.LINT) {
+                val rules = snippetService.modifyLintingRules(userId, type, newRules)
+                return ResponseEntity.ok(rules)
+            } else {
+                val rules = snippetService.modifyFormattingRules(userId, type, newRules)
+                return ResponseEntity.ok(rules)
+            }
         } catch (e: Exception) {
             logger.error("Error modifying ${type.name.lowercase()} rules: {}", e.message)
             ResponseEntity.status(500).build()
@@ -259,11 +263,12 @@ class SnippetController @Autowired constructor(
     @PostMapping("/test")
     fun postTestCase(
         @AuthenticationPrincipal jwt: Jwt,
-        @RequestBody testCase: TestCase
+        @RequestBody testCase: TestCase,
+        @RequestParam sId: String
     ): ResponseEntity<TestCase> {
         return try {
             val userId = getUserIdFromJWT(jwt)
-            val test = snippetService.addTest(testCase, userId)
+            val test = snippetService.addTest(testCase, userId, sId)
             ResponseEntity.ok(test)
         } catch (e: Exception) {
             logger.error("Error adding test case: {}", e.message)
@@ -308,9 +313,6 @@ class SnippetController @Autowired constructor(
         @RequestParam(required = true) pageSize: Int,
         @RequestParam(required = false) snippetName: String?
     ): ResponseEntity<PaginatedSnippets> {
-        //val permURL = "$BASE_URL$host:$permissionPort/$API_URL/get"
-        //check if the user can read the snippet
-        // should send the ids to the asset and get all snippets
         return try {
             val headers = generateHeaders(jwt)
             val snippetIds = permissionService.getAllSnippetsIdsForUser(headers).snippets

@@ -11,7 +11,7 @@ import com.example.springboot.app.external.redis.events.FormatEvent
 import com.example.springboot.app.external.redis.producer.FormatEventProducer
 import com.example.springboot.app.snippet.service.SnippetService
 import com.example.springboot.app.rule.FormatRule
-import com.example.springboot.app.rule.Rule
+import com.example.springboot.app.snippet.dto.RuleDTO
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
@@ -33,14 +33,14 @@ class FormattingController @Autowired constructor(
 	private val logger = LoggerFactory.getLogger(FormattingController::class.java)
 
 	@GetMapping("/format/rules")
-    fun getFormatRules(): ResponseEntity<List<Rule>> {
+    fun getFormatRules(): ResponseEntity<List<RuleDTO>> {
         val rules = listOf(
-            Rule(id = "4", name = "spaceAfterColon", isActive = false, value = false),
-            Rule(id = "5", name = "spaceAroundEquals", isActive = false, value = false),
-            Rule(id = "6", name = "lineJumpBeforePrintln", isActive = false, value = 0),
-            Rule(id = "7", name = "lineJumpAfterSemicolon", isActive = false, value = true),
-            Rule(id = "8", name = "singleSpaceBetweenTokens", isActive = false, value = true),
-            Rule(id = "9", name = "spaceAroundOperators", isActive = false, value = true)
+            RuleDTO(id = "4", name = "spaceAfterColon", isActive = false, value = false),
+            RuleDTO(id = "5", name = "spaceAroundEquals", isActive = false, value = false),
+            RuleDTO(id = "6", name = "lineJumpBeforePrintln", isActive = false, value = 0),
+            RuleDTO(id = "7", name = "lineJumpAfterSemicolon", isActive = false, value = true),
+            RuleDTO(id = "8", name = "singleSpaceBetweenTokens", isActive = false, value = true),
+            RuleDTO(id = "9", name = "spaceAroundOperators", isActive = false, value = true)
         )
         return ResponseEntity.ok(rules)
     }

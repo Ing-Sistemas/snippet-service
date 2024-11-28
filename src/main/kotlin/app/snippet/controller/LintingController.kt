@@ -1,4 +1,5 @@
 package com.example.springboot.app.snippet.controller
+
 import com.example.springboot.app.snippet.controller.ControllerUtils.generateHeaders
 import com.example.springboot.app.snippet.controller.ControllerUtils.getUserIdFromJWT
 import com.example.springboot.app.external.services.permission.PermissionService
@@ -10,7 +11,7 @@ import com.example.springboot.app.external.redis.events.LintEvent
 import com.example.springboot.app.external.redis.producer.LintEventProducer
 import com.example.springboot.app.snippet.service.SnippetService
 import com.example.springboot.app.rule.LintRule
-import com.example.springboot.app.rule.Rule
+import com.example.springboot.app.snippet.dto.RuleDTO
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
@@ -34,11 +35,11 @@ class LintingController @Autowired constructor(
 	private val logger = LoggerFactory.getLogger(LintingController::class.java)
 
 	@GetMapping("/lint/rules")
-    fun getLintRules(): ResponseEntity<List<Rule>> {
+    fun getLintRules(): ResponseEntity<List<RuleDTO>> {
         val rules = listOf(
-            Rule(id = "1", name = "identifierFormat", isActive = false, value = "camel case"),
-            Rule(id = "2", name = "mandatory-variable-or-literal-in-println", isActive = false, value = false),
-            Rule(id = "3", name = "mandatory-variable-or-literal-in-readInput", isActive = false, value = false)
+            RuleDTO(id = "1", name = "identifierFormat", isActive = false, value = "camel case"),
+            RuleDTO(id = "2", name = "mandatory-variable-or-literal-in-println", isActive = false, value = false),
+            RuleDTO(id = "3", name = "mandatory-variable-or-literal-in-readInput", isActive = false, value = false)
         )
         return ResponseEntity.ok(rules)
     }
