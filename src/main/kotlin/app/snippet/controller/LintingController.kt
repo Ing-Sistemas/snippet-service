@@ -12,6 +12,7 @@ import com.example.springboot.app.external.redis.producer.LintEventProducer
 import com.example.springboot.app.snippet.service.SnippetService
 import com.example.springboot.app.rule.LintRule
 import com.example.springboot.app.rule.RulesService
+import com.example.springboot.app.snippet.dto.AddRuleDTO
 import com.example.springboot.app.snippet.dto.RuleDTO
 import com.example.springboot.app.snippet.repository.RulesetType
 import kotlinx.coroutines.coroutineScope
@@ -68,6 +69,15 @@ class LintingController @Autowired constructor(
             logger.error("Error linting snippet: {}", e.message)
             ResponseEntity.status(500).build()
         }
+    }
+
+    @PostMapping("/{ruleType}")
+    fun editRule(
+        @PathVariable ruleType: RulesetType,
+        @RequestBody rules: List<AddRuleDTO>,
+        @AuthenticationPrincipal jwt: Jwt
+    ) {
+        return rulesService.updateRules(ruleType, rules, jwt.subject)
     }
 
     @PostMapping("/lint_all")

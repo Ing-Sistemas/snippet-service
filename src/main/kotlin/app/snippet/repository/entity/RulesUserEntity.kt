@@ -15,7 +15,7 @@ data class RulesUserEntity(
     val userId: String,
 
     @Column(name = "is_active", nullable = false)
-    val isActive: Boolean = false,
+    var isActive: Boolean = false,
 
     @ManyToOne
     @JoinColumn(name = "ruleId", referencedColumnName = "id", nullable = false)

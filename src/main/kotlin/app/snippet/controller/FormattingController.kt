@@ -46,7 +46,6 @@ class FormattingController @Autowired constructor(
 //        return ResponseEntity.ok(rules)
 //    }
 
-
 	@PostMapping("/format")
     fun formatSnippet(
         @RequestBody snippet: SnippetRequestCreate,//TODO change request body class
