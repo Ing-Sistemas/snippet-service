@@ -167,6 +167,7 @@ class SnippetController @Autowired constructor(
             val code = String(assetService.getSnippet(snippetId).body!!.bytes)
             val author = jwt.claims["email"].toString()
             val compliance = printScriptService.validateSnippet(snippetId, snippet.version, headers).body?.message ?: "not-compliant"
+            // TODO()
             val snippetDataUi = SnippetDataUi(
                 snippet.snippetId,
                 snippet.title,
@@ -177,7 +178,6 @@ class SnippetController @Autowired constructor(
                 author,
             )
             return ResponseEntity.ok(snippetDataUi)
-            TODO()
         } else {
             return ResponseEntity.status(400).body(null)
         }
