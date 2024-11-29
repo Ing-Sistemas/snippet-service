@@ -139,12 +139,14 @@ class SnippetController @Autowired constructor(
         return try {
             val hasPermission = permissionService.hasPermissionBySnippetId("WRITE", snippetId, generateHeaders(jwt))
             if (!hasPermission) {
-                return ResponseEntity.status(400).build()
+                return ResponseEntity.status(403).build()
             }
             snippetService.deleteSnippet(snippetId)
             permissionService.deleteFromPermission(snippetId, generateHeaders(jwt))
+//            if (!permRm) return ResponseEntity.status(405).build()
+
             assetService.deleteSnippet(snippetId)
-            ResponseEntity.noContent().build()
+            ResponseEntity.status(200).build()
         } catch (e: Exception) {
             logger.error("Error deleting snippet: {}", e.message)
             ResponseEntity.status(500).build()

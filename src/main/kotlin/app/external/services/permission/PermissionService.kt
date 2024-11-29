@@ -56,13 +56,11 @@ class PermissionService @Autowired constructor(
     fun deleteFromPermission(
         snippetId: String,
         headers: HttpHeaders
-    ) {
+    ): Int {
         val url = "$permissionURL/delete"
         val requestPermEntity = HttpEntity(PermissionRequest(snippetId), headers)
-        val response = restTemplate.postForEntity(url, requestPermEntity, PermissionResponse::class.java)
-        if (response.body == null) {
-            throw Exception("Failed to delete permissions")
-        }
+        val res = restTemplate.postForEntity(url, requestPermEntity, Int::class.java)
+        return res.body!!
     }
 
     fun createPermission(
