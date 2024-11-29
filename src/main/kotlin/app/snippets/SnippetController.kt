@@ -257,7 +257,7 @@ class SnippetController @Autowired constructor(
             "other"
         }
         return SnippetDataUi(
-            snippetId = snippetDto.snippetId,
+            id = snippetDto.snippetId,
             name = snippetDto.title,
             content = String(content.body!!.bytes),
             language = snippetDto.language,
