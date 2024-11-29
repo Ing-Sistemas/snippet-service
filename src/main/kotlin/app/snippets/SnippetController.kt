@@ -67,7 +67,7 @@ class SnippetController @Autowired constructor(
     @PutMapping("/update/{snippetId}")
     fun update(
         @PathVariable snippetId: String,
-        @RequestBody updateSnippetDTO: UpdateSnippetDTO,
+        @RequestParam updateSnippetDTO: UpdateSnippetDTO,
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetDataUi> {
         return try {
@@ -76,7 +76,7 @@ class SnippetController @Autowired constructor(
                 ResponseEntity.status(400).body(SnippetResponse(null, "User does not have permission to write snippet"))
             }
             val snippet = snippetService.findSnippetById(snippetId)
-            val toUpdateFile = generateFileFromData(snippet, updateSnippetDTO.code)
+            val toUpdateFile = generateFileFromData(snippet, updateSnippetDTO.content)
             val updatedSnippet = assetService.saveSnippet(snippetId, toUpdateFile)
             if (updatedSnippet.statusCode.is5xxServerError) {
                 throw Exception("Failed to update snippet in asset service")
@@ -86,7 +86,7 @@ class SnippetController @Autowired constructor(
             val snippetDataUi = SnippetDataUi(
                 snippetId,
                 snippet.title,
-                updateSnippetDTO.code,
+                updateSnippetDTO.content,
                 "prinscript",
                 snippet.extension,
                 compliance,
