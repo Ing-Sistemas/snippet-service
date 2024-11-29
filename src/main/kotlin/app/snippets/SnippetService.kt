@@ -31,7 +31,7 @@ class SnippetService @Autowired constructor(
 
     private fun translate(snippetDTO: SnippetDTO): SnippetEntity {
         return SnippetEntity(
-            snippetDTO.snippetId,
+            snippetDTO.id,
             snippetDTO.title,
             snippetDTO.extension,
             snippetDTO.language,

@@ -25,7 +25,7 @@ class PermissionService @Autowired constructor(
         snippetTitle: String,
         headers: HttpHeaders
     ): Boolean {
-        val snippetId = snippetService.findSnippetByTitle(snippetTitle).snippetId
+        val snippetId = snippetService.findSnippetByTitle(snippetTitle).id
         val url = "$permissionURL?snippetId=$snippetId"
         val response = restTemplate.exchange(
             url,
