@@ -1,6 +1,6 @@
 package com.example.springboot.app.utils
 
-import com.example.springboot.app.external.ui.SnippetData
+import com.example.springboot.app.snippets.dto.SnippetDataUi
 
 
 data class Pagination(
@@ -21,5 +21,5 @@ data class PaginatedUsers(
 
 data class PaginatedSnippets(
     val pagination: Pagination,
-    val snippets: List<SnippetData>
+    val snippets: List<SnippetDataUi>
 )

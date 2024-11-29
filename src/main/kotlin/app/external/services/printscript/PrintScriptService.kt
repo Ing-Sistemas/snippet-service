@@ -4,9 +4,9 @@ import com.example.springboot.app.external.services.printscript.request.FormatRe
 import com.example.springboot.app.external.services.printscript.request.PSRequest
 import com.example.springboot.app.external.services.printscript.response.PSResponse
 import com.example.springboot.app.external.services.printscript.response.PSValResponse
-import com.example.springboot.app.rule.FormatRule
-import com.example.springboot.app.testing.TestCase
-import com.example.springboot.app.testing.TestCaseResult
+import com.example.springboot.app.rules.FormatRule
+import com.example.springboot.app.tests.entity.TestCase
+import com.example.springboot.app.tests.enums.TestCaseResult
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity

@@ -3,10 +3,10 @@ package com.example.springboot.app.external.services.permission
 import com.example.springboot.app.external.services.permission.request.PermissionRequest
 import com.example.springboot.app.external.services.permission.request.PermissionShare
 import com.example.springboot.app.external.services.permission.response.PermissionResponse
-import com.example.springboot.app.external.ui.SnippetsGroup
-import com.example.springboot.app.snippet.service.SnippetService
+import com.example.springboot.app.snippets.SnippetService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.web.client.RestTemplate
 import org.springframework.http.HttpHeaders
@@ -20,16 +20,21 @@ class PermissionService @Autowired constructor(
 ) {
     @Value("\${spring.constants.permission_url}") private lateinit var permissionURL: String
 
-    fun hasPermission(
+    fun hasPermissionByTitle(
         permission: String,
         snippetTitle: String,
         headers: HttpHeaders
     ): Boolean {
-        val url = "$permissionURL/get"
         val snippetId = snippetService.findSnippetByTitle(snippetTitle).snippetId
-        val requestPermEntity = HttpEntity(PermissionRequest(snippetId), headers)
-        val response = restTemplate.postForEntity(url, requestPermEntity, PermissionResponse::class.java)
-        return response.body!!.permissions.contains(permission)
+        val url = "$permissionURL?snippetId=$snippetId"
+        val response = restTemplate.exchange(
+            url,
+            HttpMethod.GET,
+            HttpEntity<Any>(headers),
+            PermissionResponse::class.java
+        )
+        val permissions = response.body?.permissions ?: return false
+        return permissions.map { it.name }.contains(permission)
     }
 
     fun hasPermissionBySnippetId(
@@ -37,10 +42,15 @@ class PermissionService @Autowired constructor(
         snippetId: String,
         headers: HttpHeaders
     ): Boolean {
-        val url = "$permissionURL/get"
-        val requestPermEntity = HttpEntity(PermissionRequest(snippetId), headers)
-        val response = restTemplate.postForEntity(url, requestPermEntity, PermissionResponse::class.java)
-        return response.body!!.permissions.contains(permission)
+        val url = "$permissionURL?snippetId=$snippetId"
+        val response = restTemplate.exchange(
+            url,
+            HttpMethod.GET,
+            HttpEntity<Any>(headers),
+            PermissionResponse::class.java
+        )
+        val permissions = response.body?.permissions ?: return false
+        return permissions.map { it.name }.contains(permission)
     }
 
     fun deleteFromPermission(
@@ -50,6 +60,9 @@ class PermissionService @Autowired constructor(
         val url = "$permissionURL/delete"
         val requestPermEntity = HttpEntity(PermissionRequest(snippetId), headers)
         val response = restTemplate.postForEntity(url, requestPermEntity, PermissionResponse::class.java)
+        if (response.body == null) {
+            throw Exception("Failed to delete permissions")
+        }
     }
 
     fun createPermission(
@@ -80,9 +93,16 @@ class PermissionService @Autowired constructor(
 
     fun getAllSnippetsIdsForUser(
         headers: HttpHeaders
-    ): SnippetsGroup {
+    ): List<String> {
         val url = "$permissionURL/get_all"
-        val response = restTemplate.exchange(url, HttpMethod.GET, HttpEntity<Any>(headers), SnippetsGroup::class.java)
+
+        val response = restTemplate.exchange(
+            url, HttpMethod.GET,
+            HttpEntity<Any>(headers),
+            object : ParameterizedTypeReference<List<String>>() {}
+        )
+
+        println("perm response: ${response.body}")
         if (response.statusCode.is4xxClientError) {
             throw Exception("Failed to get all snippets")
         } else if (response.statusCode.is5xxServerError) {

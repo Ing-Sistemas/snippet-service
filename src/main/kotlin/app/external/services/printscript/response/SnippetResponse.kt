@@ -1,6 +1,6 @@
 package com.example.springboot.app.external.services.printscript.response
 
-import com.example.springboot.app.snippet.repository.entity.SnippetEntity
+import com.example.springboot.app.snippets.SnippetEntity
 
 
 data class SnippetResponse (
