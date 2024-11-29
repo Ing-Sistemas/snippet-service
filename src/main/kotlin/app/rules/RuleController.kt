@@ -63,7 +63,7 @@ class RuleController @Autowired constructor(
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<String> {
         return try {
-            val snippetIds = permissionService.getAllSnippetsIdsForUser(generateHeaders(jwt)).snippets
+            val snippetIds = permissionService.getAllSnippetsIdsForUser(generateHeaders(jwt))
             val userId = getUserIdFromJWT(jwt)
             lintEventConsumer.subscription()
             coroutineScope {
@@ -95,7 +95,7 @@ class RuleController @Autowired constructor(
     ): ResponseEntity<String> {
         val snippetId = snippetService.findSnippetByTitle(snippet.title).snippetId
         return try {
-            val hasPermission = permissionService.hasPermission("WRITE", snippetId, generateHeaders(jwt))
+            val hasPermission = permissionService.hasPermissionByTitle("WRITE", snippetId, generateHeaders(jwt))
 
             if(!hasPermission) {
                 ResponseEntity.status(400).body(SnippetResponse(null, "User does not have permission to format snippet"))
@@ -118,7 +118,7 @@ class RuleController @Autowired constructor(
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<String> {
         return try {
-            val snippetIds = permissionService.getAllSnippetsIdsForUser(generateHeaders(jwt)).snippets
+            val snippetIds = permissionService.getAllSnippetsIdsForUser(generateHeaders(jwt))
             val userId = getUserIdFromJWT(jwt)
             formatEventConsumer.subscription()
             coroutineScope {

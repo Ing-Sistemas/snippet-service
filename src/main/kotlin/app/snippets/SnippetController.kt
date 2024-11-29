@@ -70,7 +70,7 @@ class SnippetController @Autowired constructor(
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetDataUi> {
         return try {
-            val hasPermission = permissionService.hasPermission("WRITE", updateSnippetDTO.title , generateHeaders(jwt))
+            val hasPermission = permissionService.hasPermissionByTitle("WRITE", updateSnippetDTO.title , generateHeaders(jwt))
             if(!hasPermission) {
                 ResponseEntity.status(400).body(SnippetResponse(null, "User does not have permission to write snippet"))
             }
@@ -211,7 +211,7 @@ class SnippetController @Autowired constructor(
     ): ResponseEntity<PaginatedSnippets> {
         return try {
             val headers = generateHeaders(jwt)
-            val snippetIds = permissionService.getAllSnippetsIdsForUser(headers).snippets
+            val snippetIds = permissionService.getAllSnippetsIdsForUser(headers)
 
             if (snippetIds.isEmpty()) {
                 return ResponseEntity.ok(PaginatedSnippets(Pagination(page, pageSize, 0), emptyList()))
@@ -248,6 +248,7 @@ class SnippetController @Autowired constructor(
     // TODO agregar el upload
 
     private fun convertSnippetDtoToSnippetData(snippetDto: SnippetDTO, headers: HttpHeaders): SnippetDataUi {
+
         val content = assetService.getSnippet(snippetDto.snippetId)
         val compliance = printScriptService.validateSnippet(snippetDto.snippetId, snippetDto.version, headers).body?.message ?: "not-compliant"
         val author = if (permissionService.hasPermissionBySnippetId("WRITE", snippetDto.snippetId, headers)) {
