@@ -9,6 +9,7 @@ import com.example.springboot.app.external.services.printscript.PrintScriptServi
 import com.example.springboot.app.external.services.permission.request.ShareRequest
 import com.example.springboot.app.external.services.printscript.request.SnippetRequestCreate
 import com.example.springboot.app.external.services.printscript.response.SnippetResponse
+import com.example.springboot.app.snippets.ControllerUtils.generateFileFromData
 import com.example.springboot.app.snippets.dto.SnippetDTO
 import com.example.springboot.app.snippets.dto.SnippetDataUi
 import com.example.springboot.app.snippets.dto.UpdateSnippetDTO
@@ -45,16 +46,16 @@ class SnippetController @Autowired constructor(
             val headers = generateHeaders(jwt)
             val snippetFile = generateFile(snippetRequestCreate)
             logger.info("saving snippet file: $snippetFile")
-            assetService.saveSnippet(snippetDTO.snippetId, snippetFile)
+            assetService.saveSnippet(snippetDTO.id, snippetFile)
             logger.info("saved snippet file!")
 
-            val validation = printScriptService.validateSnippet(snippetDTO.snippetId, snippetDTO.version, headers)
+            val validation = printScriptService.validateSnippet(snippetDTO.id, snippetDTO.version, headers)
             if (validation.statusCode.is4xxClientError) {
                 return ResponseEntity.status(400).body(SnippetResponse(null, validation.body?.error))
             } else if (validation.statusCode.is5xxServerError) {
                 throw Exception("Failed to validate snippet in service")
             }
-            permissionService.createPermission(snippetDTO.snippetId, headers)
+            permissionService.createPermission(snippetDTO.id, headers)
 
             ResponseEntity.ok().body(SnippetResponse(snippetService.createSnippet(snippetDTO), null))
         } catch (e: Exception) {
@@ -70,20 +71,21 @@ class SnippetController @Autowired constructor(
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetDataUi> {
         return try {
-            val hasPermission = permissionService.hasPermissionByTitle("WRITE", updateSnippetDTO.title , generateHeaders(jwt))
+            val hasPermission = permissionService.hasPermissionBySnippetId("WRITE", snippetId , generateHeaders(jwt))
             if(!hasPermission) {
                 ResponseEntity.status(400).body(SnippetResponse(null, "User does not have permission to write snippet"))
             }
-            //val updatedSnippet = assetService.saveSnippet(snippetId, updateSnippetDTO.code)
-//            if (updatedSnippet.statusCode.is5xxServerError) {
-//                throw Exception("Failed to update snippet in asset service")
-//            }
+            val snippet = snippetService.findSnippetById(snippetId)
+            val toUpdateFile = generateFileFromData(snippet, updateSnippetDTO.code)
+            val updatedSnippet = assetService.saveSnippet(snippetId, toUpdateFile)
+            if (updatedSnippet.statusCode.is5xxServerError) {
+                throw Exception("Failed to update snippet in asset service")
+            }
             val headers = generateHeaders(jwt)
             val compliance = printScriptService.validateSnippet(snippetId, "1.1", headers).body?.message ?: "not-compliant"
-            val snippet = snippetService.findSnippetById(snippetId)
             val snippetDataUi = SnippetDataUi(
                 snippetId,
-                updateSnippetDTO.title,
+                snippet.title,
                 updateSnippetDTO.code,
                 "prinscript",
                 snippet.extension,
@@ -103,8 +105,6 @@ class SnippetController @Autowired constructor(
         @RequestBody shareRequest: ShareRequest,
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetDataUi> {
-        // this sends the userId to the Perm service, check if the user can share and if so
-        // the Perm adds the user to the snippet permissions
         return try {
             val hasPermission = permissionService.hasPermissionBySnippetId("SHARE", shareRequest.snippetId, generateHeaders(jwt))
             if(!hasPermission) {
@@ -136,24 +136,22 @@ class SnippetController @Autowired constructor(
         @AuthenticationPrincipal jwt: Jwt,
         @PathVariable snippetId: String
     ): ResponseEntity<Void> {
-        // this sends the userId to the Perm service, check if the user can delete and if so
-        // the Perm deletes the snippet from its db, the asset deletes de file
-        // and the SnippetS deletes the snippet from its db
         return try {
             val hasPermission = permissionService.hasPermissionBySnippetId("WRITE", snippetId, generateHeaders(jwt))
             if (!hasPermission) {
-                return ResponseEntity.status(400).build()
+                return ResponseEntity.status(403).build()
             }
             snippetService.deleteSnippet(snippetId)
             permissionService.deleteFromPermission(snippetId, generateHeaders(jwt))
+//            if (!permRm) return ResponseEntity.status(405).build()
+
             assetService.deleteSnippet(snippetId)
-            ResponseEntity.noContent().build()
+            ResponseEntity.status(200).build()
         } catch (e: Exception) {
             logger.error("Error deleting snippet: {}", e.message)
             ResponseEntity.status(500).build()
         }
     }
-    //todo difference between get a snippet, get all my snippets and get all snippets i have access to
 
     @GetMapping("/get/{snippetId}")
     suspend fun getSnippet(
@@ -169,7 +167,7 @@ class SnippetController @Autowired constructor(
             val compliance = printScriptService.validateSnippet(snippetId, snippet.version, headers).body?.message ?: "not-compliant"
             // TODO()
             val snippetDataUi = SnippetDataUi(
-                snippet.snippetId,
+                snippet.id,
                 snippet.title,
                 code,
                 snippet.language,
@@ -213,9 +211,7 @@ class SnippetController @Autowired constructor(
             val headers = generateHeaders(jwt)
             val snippetIds = permissionService.getAllSnippetsIdsForUser(headers)
 
-            if (snippetIds.isEmpty()) {
-                return ResponseEntity.ok(PaginatedSnippets(Pagination(page, pageSize, 0), emptyList()))
-            }
+            if (snippetIds.isEmpty()) { return ResponseEntity.ok(PaginatedSnippets(Pagination(page, pageSize, 0), emptyList())) }
 
             val snippets = if (snippetName != null) {
                 snippetIds
@@ -224,14 +220,8 @@ class SnippetController @Autowired constructor(
             } else {
                 snippetIds.map { snippetService.findSnippetById(it) }
             }
-            if (snippets.isEmpty()) {
-                return ResponseEntity.ok(PaginatedSnippets(Pagination(page, pageSize, 0), emptyList()))
-            }
 
             val resSnippets = snippets.map { convertSnippetDtoToSnippetData(it, headers) }
-            if (resSnippets.isEmpty()) {
-                return ResponseEntity.ok(PaginatedSnippets(Pagination(page, pageSize, 0), emptyList()))
-            }
 
             val totalCount = snippets.size
             val paginatedSnippets = PaginatedSnippets(
@@ -249,15 +239,15 @@ class SnippetController @Autowired constructor(
 
     private fun convertSnippetDtoToSnippetData(snippetDto: SnippetDTO, headers: HttpHeaders): SnippetDataUi {
 
-        val content = assetService.getSnippet(snippetDto.snippetId)
-        val compliance = printScriptService.validateSnippet(snippetDto.snippetId, snippetDto.version, headers).body?.message ?: "not-compliant"
-        val author = if (permissionService.hasPermissionBySnippetId("WRITE", snippetDto.snippetId, headers)) {
+        val content = assetService.getSnippet(snippetDto.id)
+        val compliance = printScriptService.validateSnippet(snippetDto.id, snippetDto.version, headers).body?.message ?: "not-compliant"
+        val author = if (permissionService.hasPermissionBySnippetId("WRITE", snippetDto.id, headers)) {
             "you"
         } else {
             "other"
         }
         return SnippetDataUi(
-            snippetId = snippetDto.snippetId,
+            id = snippetDto.id,
             name = snippetDto.title,
             content = String(content.body!!.bytes),
             language = snippetDto.language,

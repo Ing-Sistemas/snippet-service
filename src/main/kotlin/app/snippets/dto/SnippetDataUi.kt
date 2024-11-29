@@ -1,7 +1,7 @@
 package com.example.springboot.app.snippets.dto
 
 data class SnippetDataUi(
-    val snippetId: String,
+    val id: String,
     val name: String,
     val content: String,
     val language: String,

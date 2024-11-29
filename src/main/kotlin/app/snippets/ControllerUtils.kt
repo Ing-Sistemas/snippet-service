@@ -45,6 +45,18 @@ object ControllerUtils {
         )
     }
 
+    fun generateFileFromData(
+        snippet: SnippetDTO,
+        code: String
+    ): MultipartFile {
+        return MockMultipartFile(
+            snippet.title,
+            snippet.title,
+            snippet.extension,
+            code.toByteArray()
+        )
+    }
+
     fun getFileContent(file: MultipartFile): String {
         return String(file.bytes)
     }

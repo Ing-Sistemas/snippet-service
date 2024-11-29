@@ -25,7 +25,7 @@ class PermissionService @Autowired constructor(
         snippetTitle: String,
         headers: HttpHeaders
     ): Boolean {
-        val snippetId = snippetService.findSnippetByTitle(snippetTitle).snippetId
+        val snippetId = snippetService.findSnippetByTitle(snippetTitle).id
         val url = "$permissionURL?snippetId=$snippetId"
         val response = restTemplate.exchange(
             url,
@@ -56,13 +56,11 @@ class PermissionService @Autowired constructor(
     fun deleteFromPermission(
         snippetId: String,
         headers: HttpHeaders
-    ) {
+    ): Int {
         val url = "$permissionURL/delete"
         val requestPermEntity = HttpEntity(PermissionRequest(snippetId), headers)
-        val response = restTemplate.postForEntity(url, requestPermEntity, PermissionResponse::class.java)
-        if (response.body == null) {
-            throw Exception("Failed to delete permissions")
-        }
+        val res = restTemplate.postForEntity(url, requestPermEntity, Int::class.java)
+        return res.body!!
     }
 
     fun createPermission(
