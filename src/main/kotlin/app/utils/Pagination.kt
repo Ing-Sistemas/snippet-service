@@ -5,18 +5,18 @@ import com.example.springboot.app.snippets.dto.SnippetDataUi
 
 data class Pagination(
     val page: Int,
-    val pageSize: Int,
+    val page_size: Int,
     val count: Int
 )
 
-data class User(
+data class UserDTOUI(
     val id: String,
     val name: String
 )
 
 data class PaginatedUsers(
     val pagination: Pagination,
-    val users: List<User>
+    val usersDTOUI: List<UserDTOUI>
 )
 
 data class PaginatedSnippets(
