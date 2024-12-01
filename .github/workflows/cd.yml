@@ -79,5 +79,3 @@ jobs:
           docker compose rm -f snippet-service && \
           docker compose pull snippet-service && \
           docker compose up -d snippet-service"
-          
-      
