@@ -57,3 +57,27 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: |
             ghcr.io/ing-sistemas/snippet-service:prod-latest
+
+      - name: Set up Production SSH key
+        uses: webfactory/ssh-agent@v0.5.4
+        if: github.ref == 'refs/heads/main'
+        with:
+          ssh-private-key: ${{ secrets.PROD_KEY }}
+
+      - name: Set up Production SSH key
+        uses: webfactory/ssh-agent@v0.5.4
+        if: github.ref == 'refs/heads/dev'
+        with:
+          ssh-private-key: ${{ secrets.DEV_KEY }}
+
+
+      - name: Deploy to production VM
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+          "cd ${{secrets.WORKDIR}} && \
+          docker compose stop snippet-service && \
+          docker compose rm -f snippet-service && \
+          docker compose pull snippet-service && \
+          docker compose up -d snippet-service"
+          
+      
