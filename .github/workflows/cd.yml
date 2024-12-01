@@ -64,7 +64,7 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.PROD_KEY }}
 
-      - name: Set up Production SSH key
+      - name: Set up Development SSH key
         uses: webfactory/ssh-agent@v0.5.4
         if: github.ref == 'refs/heads/dev'
         with:
