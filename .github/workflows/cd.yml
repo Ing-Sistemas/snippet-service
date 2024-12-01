@@ -58,22 +58,32 @@ jobs:
           tags: |
             ghcr.io/ing-sistemas/snippet-service:prod-latest
 
-      - name: Set up Production SSH key
+      - name: Set up Prod SSH key
         uses: webfactory/ssh-agent@v0.5.4
         if: github.ref == 'refs/heads/main'
         with:
           ssh-private-key: ${{ secrets.PROD_KEY }}
 
-      - name: Set up Development SSH key
+      - name: Deploy to Prod VM
+        if: github.ref == 'refs/heads/main'
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_PROD }} \
+          "cd ${{secrets.WORKDIR}} && \
+          docker compose stop snippet-service && \
+          docker compose rm -f snippet-service && \
+          docker compose pull snippet-service && \
+          docker compose up -d snippet-service"
+
+      - name: Set up Dev SSH key
         uses: webfactory/ssh-agent@v0.5.4
         if: github.ref == 'refs/heads/dev'
         with:
-          ssh-private-key: ${{ secrets.DEV_KEY }}
+          ssh-private-key: ${{ secrets.DEV_KEY  }}
 
-
-      - name: Deploy to production VM
+      - name: Deploy to Dev VM
+        if: github.ref == 'refs/heads/dev'
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_DEV }} \
           "cd ${{secrets.WORKDIR}} && \
           docker compose stop snippet-service && \
           docker compose rm -f snippet-service && \
