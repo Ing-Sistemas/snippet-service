@@ -53,9 +53,6 @@ class SnippetService @Autowired constructor(
         } catch (e: HttpClientErrorException) {
             logger.error("HTTP error while getting users: ${e.message}")
             throw e
-        } catch (e: Exception) {
-            logger.error("Failed to get users: ${e.message}")
-            throw e
         }
     }
 

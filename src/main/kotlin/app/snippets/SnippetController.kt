@@ -10,7 +10,6 @@ import com.example.springboot.app.external.services.permission.request.ShareRequ
 import com.example.springboot.app.external.services.printscript.request.SnippetRequestCreate
 import com.example.springboot.app.external.services.printscript.response.SnippetResponse
 import com.example.springboot.app.snippets.ControllerUtils.generateFileFromData
-import com.example.springboot.app.snippets.ControllerUtils.getUserIdFromJWT
 import com.example.springboot.app.snippets.dto.SnippetDTO
 import com.example.springboot.app.snippets.dto.SnippetDataUi
 import com.example.springboot.app.snippets.dto.UpdateSnippetDTO
@@ -67,7 +66,7 @@ class SnippetController @Autowired constructor(
     @PutMapping("/update/{snippetId}")
     fun update(
         @PathVariable snippetId: String,
-        @RequestParam updateSnippetDTO: UpdateSnippetDTO,
+        @RequestBody updateSnippetDTO: UpdateSnippetDTO,
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetDataUi> {
         return try {
@@ -79,20 +78,21 @@ class SnippetController @Autowired constructor(
             val code = updateSnippetDTO.content
             val snippet = snippetService.findSnippetById(snippetId)
             val toUpdateFile = generateFileFromData(snippet, code)
+            assetService.deleteSnippet(snippetId)
             val updatedSnippet = assetService.saveSnippet(snippetId, toUpdateFile)
             logger.info("Snippet updated successfully in the assetService end, ${updatedSnippet.statusCode}")
             if (updatedSnippet.statusCode.is5xxServerError) {
                 throw Exception("Failed to update snippet in asset service")
             }
-            val headers = generateHeaders(jwt)
-            val compliance = printScriptService.validateSnippet(snippetId, "1.1", headers).body?.message ?: "not-compliant"
+//            val headers = generateHeaders(jwt)
+//            val compliance = printScriptService.validateSnippet(snippetId, "1.1", headers).body?.message ?: "not-compliant"
             val snippetDataUi = SnippetDataUi(
                 snippetId,
                 snippet.title,
                 code,
                 snippet.language,
                 snippet.extension,
-                compliance,
+                "non-compliant",
                 author = jwt.claims["email"].toString()
             )
             ResponseEntity.ok(snippetDataUi)
