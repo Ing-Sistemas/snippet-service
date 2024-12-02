@@ -16,7 +16,6 @@ import com.example.springboot.app.snippets.dto.UpdateSnippetDTO
 import com.example.springboot.app.utils.PaginatedSnippets
 import com.example.springboot.app.utils.PaginatedUsers
 import com.example.springboot.app.utils.Pagination
-import com.example.springboot.app.utils.User
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpHeaders
@@ -71,28 +70,31 @@ class SnippetController @Autowired constructor(
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetDataUi> {
         return try {
-            val hasPermission = permissionService.hasPermissionBySnippetId("WRITE", snippetId , generateHeaders(jwt))
+            val hasPermission = permissionService.hasPermissionBySnippetId("WRITE", snippetId, generateHeaders(jwt))
             if(!hasPermission) {
+                logger.info("User does not have permission to write snippet")
                 ResponseEntity.status(400).body(SnippetResponse(null, "User does not have permission to write snippet"))
             }
+            val code = updateSnippetDTO.content
             val snippet = snippetService.findSnippetById(snippetId)
-            val toUpdateFile = generateFileFromData(snippet, updateSnippetDTO.code)
+            val toUpdateFile = generateFileFromData(snippet, code)
+            assetService.deleteSnippet(snippetId)
             val updatedSnippet = assetService.saveSnippet(snippetId, toUpdateFile)
+            logger.info("Snippet updated successfully in the assetService end, ${updatedSnippet.statusCode}")
             if (updatedSnippet.statusCode.is5xxServerError) {
                 throw Exception("Failed to update snippet in asset service")
             }
-            val headers = generateHeaders(jwt)
-            val compliance = printScriptService.validateSnippet(snippetId, "1.1", headers).body?.message ?: "not-compliant"
+//            val headers = generateHeaders(jwt)
+//            val compliance = printScriptService.validateSnippet(snippetId, "1.1", headers).body?.message ?: "not-compliant"
             val snippetDataUi = SnippetDataUi(
                 snippetId,
                 snippet.title,
-                updateSnippetDTO.code,
-                "prinscript",
+                code,
+                snippet.language,
                 snippet.extension,
-                compliance,
+                "non-compliant",
                 author = jwt.claims["email"].toString()
             )
-
             ResponseEntity.ok(snippetDataUi)
         } catch (e: Exception) {
             logger.error("Error updating snippet: {}", e.message)
@@ -184,16 +186,13 @@ class SnippetController @Autowired constructor(
     @GetMapping("/get_users")
     fun getUserFriends(
         @AuthenticationPrincipal jwt: Jwt,
-        @RequestParam(required = false) name: String,
-        @RequestParam(required = false) page: Int,
-        @RequestParam(required = false) pageSize: Int,
+        @RequestParam(required = false, defaultValue = "") name: String,
+        @RequestParam(required = false, defaultValue = "0") page: Int,
+        @RequestParam(required = false, defaultValue = "10") pageSize: Int,
     ): ResponseEntity<PaginatedUsers> {
         return try {
-            // TODO
-            val userFriends = emptyList<User>()
-            val pag = Pagination(page, pageSize, pageSize)
-            val res = PaginatedUsers(pag, userFriends)
-            ResponseEntity.ok(res)
+            val users = snippetService.getAllUsers(page, pageSize, name, jwt)
+            ResponseEntity.ok(users)
         } catch (e: Exception) {
             logger.error("Error getting user friends: {}", e.message)
             ResponseEntity.status(500).build()
