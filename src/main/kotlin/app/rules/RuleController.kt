@@ -93,7 +93,7 @@ class RuleController @Autowired constructor(
         @RequestBody snippet: SnippetRequestCreate,//TODO change request body class
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<String> {
-        val snippetId = snippetService.findSnippetByTitle(snippet.title).snippetId
+        val snippetId = snippetService.findSnippetByTitle(snippet.title).id
         return try {
             val hasPermission = permissionService.hasPermissionByTitle("WRITE", snippetId, generateHeaders(jwt))
 

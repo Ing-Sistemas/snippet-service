@@ -41,7 +41,7 @@ class TestController @Autowired constructor(
         }
     }
 
-    @PostMapping("/test")
+    @PutMapping("/test")
     fun postTestCase(
         @AuthenticationPrincipal jwt: Jwt,
         @RequestBody testCase: AddTestCaseDTO,
@@ -49,6 +49,19 @@ class TestController @Autowired constructor(
     ): ResponseEntity<TestCaseDTO> {
         return try {
             // TODO validate permission instead
+            if (testCase.id != null && testService.existsById(testCase.id)) {
+                // update the test case
+                val test = testService.updateTest(testCase)
+                val testCaseDTO = TestCaseDTO(
+                    id = test.id,
+                    name = test.name,
+                    input = test.input,
+                    output = test.output,
+                    status = test.snippetTests.firstOrNull()?.status ?: TestStatus.PENDING
+                )
+                return ResponseEntity.ok(testCaseDTO)
+            }
+
             val test = testService.addTest(testCase, sId)
             val testCaseDTO = TestCaseDTO(
                 id = test.id,

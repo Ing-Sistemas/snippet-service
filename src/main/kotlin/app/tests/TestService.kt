@@ -62,6 +62,24 @@ class TestService @Autowired constructor(
         testCaseRepository.deleteById(testId)
     }
 
+    fun existsById(testId: String): Boolean {
+        return testCaseRepository.existsById(testId)
+    }
+
+    fun updateTest(testCase: AddTestCaseDTO): TestCase {
+        logger.info("Updating test with id: ${testCase.id}")
+        val test = testCaseRepository.findById(testCase.id!!)
+            .orElseThrow { IllegalStateException("Test with id: ${testCase.id} not found") }
+        return testCaseRepository.save(
+            test.copy(
+                id = test.id,
+                name = testCase.name,
+                input = testCase.input ?: emptyList(),
+                output = testCase.output ?: emptyList(),
+            )
+        )
+    }
+
     private fun relateWithSnippetTest(testCase: TestCase) {
         snippetTestRepository.save(
             SnippetTest(
