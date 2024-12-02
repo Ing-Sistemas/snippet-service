@@ -1,10 +1,11 @@
 package com.example.springboot.app.external.services.printscript
 
 import com.example.springboot.app.external.services.printscript.request.FormatRequest
+import com.example.springboot.app.external.services.printscript.request.LintRequest
 import com.example.springboot.app.external.services.printscript.request.PSRequest
 import com.example.springboot.app.external.services.printscript.response.PSResponse
 import com.example.springboot.app.external.services.printscript.response.PSValResponse
-import com.example.springboot.app.rules.FormatRule
+import com.example.springboot.app.rules.dto.RuleDTO
 import com.example.springboot.app.tests.entity.TestCase
 import com.example.springboot.app.tests.enums.TestCaseResult
 import org.springframework.beans.factory.annotation.Autowired
@@ -67,24 +68,27 @@ class PrintScriptService @Autowired constructor (
     // for async formatting
     fun autoFormat(
         snippetId: String,
-        rule: FormatRule,
+        userId: String,
+        rules: List<RuleDTO>
     ){
         val url = "$psUrl/auto_format"
-        val requestEntity = HttpEntity(FormatRequest(snippetId, rule))
+        val requestEntity = HttpEntity(FormatRequest(snippetId, userId ,rules))
         val response = restTemplate.postForEntity(url, requestEntity, PSResponse::class.java)
         if (response.body == null) {
-            throw Exception("Failed to format snippet")//todo, instead of throwing, change status in asset service maybe (?)
+            throw Exception("Failed to format snippet")//CHANGE, instead of throwing, change status in DB
         }
     }
 
     fun autoLint(
         snippetId: String,
+        userId: String,
+        rules: List<RuleDTO>
     ){
         val url = "$psUrl/auto_lint"
-        val requestEntity = HttpEntity(snippetId)
+        val requestEntity = HttpEntity(LintRequest(snippetId, userId, rules))
         val response = restTemplate.postForEntity(url, requestEntity, PSResponse::class.java)
-        if (response.body == null) {
-            throw Exception("Failed to lint snippet")//todo same as above jijiji
+        if (response.statusCode.is4xxClientError) {
+            throw Exception("Failed to lint snippet")//CHANGE, instead of throwing, change status in DB
         }
     }
 

@@ -65,14 +65,15 @@ class RuleController @Autowired constructor(
         return try {
             val snippetIds = permissionService.getAllSnippetsIdsForUser(generateHeaders(jwt))
             val userId = getUserIdFromJWT(jwt)
+            val lintRules = rulesService.getRules(RulesetType.LINT, userId)
             lintEventConsumer.subscription()
             coroutineScope {
                 snippetIds.map { snippetId ->
                     launch {
                         val event = LintEvent(
                             snippetId = snippetId,
-                            rule = LintRule("TEMP_RULE"),
-                            userId = userId
+                            userId = userId,
+                            rules = lintRules
                         )
                         lintEventProducer.publish(event)
                     }
@@ -120,14 +121,15 @@ class RuleController @Autowired constructor(
         return try {
             val snippetIds = permissionService.getAllSnippetsIdsForUser(generateHeaders(jwt))
             val userId = getUserIdFromJWT(jwt)
+            val formatRules = rulesService.getRules(RulesetType.FORMAT, userId)
             formatEventConsumer.subscription()
             coroutineScope {
                 snippetIds.map { snippetId ->
                     launch {
                         val event = FormatEvent(
                             snippetId = snippetId,
-                            rule = FormatRule("TEMP_RULE"),
-                            userId = userId
+                            userId = userId,
+                            rules = formatRules
                         )
                         formatEventProducer.publish(event)
                     }

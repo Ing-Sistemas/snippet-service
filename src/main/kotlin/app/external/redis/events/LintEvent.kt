@@ -1,9 +1,9 @@
 package com.example.springboot.app.external.redis.events
 
-import com.example.springboot.app.rules.LintRule
+import com.example.springboot.app.rules.dto.RuleDTO
 
 data class LintEvent(
     val snippetId: String,
-    val rule: LintRule,
-    val userId: String
+    val userId: String,
+    val rules: List<RuleDTO>
 ): Event

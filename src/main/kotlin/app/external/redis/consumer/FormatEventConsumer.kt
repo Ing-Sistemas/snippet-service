@@ -30,7 +30,8 @@ class FormatEventConsumer @Autowired constructor(
 
     override fun onMessage(record: ObjectRecord<String, FormatEvent>) {
         Thread.sleep(1000 * 10)
-        logger.info("Id: ${record.id}, Value: ${record.value}, Stream: ${record.stream}, Group: $groupId")
-        //externalService.format(record.value, )
+        val eventValue = record.value
+        logger.info("Id: ${record.id}, Value: ${eventValue}, Stream: ${record.stream}, Group: $groupId")
+        printScriptService.autoFormat(eventValue.snippetId, eventValue.userId, eventValue.rules)
     }
 }
