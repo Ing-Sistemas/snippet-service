@@ -37,15 +37,14 @@ class SnippetService @Autowired constructor(
 
     fun getAllUsers(page: Int, pageSize: Int, name: String, jwt: Jwt): PaginatedUsers {
         return try {
-            logger.info("Getting all users")
 
             val userId = getUserIdFromJWT(jwt)
 
-            val usersRE = userUtils.getUsers(page, pageSize, name, jwt)
+            val usersRE = userUtils.getUsers(page, pageSize, name)
 
             val users = usersRE.body?.filter { it.user_id != userId } ?: emptyList()
             val userDTOList = users.map { UserDTOUI(it.user_id, it.nickname) }
-
+            logger.info("Users: $users")
             PaginatedUsers(
                 pagination = Pagination(page, pageSize, users.size),
                 usersDTOUI = userDTOList
