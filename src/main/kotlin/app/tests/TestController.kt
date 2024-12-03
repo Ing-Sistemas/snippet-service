@@ -98,7 +98,7 @@ class TestController @Autowired constructor(
     fun runTests(
         @AuthenticationPrincipal jwt: Jwt,
         @RequestBody testCase: TestCaseDTO,
-        @RequestParam sId: String
+        @RequestBody sId: String
     ): ResponseEntity<TestCaseResult> {
         return try {
             val userId = getUserIdFromJWT(jwt)
