@@ -97,7 +97,7 @@ class TestController @Autowired constructor(
     @PutMapping("/test/run_tests")
     fun runTests(
         @AuthenticationPrincipal jwt: Jwt,
-        @RequestParam testCase: TestCaseDTO,
+        @RequestBody testCase: TestCaseDTO,
         @RequestParam snippetId: String
     ): ResponseEntity<TestCaseResult> {
         return try {
