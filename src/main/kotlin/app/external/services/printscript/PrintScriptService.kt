@@ -5,6 +5,7 @@ import com.example.springboot.app.external.services.printscript.request.PSReques
 import com.example.springboot.app.external.services.printscript.response.PSResponse
 import com.example.springboot.app.external.services.printscript.response.PSValResponse
 import com.example.springboot.app.rules.FormatRule
+import com.example.springboot.app.tests.dto.AddTestCaseDTO
 import com.example.springboot.app.tests.dto.TestCaseDTO
 import com.example.springboot.app.tests.entity.TestCase
 import com.example.springboot.app.tests.enums.TestCaseResult
@@ -90,7 +91,7 @@ class PrintScriptService @Autowired constructor (
         }
     }
 
-    fun runTests(test: TestCaseDTO, userId: String, snippetId: String): TestCaseResult {
+    fun runTests(test: AddTestCaseDTO, userId: String, snippetId: String): TestCaseResult {
         val url = "$psUrl/run_tests"
         val entityToPass = TestRunHttp(test, snippetId)
         val requestEntity = HttpEntity(entityToPass)

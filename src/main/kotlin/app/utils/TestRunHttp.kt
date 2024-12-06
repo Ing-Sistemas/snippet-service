@@ -1,8 +1,8 @@
 package com.example.springboot.app.utils
 
-import com.example.springboot.app.tests.dto.TestCaseDTO
+import com.example.springboot.app.tests.dto.AddTestCaseDTO
 
 data class TestRunHttp(
-    val testCaseDTO: TestCaseDTO,
+    val testCaseDTO: AddTestCaseDTO,
     val snippetId: String,
 )
