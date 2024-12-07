@@ -7,7 +7,6 @@ import org.jetbrains.annotations.NotNull
 @Entity
 data class Rule (
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @NotNull
     val id: String,
 

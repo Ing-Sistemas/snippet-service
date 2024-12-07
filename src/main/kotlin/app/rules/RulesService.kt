@@ -26,10 +26,11 @@ class RulesService
     fun getRules(ruleType: RulesetType, userId: String): List<RuleDTO> {
         logger.info("Getting rules for $ruleType")
         val rules = ruleRepository.findAllRulesByUserIdAndType(userId, ruleType)
-
+        logger.info("Found rules ${rules.map {it.name}}")
         if (rules.isEmpty()) {
             val defaultRules = genDefaultRules(ruleType)
             defaultRules.forEach {
+                logger.info("Saving rule ${it.name} with value ${it.value.toString()}")
                 ruleRepository.save(
                     Rule(
                         id = it.id,
@@ -38,11 +39,13 @@ class RulesService
                         type = it.ruleType
                     )
                 )
+                val savedRule = ruleRepository.findRuleById(it.id)
+                logger.info("Saving user rule ${savedRule.name}")
                 ruleUserRepository.save(
                     RulesUserEntity(
                         userId = userId,
                         isActive = it.isActive,
-                        rule = ruleRepository.findRuleById(it.id),
+                        rule = savedRule,
                     )
                 )
             }
@@ -90,7 +93,8 @@ class RulesService
                 )
                 FormatConfig::class.memberProperties.map { property ->
                     val name = property.name
-                    val value = property.get(config)?.toString() ?: "null"
+                    val value = property.get(config).toString()
+                    logger.info("Generating rule $name with value $value")
 
                     RuleDTO(
                         id = UUID.randomUUID().toString(),
@@ -103,17 +107,17 @@ class RulesService
             }
 
             RulesetType.LINT -> {
-                val availableRules = listOf(
-                    "identifier_format",
-                    "mandatory-variable-or-literal-in-println",
-                    "mandatory-variable-or-literal-in-readInput",
+                val availableRules = mapOf(
+                    "identifier_format" to "none",
+                    "mandatory-variable-or-literal-in-println" to false,
+                    "mandatory-variable-or-literal-in-readInput" to false,
                 )
-                availableRules.map { ruleName ->
+                availableRules.map { (name, value)  ->
                     RuleDTO(
                         id = UUID.randomUUID().toString(),
-                        name = ruleName,
+                        name = name,
                         isActive = false,
-                        value = null, // "camel case" or "snake case"
+                        value = value, // "camel case" or "snake case"
                         ruleType = RulesetType.LINT,
                     )
                 }

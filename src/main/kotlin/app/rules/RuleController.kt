@@ -24,6 +24,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.*
+import java.util.*
 
 @RestController
 @RequestMapping("/api")
@@ -42,10 +43,13 @@ class RuleController @Autowired constructor(
 
     @GetMapping("/{ruleType}/rules")
     fun getRules(
-        @PathVariable ruleType: RulesetType,
+        @PathVariable ruleType: String,
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<List<RuleDTO>> {
-        return ResponseEntity.ok(rulesService.getRules(ruleType, getUserIdFromJWT(jwt)))
+        val ruleSetType = RulesetType.valueOf(ruleType.uppercase(Locale.getDefault()))
+        val rules = rulesService.getRules(ruleSetType, getUserIdFromJWT(jwt))
+        logger.info("Returning rules : ${rules.map { it.name }}")
+        return ResponseEntity.ok(rules)
     }
 
     @PostMapping("/{ruleType}")
