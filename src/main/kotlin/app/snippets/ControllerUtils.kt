@@ -36,6 +36,13 @@ object ControllerUtils {
         }
     }
 
+    fun generateHeadersFromStr(token: String): HttpHeaders {
+        return HttpHeaders().apply {
+            set("Authorization", "Bearer $token")
+            contentType = MediaType.APPLICATION_JSON
+        }
+    }
+
     fun generateFile(snippetRequestCreate: SnippetRequestCreate): MultipartFile {
         return MockMultipartFile(
             snippetRequestCreate.title,

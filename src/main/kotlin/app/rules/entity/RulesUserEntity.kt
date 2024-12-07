@@ -1,5 +1,6 @@
 package com.example.springboot.app.rules.entity
 
+import com.example.springboot.app.rules.enums.Compliance
 import jakarta.persistence.*
 import java.util.*
 
@@ -15,6 +16,10 @@ data class RulesUserEntity(
 
     @Column(name = "is_active", nullable = false)
     var isActive: Boolean = false,
+
+    @Column(name="compilace", nullable = false)
+    @Enumerated(EnumType.STRING)
+    var compliance: Compliance = Compliance.PENDING,
 
     @ManyToOne
     @JoinColumn(name = "ruleId", referencedColumnName = "id", nullable = false)
