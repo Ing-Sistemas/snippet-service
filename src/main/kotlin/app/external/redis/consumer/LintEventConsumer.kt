@@ -10,13 +10,14 @@ import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.data.redis.stream.StreamReceiver
 import org.springframework.stereotype.Component
 import java.time.Duration
+import org.springframework.context.annotation.Lazy
 
 @Component
 class LintEventConsumer @Autowired constructor(
     redis: ReactiveRedisTemplate<String, String>,
     @Value("\${stream.key.linter}") streamKey: String,
     @Value("\${groups.linter}") groupId: String,
-    private val printScriptService: PrintScriptService
+    @Lazy private val printScriptService: PrintScriptService
 ) : RedisStreamConsumer<LintEvent>(streamKey, groupId, redis){
 
     private val logger = LoggerFactory.getLogger(LintEventConsumer::class.java)

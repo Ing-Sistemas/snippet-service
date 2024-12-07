@@ -36,8 +36,7 @@ class RulesService
     private val lintEventConsumer: LintEventConsumer,
     private val formatEventConsumer: FormatEventConsumer,
     private val formatEventProducer: FormatEventProducer,
-    private val userUtils: UserUtils
-
+    private val userUtils: UserUtils,
     ) {
     private val logger = LoggerFactory.getLogger(RulesService::class.java)
 

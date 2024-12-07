@@ -10,13 +10,14 @@ import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.data.redis.stream.StreamReceiver
 import org.springframework.stereotype.Component
 import java.time.Duration
+import org.springframework.context.annotation.Lazy
 
 @Component
 class FormatEventConsumer @Autowired constructor(
     redis: ReactiveRedisTemplate<String, String>,
     @Value("\${stream.key.formatter}") streamKey: String,
     @Value("\${groups.formatter}") groupId: String,
-    private val printScriptService: PrintScriptService
+    @Lazy private val printScriptService: PrintScriptService
 ) : RedisStreamConsumer<FormatEvent>(streamKey, groupId, redis){
 
     private val logger = LoggerFactory.getLogger(FormatEventConsumer::class.java)

@@ -19,13 +19,12 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
-import kotlin.math.E
-
+import org.springframework.context.annotation.Lazy
 @Service
 class PrintScriptService @Autowired constructor (
     private val restTemplate: RestTemplate,
     private val userUtils: UserUtils,
-    private val rulesService: RulesService
+    @Lazy private val rulesService: RulesService
 ){
     @Value("\${spring.constants.print_script_url}") private lateinit var psUrl: String
 
