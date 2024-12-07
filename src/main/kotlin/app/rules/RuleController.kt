@@ -49,7 +49,7 @@ class RuleController @Autowired constructor(
     }
 
     @PostMapping("/{ruleType}")
-    fun editRule(
+    suspend fun editRule(
         @PathVariable ruleType: RulesetType,
         @RequestBody rules: List<AddRuleDTO>,
         @AuthenticationPrincipal jwt: Jwt
