@@ -15,20 +15,14 @@ import com.example.springboot.app.rules.enums.Compliance
 import com.example.springboot.app.rules.enums.RulesetType
 import com.example.springboot.app.rules.repository.RuleRepository
 import com.example.springboot.app.rules.repository.RuleUserRepository
-import com.example.springboot.app.snippets.ControllerUtils.generateHeaders
 import com.example.springboot.app.snippets.ControllerUtils.generateHeadersFromStr
-import com.example.springboot.app.snippets.ControllerUtils.getUserIdFromJWT
 import com.example.springboot.app.utils.FormatConfig
 import com.example.springboot.app.utils.UserUtils
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.HttpHeaders
-import org.springframework.http.ResponseEntity
-import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Service
-import org.springframework.web.bind.annotation.PostMapping
 import java.util.*
 import kotlin.reflect.full.memberProperties
 
@@ -79,7 +73,7 @@ class RulesService
         }
     }
 
-    fun updateRules(
+    suspend fun updateRules(
         ruleType: RulesetType,
         newRules: List<AddRuleDTO>,
         userId: String
@@ -100,7 +94,11 @@ class RulesService
                 )
             }
         }
-        // TODO missing sending to the ps service part
+        val message = when (ruleType) {
+            RulesetType.FORMAT -> formatAllSnippets(userId)
+            RulesetType.LINT -> lintAllSnippets(userId)
+        }
+        logger.info(message)
     }
 
     private fun genDefaultRules(ruleType: RulesetType): List<RuleDTO> {
@@ -178,7 +176,7 @@ class RulesService
 
     private suspend fun formatAllSnippets(
         userId: String
-    ): ResponseEntity<String> {
+    ): String {
         return try {
             val jwt = userUtils.getAuth0AccessToken()
             val snippetIds = permissionService.getAllSnippetsIdsWithUserId(generateHeadersFromStr(jwt!!), userId)
@@ -197,10 +195,10 @@ class RulesService
                 }.forEach { it.join() }
             }
 
-            ResponseEntity.ok().body("Started formatting all snippets")
+            "Started formatting all snippets"
         } catch (e: Exception) {
             logger.error("Error formatting all snippets: {}", e.message)
-            ResponseEntity.status(500).build()
+            "Error linting all snippets"
         }
     }
 
