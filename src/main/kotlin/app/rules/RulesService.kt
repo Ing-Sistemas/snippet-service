@@ -1,16 +1,34 @@
 package com.example.springboot.app.rules
 
+import com.example.springboot.app.external.redis.consumer.FormatEventConsumer
+import com.example.springboot.app.external.redis.consumer.LintEventConsumer
+import com.example.springboot.app.external.redis.events.FormatEvent
+import com.example.springboot.app.external.redis.events.LintEvent
+import com.example.springboot.app.external.redis.producer.FormatEventProducer
+import com.example.springboot.app.external.redis.producer.LintEventProducer
+import com.example.springboot.app.external.services.permission.PermissionService
 import com.example.springboot.app.rules.dto.AddRuleDTO
 import com.example.springboot.app.rules.dto.RuleDTO
 import com.example.springboot.app.rules.entity.Rule
 import com.example.springboot.app.rules.entity.RulesUserEntity
+import com.example.springboot.app.rules.enums.Compliance
 import com.example.springboot.app.rules.enums.RulesetType
 import com.example.springboot.app.rules.repository.RuleRepository
 import com.example.springboot.app.rules.repository.RuleUserRepository
+import com.example.springboot.app.snippets.ControllerUtils.generateHeaders
+import com.example.springboot.app.snippets.ControllerUtils.generateHeadersFromStr
+import com.example.springboot.app.snippets.ControllerUtils.getUserIdFromJWT
 import com.example.springboot.app.utils.FormatConfig
+import com.example.springboot.app.utils.UserUtils
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpHeaders
+import org.springframework.http.ResponseEntity
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Service
+import org.springframework.web.bind.annotation.PostMapping
 import java.util.*
 import kotlin.reflect.full.memberProperties
 
@@ -18,9 +36,15 @@ import kotlin.reflect.full.memberProperties
 class RulesService
 @Autowired constructor(
     private val ruleRepository: RuleRepository,
-    private val ruleUserRepository: RuleUserRepository
+    private val ruleUserRepository: RuleUserRepository,
+    private val permissionService: PermissionService,
+    private val lintEventProducer: LintEventProducer,
+    private val lintEventConsumer: LintEventConsumer,
+    private val formatEventConsumer: FormatEventConsumer,
+    private val formatEventProducer: FormatEventProducer,
+    private val userUtils: UserUtils
 
-) {
+    ) {
     private val logger = LoggerFactory.getLogger(RulesService::class.java)
 
     fun getRules(ruleType: RulesetType, userId: String): List<RuleDTO> {
@@ -122,6 +146,73 @@ class RulesService
                     )
                 }
             }
+        }
+    }
+
+    private suspend fun lintAllSnippets(
+        userId: String
+    ): String {
+        return try {
+            val jwt = userUtils.getAuth0AccessToken()
+            val snippetIds = permissionService.getAllSnippetsIdsWithUserId(generateHeadersFromStr(jwt!!), userId)
+            val lintRules = getRules(RulesetType.LINT, userId)
+            lintEventConsumer.subscription()
+            coroutineScope {
+                snippetIds.map { snippetId ->
+                    launch {
+                        val event = LintEvent(
+                            snippetId = snippetId,
+                            userId = userId,
+                            rules = lintRules
+                        )
+                        lintEventProducer.publish(event)
+                    }
+                }.forEach { it.join() }
+            }
+            "Started linting all snippets"
+        } catch (e: Exception) {
+            logger.error("Error linting all snippets: {}", e.message)
+            "Error linting all snippets"
+        }
+    }
+
+    private suspend fun formatAllSnippets(
+        userId: String
+    ): ResponseEntity<String> {
+        return try {
+            val jwt = userUtils.getAuth0AccessToken()
+            val snippetIds = permissionService.getAllSnippetsIdsWithUserId(generateHeadersFromStr(jwt!!), userId)
+            val formatRules = getRules(RulesetType.FORMAT, userId)
+            formatEventConsumer.subscription()
+            coroutineScope {
+                snippetIds.map { snippetId ->
+                    launch {
+                        val event = FormatEvent(
+                            snippetId = snippetId,
+                            userId = userId,
+                            rules = formatRules
+                        )
+                        formatEventProducer.publish(event)
+                    }
+                }.forEach { it.join() }
+            }
+
+            ResponseEntity.ok().body("Started formatting all snippets")
+        } catch (e: Exception) {
+            logger.error("Error formatting all snippets: {}", e.message)
+            ResponseEntity.status(500).build()
+        }
+    }
+
+    fun changeUserRuleCompliance(
+        userId: String,
+        ruleId: String,
+        compliance: Compliance
+    ) {
+        val userRule = ruleUserRepository.findFirstByUserIdAndRuleId(userId, ruleId)
+        userRule?.let {
+            userRule.compliance = compliance
+            ruleUserRepository.save(userRule)
         }
     }
 }

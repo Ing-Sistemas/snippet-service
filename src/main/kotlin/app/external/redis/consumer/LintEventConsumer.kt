@@ -33,5 +33,6 @@ class LintEventConsumer @Autowired constructor(
         val eventValue = record.value
         logger.info("Id: ${record.id}, Value: ${eventValue}, Stream: ${record.stream}, Group: $groupId")
         printScriptService.autoLint(eventValue.snippetId, eventValue.userId ,eventValue.rules)
+
     }
 }

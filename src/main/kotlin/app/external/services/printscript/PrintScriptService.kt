@@ -5,9 +5,13 @@ import com.example.springboot.app.external.services.printscript.request.LintRequ
 import com.example.springboot.app.external.services.printscript.request.PSRequest
 import com.example.springboot.app.external.services.printscript.response.PSResponse
 import com.example.springboot.app.external.services.printscript.response.PSValResponse
+import com.example.springboot.app.rules.RulesService
 import com.example.springboot.app.rules.dto.RuleDTO
+import com.example.springboot.app.rules.enums.Compliance
+import com.example.springboot.app.snippets.ControllerUtils
 import com.example.springboot.app.tests.entity.TestCase
 import com.example.springboot.app.tests.enums.TestCaseResult
+import com.example.springboot.app.utils.UserUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
@@ -15,10 +19,13 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
+import kotlin.math.E
 
 @Service
 class PrintScriptService @Autowired constructor (
     private val restTemplate: RestTemplate,
+    private val userUtils: UserUtils,
+    private val rulesService: RulesService
 ){
     @Value("\${spring.constants.print_script_url}") private lateinit var psUrl: String
 
@@ -72,11 +79,10 @@ class PrintScriptService @Autowired constructor (
         rules: List<RuleDTO>
     ){
         val url = "$psUrl/auto_format"
-        val requestEntity = HttpEntity(FormatRequest(snippetId, userId ,rules))
+        val jwt = userUtils.getAuth0AccessToken()
+        val requestEntity = HttpEntity(FormatRequest(snippetId, userId ,rules), ControllerUtils.generateHeadersFromStr(jwt!!))
         val response = restTemplate.postForEntity(url, requestEntity, PSResponse::class.java)
-        if (response.body == null) {
-            throw Exception("Failed to format snippet")//CHANGE, instead of throwing, change status in DB
-        }
+        processResponse(response, userId, rules)
     }
 
     fun autoLint(
@@ -85,11 +91,10 @@ class PrintScriptService @Autowired constructor (
         rules: List<RuleDTO>
     ){
         val url = "$psUrl/auto_lint"
-        val requestEntity = HttpEntity(LintRequest(snippetId, userId, rules))
+        val jwt = userUtils.getAuth0AccessToken()
+        val requestEntity = HttpEntity(LintRequest(snippetId, userId, rules), ControllerUtils.generateHeadersFromStr(jwt!!))
         val response = restTemplate.postForEntity(url, requestEntity, PSResponse::class.java)
-        if (response.statusCode.is4xxClientError) {
-            throw Exception("Failed to lint snippet")//CHANGE, instead of throwing, change status in DB
-        }
+        processResponse(response, userId, rules)
     }
 
     fun runTests(test: TestCase, userId: String): TestCaseResult {
@@ -103,6 +108,32 @@ class PrintScriptService @Autowired constructor (
             TestCaseResult.SUCCESS
         } else {
             TestCaseResult.FAIL
+        }
+    }
+
+    private fun processResponse(response: ResponseEntity<PSResponse>, userId: String, rules: List<RuleDTO>): ResponseEntity<String> {
+        return when {
+            response.statusCode.is2xxSuccessful -> {
+                rules.forEach { rule ->
+                    rulesService.changeUserRuleCompliance(userId, rule.id, Compliance.COMPLIANT)
+                }
+                ResponseEntity.ok(response.body!!.message)
+            }
+            response.statusCode.is4xxClientError -> {
+                rules.forEach { rule ->
+                    rulesService.changeUserRuleCompliance(userId, rule.id, Compliance.NOT_COMPLIANT)
+                }
+                ResponseEntity.status(400).body(response.body!!.message)
+            }
+            response.statusCode.is5xxServerError -> {
+                rules.forEach { rule ->
+                    rulesService.changeUserRuleCompliance(userId, rule.id, Compliance.FAILED)
+                }
+                ResponseEntity.status(500).body(response.body!!.message)
+            }
+            else -> {
+                throw Exception("Failed to process response")
+            }
         }
     }
 }

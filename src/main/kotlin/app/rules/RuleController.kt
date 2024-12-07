@@ -33,10 +33,6 @@ class RuleController @Autowired constructor(
     private val snippetService: SnippetService,
     private val permissionService: PermissionService,
     private val printScriptService: PrintScriptService,
-    private val lintEventProducer: LintEventProducer,
-    private val lintEventConsumer: LintEventConsumer,
-    private val formatEventConsumer: FormatEventConsumer,
-    private val formatEventProducer: FormatEventProducer,
 ) {
 
     private val logger = LoggerFactory.getLogger(RuleController::class.java)
@@ -59,36 +55,6 @@ class RuleController @Autowired constructor(
         @AuthenticationPrincipal jwt: Jwt
     ) {
         return rulesService.updateRules(ruleType, rules, getUserIdFromJWT(jwt))
-    }
-
-    // TODO add to the editRule method
-    @PostMapping("/lint_all")
-    suspend fun lintAllSnippets(
-        @AuthenticationPrincipal jwt: Jwt
-    ): ResponseEntity<String> {
-        return try {
-            val snippetIds = permissionService.getAllSnippetsIdsForUser(generateHeaders(jwt))
-            val userId = getUserIdFromJWT(jwt)
-            val lintRules = rulesService.getRules(RulesetType.LINT, userId)
-            lintEventConsumer.subscription()
-            coroutineScope {
-                snippetIds.map { snippetId ->
-                    launch {
-                        val event = LintEvent(
-                            snippetId = snippetId,
-                            userId = userId,
-                            rules = lintRules
-                        )
-                        lintEventProducer.publish(event)
-                    }
-                }.forEach { it.join() }
-            }
-
-            ResponseEntity.ok().body("Started linting all snippets")
-        } catch (e: Exception) {
-            logger.error("Error linting all snippets: {}", e.message)
-            ResponseEntity.status(500).build()
-        }
     }
 
     //--------------------------------FORMAT----------------------------
@@ -117,35 +83,4 @@ class RuleController @Autowired constructor(
             ResponseEntity.status(500).build()
         }
     }
-
-    @PostMapping("/format_all")
-    suspend fun formatAllSnippets(
-        @AuthenticationPrincipal jwt: Jwt
-    ): ResponseEntity<String> {
-        return try {
-            val snippetIds = permissionService.getAllSnippetsIdsForUser(generateHeaders(jwt))
-            val userId = getUserIdFromJWT(jwt)
-            val formatRules = rulesService.getRules(RulesetType.FORMAT, userId)
-            formatEventConsumer.subscription()
-            coroutineScope {
-                snippetIds.map { snippetId ->
-                    launch {
-                        val event = FormatEvent(
-                            snippetId = snippetId,
-                            userId = userId,
-                            rules = formatRules
-                        )
-                        formatEventProducer.publish(event)
-                    }
-                }.forEach { it.join() }
-            }
-
-            ResponseEntity.ok().body("Started formatting all snippets")
-        } catch (e: Exception) {
-            logger.error("Error formatting all snippets: {}", e.message)
-            ResponseEntity.status(500).build()
-        }
-    }
-
-
 }

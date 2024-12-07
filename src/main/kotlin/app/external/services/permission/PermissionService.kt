@@ -26,7 +26,7 @@ class PermissionService @Autowired constructor(
         headers: HttpHeaders
     ): Boolean {
         val snippetId = snippetService.findSnippetByTitle(snippetTitle).id
-        val url = "$permissionURL?snippetId=$snippetId"
+        val url = "$permissionURL/$snippetId"
         val response = restTemplate.exchange(
             url,
             HttpMethod.GET,
@@ -42,7 +42,7 @@ class PermissionService @Autowired constructor(
         snippetId: String,
         headers: HttpHeaders
     ): Boolean {
-        val url = "$permissionURL?snippetId=$snippetId"
+        val url = "$permissionURL/$snippetId"
         val response = restTemplate.exchange(
             url,
             HttpMethod.GET,
@@ -93,6 +93,27 @@ class PermissionService @Autowired constructor(
         headers: HttpHeaders
     ): List<String> {
         val url = "$permissionURL/get_all"
+        val response = restTemplate.exchange(
+            url, HttpMethod.GET,
+            HttpEntity<Any>(headers),
+            object : ParameterizedTypeReference<List<String>>() {}
+        )
+
+        println("perm response: ${response.body}")
+        if (response.statusCode.is4xxClientError) {
+            throw Exception("Failed to get all snippets")
+        } else if (response.statusCode.is5xxServerError) {
+            throw Exception("Server error")
+        } else {
+            return response.body!!
+        }
+    }
+
+    fun getAllSnippetsIdsWithUserId(
+        headers: HttpHeaders,
+        userId : String
+    ): List<String> {
+        val url = "$permissionURL/get_all/$userId"
 
         val response = restTemplate.exchange(
             url, HttpMethod.GET,
