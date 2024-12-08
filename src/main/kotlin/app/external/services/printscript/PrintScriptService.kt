@@ -6,6 +6,7 @@ import com.example.springboot.app.external.services.printscript.response.PSRespo
 import com.example.springboot.app.external.services.printscript.response.PSValResponse
 import com.example.springboot.app.rules.FormatRule
 import com.example.springboot.app.tests.dto.AddTestCaseDTO
+import com.example.springboot.app.tests.dto.RunTestDTO
 import com.example.springboot.app.tests.dto.TestCaseDTO
 import com.example.springboot.app.tests.entity.TestCase
 import com.example.springboot.app.tests.enums.TestCaseResult
@@ -90,8 +91,7 @@ class PrintScriptService @Autowired constructor (
             throw Exception("Failed to lint snippet")//todo same as above jijiji
         }
     }
-
-    fun runTests(test: AddTestCaseDTO, userId: String, snippetId: String): TestCaseResult {
+    fun runTests(test: RunTestDTO, userId: String, snippetId: String): TestCaseResult {
         val url = "$psUrl/run_tests"
         val entityToPass = TestRunHttp(test, snippetId)
         val requestEntity = HttpEntity(entityToPass)

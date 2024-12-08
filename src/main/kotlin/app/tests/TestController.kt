@@ -5,6 +5,7 @@ import com.example.springboot.app.external.services.printscript.PrintScriptServi
 import com.example.springboot.app.snippets.ControllerUtils.generateHeaders
 import com.example.springboot.app.snippets.ControllerUtils.getUserIdFromJWT
 import com.example.springboot.app.tests.dto.AddTestCaseDTO
+import com.example.springboot.app.tests.dto.RunTestDTO
 import com.example.springboot.app.tests.dto.TestCaseDTO
 import com.example.springboot.app.tests.entity.TestCase
 import com.example.springboot.app.tests.enums.TestCaseResult
@@ -97,7 +98,7 @@ class TestController @Autowired constructor(
     @PutMapping("/test/run_tests")
     fun runTests(
         @AuthenticationPrincipal jwt: Jwt,
-        @RequestBody testCase: AddTestCaseDTO,
+        @RequestBody testCase: RunTestDTO,
         @RequestBody sId: String
     ): ResponseEntity<TestCaseResult> {
         return try {
