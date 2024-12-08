@@ -28,13 +28,15 @@ class OAuth2ResourceServerSecurityConfiguration(@Value("\${auth0.audience}")
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http.authorizeHttpRequests {
             it
-                .requestMatchers("/").permitAll()
+                .requestMatchers(GET, "/api/health/ping").anonymous()
+                .requestMatchers(GET, "/api/health/check").anonymous()
                 .requestMatchers(GET, "/api/test").permitAll()
-                .requestMatchers(GET, "/api/get").hasAuthority("SCOPE_read:snippets")
-                .requestMatchers(POST, "/api/create").hasAuthority("SCOPE_write:snippets")
-                .requestMatchers(PUT, "/api/update").hasAuthority("SCOPE_write:snippets")
-                .requestMatchers(DELETE, "/api/delete").hasAuthority("SCOPE_write:snippets")
+                .requestMatchers(GET, "/api/get").permitAll()
+                .requestMatchers(POST, "/api/create").permitAll()
+                .requestMatchers(PUT, "/api/update").permitAll()
+                .requestMatchers(DELETE, "/api/delete").permitAll()
                 .anyRequest().authenticated()
+
         }
             .oauth2ResourceServer { it.jwt(withDefaults()) }
             .cors {

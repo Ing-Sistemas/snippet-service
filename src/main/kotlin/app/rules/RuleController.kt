@@ -1,11 +1,6 @@
 package com.example.springboot.app.rules
 
-import com.example.springboot.app.external.redis.consumer.FormatEventConsumer
-import com.example.springboot.app.external.redis.consumer.LintEventConsumer
-import com.example.springboot.app.external.redis.events.FormatEvent
-import com.example.springboot.app.external.redis.events.LintEvent
-import com.example.springboot.app.external.redis.producer.FormatEventProducer
-import com.example.springboot.app.external.redis.producer.LintEventProducer
+
 import com.example.springboot.app.external.services.permission.PermissionService
 import com.example.springboot.app.external.services.printscript.PrintScriptService
 import com.example.springboot.app.external.services.printscript.request.SnippetRequestCreate
@@ -16,8 +11,6 @@ import com.example.springboot.app.rules.enums.RulesetType
 import com.example.springboot.app.snippets.ControllerUtils.generateHeaders
 import com.example.springboot.app.snippets.ControllerUtils.getUserIdFromJWT
 import com.example.springboot.app.snippets.SnippetService
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
@@ -48,18 +41,20 @@ class RuleController @Autowired constructor(
         return ResponseEntity.ok(rules)
     }
 
-    @PostMapping("/{ruleType}")
+    @PutMapping("/{ruleType}")
     suspend fun editRule(
-        @PathVariable ruleType: RulesetType,
+        @PathVariable ruleType: String,
         @RequestBody rules: List<AddRuleDTO>,
         @AuthenticationPrincipal jwt: Jwt
     ) {
-        return rulesService.updateRules(ruleType, rules, getUserIdFromJWT(jwt))
+        logger.info("Updating rules for $ruleType")
+        val ruleTypeEnum = RulesetType.valueOf(ruleType)
+        return rulesService.updateRules(ruleTypeEnum, rules, getUserIdFromJWT(jwt))
     }
 
     //--------------------------------FORMAT----------------------------
 
-    @PostMapping("/format")
+    @PutMapping("/format")
     fun formatSnippet(
         @RequestBody snippet: SnippetRequestCreate,//TODO change request body class
         @AuthenticationPrincipal jwt: Jwt

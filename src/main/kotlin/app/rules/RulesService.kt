@@ -22,6 +22,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Service
 import java.util.*
 import kotlin.reflect.full.memberProperties
@@ -79,7 +80,7 @@ class RulesService
     ) {
         logger.info("Updating rules for $ruleType and user with id $userId")
         newRules.forEach { rule ->
-            val userRule = ruleUserRepository.findFirstByUserIdAndRuleId(userId, rule.ruleId)
+            val userRule = ruleUserRepository.findFirstByUserIdAndRuleId(userId, rule.id)
             if (userRule != null) {
                 userRule.isActive = rule.isActive
                 ruleUserRepository.save(userRule)
@@ -88,7 +89,7 @@ class RulesService
                     RulesUserEntity(
                         userId = userId,
                         isActive = rule.isActive,
-                        rule = ruleRepository.findRuleById(rule.ruleId),
+                        rule = ruleRepository.findRuleById(rule.id),
                     ),
                 )
             }
@@ -150,8 +151,10 @@ class RulesService
         userId: String
     ): String {
         return try {
-            val jwt = userUtils.getAuth0AccessToken()
-            val snippetIds = permissionService.getAllSnippetsIdsWithUserId(generateHeadersFromStr(jwt!!), userId)
+//            logger.info("getting token")
+//            val jwt = userUtils.getAuth0AccessToken()
+//            logger.info("token gotten $jwt")
+            val snippetIds = permissionService.getAllSnippetsIdsWithUserId(HttpHeaders(), userId)
             val lintRules = getRules(RulesetType.LINT, userId)
             lintEventConsumer.subscription()
             coroutineScope {
@@ -175,10 +178,13 @@ class RulesService
 
     private suspend fun formatAllSnippets(
         userId: String
+
     ): String {
         return try {
             val jwt = userUtils.getAuth0AccessToken()
-            val snippetIds = permissionService.getAllSnippetsIdsWithUserId(generateHeadersFromStr(jwt!!), userId)
+            logger.info("token gotten $jwt")
+            //val snippetIds = permissionService.getAllSnippetsIdsWithUserId(generateHeadersFromStr(jwt!!), userId)
+            val snippetIds = permissionService.getAllSnippetsIdsWithUserId(HttpHeaders(), userId)
             val formatRules = getRules(RulesetType.FORMAT, userId)
             formatEventConsumer.subscription()
             coroutineScope {

@@ -99,7 +99,7 @@ class PermissionService @Autowired constructor(
             object : ParameterizedTypeReference<List<String>>() {}
         )
 
-        println("perm response: ${response.body}")
+        println("PERMISSION response: ${response.body}")
         if (response.statusCode.is4xxClientError) {
             throw Exception("Failed to get all snippets")
         } else if (response.statusCode.is5xxServerError) {
@@ -113,15 +113,14 @@ class PermissionService @Autowired constructor(
         headers: HttpHeaders,
         userId : String
     ): List<String> {
-        val url = "$permissionURL/get_all/$userId"
 
+        val url = "$permissionURL/get_all/$userId"
         val response = restTemplate.exchange(
             url, HttpMethod.GET,
             HttpEntity<Any>(headers),
             object : ParameterizedTypeReference<List<String>>() {}
         )
-
-        println("perm response: ${response.body}")
+        println("HOLA response: ${response.body}")
         if (response.statusCode.is4xxClientError) {
             throw Exception("Failed to get all snippets")
         } else if (response.statusCode.is5xxServerError) {

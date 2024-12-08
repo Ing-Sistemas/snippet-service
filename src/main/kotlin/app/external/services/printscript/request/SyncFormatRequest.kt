@@ -1,10 +1,9 @@
 package com.example.springboot.app.external.services.printscript.request
 
-import com.example.springboot.app.utils.FormatConfig
+import com.example.springboot.app.rules.dto.RuleDTO
 
-
-data class FormatRequest(
+data class SyncFormatRequest(
     val snippetId: String,
     val userId: String,
-    val config: FormatConfig
+    val rules: List<RuleDTO>
 )

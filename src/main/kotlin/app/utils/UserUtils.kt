@@ -34,6 +34,12 @@ class UserUtils @Autowired constructor(
 
     //TODO see if this token is OP or not
     fun getAuth0AccessToken(): String? {
+        restTemplate.apply {
+            messageConverters.add(FormHttpMessageConverter())
+            messageConverters.add(StringHttpMessageConverter())
+
+        }
+
         val audience = auth0URL + "api/v2/"
 
         val headers = HttpHeaders()
@@ -69,6 +75,7 @@ class UserUtils @Autowired constructor(
             null
         }
     }
+
 
     fun getUsers(
         page: Int,
