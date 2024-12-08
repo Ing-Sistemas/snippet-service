@@ -103,7 +103,7 @@ class TestController @Autowired constructor(
     ): ResponseEntity<TestCaseResult> {
         return try {
             val userId = getUserIdFromJWT(jwt)
-            val result = printScriptService.runTests(validateRequest.testCaseDTO, userId, validateRequest.sId)
+            val result = validateRequest.testCaseDTO?.let { printScriptService.runTests(it, userId, validateRequest.sId) }
             ResponseEntity.ok(result)
         } catch (e: Exception) {
             logger.error("Error running tests: {}", e.message)
