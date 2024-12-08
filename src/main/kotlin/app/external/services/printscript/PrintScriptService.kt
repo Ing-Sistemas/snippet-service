@@ -92,12 +92,12 @@ class PrintScriptService @Autowired constructor (
         }
     }
     fun runTests(test: RunTestDTO, userId: String, snippetId: String): TestCaseResult {
-        val url = "$psUrl/run_tests"
+        val url = "$psUrl/test/run_tests"
         val entityToPass = TestRunHttp(test, snippetId)
         val requestEntity = HttpEntity(entityToPass)
         val response = restTemplate.postForEntity(url, requestEntity, String::class.java)
         if (response.body == null) {
-            throw Exception("Failed to run tests")
+            throw Exception("Failed to run tests ${response.body}")
         }
         return if (response.body == "success") {
             TestCaseResult.SUCCESS

@@ -96,14 +96,15 @@ class TestController @Autowired constructor(
 
 
     // TODO finish
-    @PutMapping("/test/run_tests")
+    @PutMapping("/test/run_tests/{sId}")
     fun runTests(
         @AuthenticationPrincipal jwt: Jwt,
-        @RequestBody validateRequest: ValidateTestRunRequest
+        @RequestBody runTestDTO: RunTestDTO,
+        @PathVariable sId: String
     ): ResponseEntity<TestCaseResult> {
         return try {
             val userId = getUserIdFromJWT(jwt)
-            val result = validateRequest.testCaseDTO?.let { printScriptService.runTests(it, userId, validateRequest.sId) }
+            val result = printScriptService.runTests(runTestDTO, userId, sId)
             ResponseEntity.ok(result)
         } catch (e: Exception) {
             logger.error("Error running tests: {}", e.message)

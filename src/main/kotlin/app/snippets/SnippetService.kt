@@ -44,7 +44,6 @@ class SnippetService @Autowired constructor(
 
             val users = usersRE.body?.filter { it.user_id != userId } ?: emptyList()
             val userDTOList = users.map { UserDTOUI(it.user_id, it.nickname) }
-            logger.info("Users: $users")
             PaginatedUsers(
                 pagination = Pagination(page, pageSize, users.size),
                 usersDTOUI = userDTOList
