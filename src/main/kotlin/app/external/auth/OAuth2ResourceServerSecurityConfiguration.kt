@@ -30,11 +30,6 @@ class OAuth2ResourceServerSecurityConfiguration(@Value("\${auth0.audience}")
             it
                 .requestMatchers(GET, "/api/health/ping").anonymous()
                 .requestMatchers(GET, "/api/health/check").anonymous()
-                .requestMatchers(GET, "/api/test").permitAll()
-                .requestMatchers(GET, "/api/get").permitAll()
-                .requestMatchers(POST, "/api/create").permitAll()
-                .requestMatchers(PUT, "/api/update").permitAll()
-                .requestMatchers(DELETE, "/api/delete").permitAll()
                 .anyRequest().authenticated()
 
         }
