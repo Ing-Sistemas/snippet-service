@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.*
+import kotlin.math.log
 
 @RestController
 @RequestMapping("/api")
@@ -99,12 +100,13 @@ class TestController @Autowired constructor(
     @PutMapping("/test/run_tests/{sId}")
     fun runTests(
         @AuthenticationPrincipal jwt: Jwt,
-        @RequestBody runTestDTO: RunTestDTO,
-        @PathVariable sId: String
+        @PathVariable sId: String,
+        @RequestBody runTestDTO: RunTestDTO
     ): ResponseEntity<TestCaseResult> {
         return try {
-            val userId = getUserIdFromJWT(jwt)
-            val result = printScriptService.runTests(runTestDTO, userId, sId)
+            val headers = generateHeaders(jwt)
+            val result = printScriptService.runTests(runTestDTO, headers, sId)
+            logger.info(result.toString())
             ResponseEntity.ok(result)
         } catch (e: Exception) {
             logger.error("Error running tests: {}", e.message)

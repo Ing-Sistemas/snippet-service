@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 
@@ -91,11 +92,11 @@ class PrintScriptService @Autowired constructor (
             throw Exception("Failed to lint snippet")//todo same as above jijiji
         }
     }
-    fun runTests(test: RunTestDTO, userId: String, snippetId: String): TestCaseResult {
-        val url = "$psUrl/test/run_tests"
-        val entityToPass = TestRunHttp(test, snippetId)
-        val requestEntity = HttpEntity(entityToPass)
+    fun runTests(test: RunTestDTO, headers: HttpHeaders, sId: String): TestCaseResult {
+        val url = "$psUrl/test/run_tests/${sId}"
+        val requestEntity = HttpEntity(test, headers)
         val response = restTemplate.postForEntity(url, requestEntity, String::class.java)
+        println(response.statusCode)
         if (response.body == null) {
             throw Exception("Failed to run tests ${response.body}")
         }
