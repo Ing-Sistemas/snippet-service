@@ -62,7 +62,6 @@ class UserUtils @Autowired constructor(
 
             val responseBody = response.body
             val accessToken = responseBody?.get("access_token") as? String
-            logger.info(accessToken)
             accessToken ?: throw RuntimeException("Access token not found in response")
         } catch (e: HttpClientErrorException) {
             logger.error("HTTP error while requesting Auth0 token: ${e.message}")
