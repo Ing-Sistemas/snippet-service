@@ -33,6 +33,6 @@ class FormatEventConsumer @Autowired constructor(
         Thread.sleep(1000 * 10)
         val eventValue = record.value
         logger.info("Id: ${record.id}, Value: ${eventValue}, Stream: ${record.stream}, Group: $groupId")
-        printScriptService.autoFormat(eventValue.snippetId, eventValue.userId, eventValue.rules)
+        printScriptService.autoFormat(eventValue.snippetId, eventValue.jwt, eventValue.rules)
     }
 }

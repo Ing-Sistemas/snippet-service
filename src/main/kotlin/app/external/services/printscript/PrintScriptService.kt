@@ -3,13 +3,15 @@ package com.example.springboot.app.external.services.printscript
 import com.example.springboot.app.external.services.printscript.request.FormatRequest
 import com.example.springboot.app.external.services.printscript.request.LintRequest
 import com.example.springboot.app.external.services.printscript.request.PSRequest
-import com.example.springboot.app.external.services.printscript.response.PSResponse
+import com.example.springboot.app.external.services.printscript.response.FormatResponse
 import com.example.springboot.app.external.services.printscript.response.PSValResponse
 import com.example.springboot.app.rules.RulesService
 import com.example.springboot.app.rules.dto.RuleDTO
 import com.example.springboot.app.rules.enums.Compliance
 import com.example.springboot.app.rules.enums.RulesetType
-import com.example.springboot.app.snippets.ControllerUtils
+import org.springframework.http.HttpMethod.POST
+import com.example.springboot.app.snippets.ControllerUtils.generateHeaders
+import com.example.springboot.app.snippets.ControllerUtils.getUserIdFromJWT
 import com.example.springboot.app.tests.entity.TestCase
 import com.example.springboot.app.tests.enums.TestCaseResult
 import com.example.springboot.app.utils.FormatConfig
@@ -22,6 +24,10 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import org.springframework.context.annotation.Lazy
+import org.springframework.core.ParameterizedTypeReference
+import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.web.client.exchange
+
 @Service
 class PrintScriptService @Autowired constructor (
     private val restTemplate: RestTemplate,
@@ -50,53 +56,69 @@ class PrintScriptService @Autowired constructor (
     // for sync formatting
     fun format(
         snippetId: String,
-        headers: HttpHeaders
-    ): ResponseEntity<PSResponse> {
+        jwt: Jwt
+    ): ResponseEntity<String> {
         val url = "$psUrl/format"
-        val requestEntity = HttpEntity(snippetId, headers)
-        val response = restTemplate.postForEntity(url, requestEntity, PSResponse::class.java)
-        if (response.body == null) {
-            throw Exception("Failed to format snippet")
+        val formatConfig = generateFormatConfig(rulesService.getRules(RulesetType.FORMAT, getUserIdFromJWT(jwt)))
+        val requestEntity = HttpEntity(FormatRequest(snippetId, formatConfig), generateHeaders(jwt))
+        println(formatConfig.toString())
+        val response = restTemplate.exchange(
+            url,
+            POST,
+            requestEntity,
+            object : ParameterizedTypeReference<String> () {}
+        )
+        if (response.statusCode.is2xxSuccessful) {
+            return response
+        } else {
+            throw Exception("Failed to format snippet: ${response.body}")
         }
-        return response
     }
-
-//    fun lint(
-//        snippetId: String,
-//        headers: HttpHeaders
-//    ): ResponseEntity<PSResponse> {
-//        val url = "$psUrl/lint"
-//        val requestEntity = HttpEntity(snippetId, headers)
-//        val response = restTemplate.postForEntity(url, requestEntity, PSResponse::class.java)
-//        if (response.body == null) {
-//            throw Exception("Failed to lint snippet")
-//        }
-//        return response
-//    }
 
     // for async formatting
     fun autoFormat(
         snippetId: String,
-        userId: String,
+        jwt: Jwt,
         rules: List<RuleDTO>
     ){
         val url = "$psUrl/format"
-        val jwt = userUtils.getAuth0AccessToken()
         val formatConfig = generateFormatConfig(rules)
-        val requestEntity = HttpEntity(FormatRequest(snippetId, userId, formatConfig), ControllerUtils.generateHeadersFromStr(jwt!!))
-        val response = restTemplate.postForEntity(url, requestEntity, PSResponse::class.java)
+        val userId = getUserIdFromJWT(jwt)
+        val requestEntity = HttpEntity(FormatRequest(snippetId, formatConfig), generateHeaders(jwt))
+        val response = restTemplate.exchange(
+            url,
+            POST,
+            requestEntity,
+            object : ParameterizedTypeReference<String> () {}
+        )
         processResponse(response, userId, rules)
     }
 
+    /*
+    fun lint(
+        snippetId: String,
+        headers: HttpHeaders
+    ): ResponseEntity<PSResponse> {
+        val url = "$psUrl/lint"
+        val requestEntity = HttpEntity(snippetId, headers)
+        val response = restTemplate.postForEntity(url, requestEntity, PSResponse::class.java)
+        if (response.body == null) {
+            throw Exception("Failed to lint snippet")
+        }
+        return response
+    }
+     */
+
+
     fun autoLint(
         snippetId: String,
-        userId: String,
+        jwt: Jwt,
         rules: List<RuleDTO>
     ){
         val url = "$psUrl/lint"
-        val jwt = userUtils.getAuth0AccessToken()
-        val requestEntity = HttpEntity(LintRequest(snippetId, userId, rules), ControllerUtils.generateHeadersFromStr(jwt!!))
-        val response = restTemplate.postForEntity(url, requestEntity, PSResponse::class.java)
+        val userId = getUserIdFromJWT(jwt)
+        val requestEntity = HttpEntity(LintRequest(snippetId, rules), generateHeaders(jwt))
+        val response = restTemplate.postForEntity(url, requestEntity, String::class.java)
         processResponse(response, userId, rules)
     }
 
@@ -114,25 +136,25 @@ class PrintScriptService @Autowired constructor (
         }
     }
 
-    private fun processResponse(response: ResponseEntity<PSResponse>, userId: String, rules: List<RuleDTO>): ResponseEntity<String> {
+    private fun processResponse(response: ResponseEntity<String>, userId: String, rules: List<RuleDTO>): ResponseEntity<String> {
         return when {
             response.statusCode.is2xxSuccessful -> {
                 rules.forEach { rule ->
                     rulesService.changeUserRuleCompliance(userId, rule.id, Compliance.COMPLIANT)
                 }
-                ResponseEntity.ok(response.body!!.message)
+                ResponseEntity.ok(response.body!!)
             }
             response.statusCode.is4xxClientError -> {
                 rules.forEach { rule ->
                     rulesService.changeUserRuleCompliance(userId, rule.id, Compliance.NOT_COMPLIANT)
                 }
-                ResponseEntity.status(400).body(response.body!!.message)
+                ResponseEntity.status(400).body(response.body!!)
             }
             response.statusCode.is5xxServerError -> {
                 rules.forEach { rule ->
                     rulesService.changeUserRuleCompliance(userId, rule.id, Compliance.FAILED)
                 }
-                ResponseEntity.status(500).body(response.body!!.message)
+                ResponseEntity.status(500).body(response.body!!)
             }
             else -> {
                 throw Exception("Failed to process response")

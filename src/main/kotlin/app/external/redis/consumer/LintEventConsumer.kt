@@ -33,7 +33,7 @@ class LintEventConsumer @Autowired constructor(
         Thread.sleep(1000 * 10)
         val eventValue = record.value
         logger.info("Id: ${record.id}, Value: ${eventValue}, Stream: ${record.stream}, Group: $groupId")
-        printScriptService.autoLint(eventValue.snippetId, eventValue.userId ,eventValue.rules)
+        printScriptService.autoLint(eventValue.snippetId, eventValue.jwt, eventValue.rules)
 
     }
 }

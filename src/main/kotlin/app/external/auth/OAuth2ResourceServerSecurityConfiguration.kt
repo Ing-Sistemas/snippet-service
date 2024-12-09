@@ -31,9 +31,11 @@ class OAuth2ResourceServerSecurityConfiguration(@Value("\${auth0.audience}")
                 .requestMatchers(GET, "/api/health/ping").anonymous()
                 .requestMatchers(GET, "/api/health/check").anonymous()
                 .anyRequest().authenticated()
-
         }
-            .oauth2ResourceServer { it.jwt(withDefaults()) }
+            .oauth2ResourceServer {
+                it
+                .jwt(withDefaults())
+            }
             .cors {
                 it.configurationSource(corsConfigurationSource())
             }

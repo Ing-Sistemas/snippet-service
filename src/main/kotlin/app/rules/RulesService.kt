@@ -15,7 +15,8 @@ import com.example.springboot.app.rules.enums.Compliance
 import com.example.springboot.app.rules.enums.RulesetType
 import com.example.springboot.app.rules.repository.RuleRepository
 import com.example.springboot.app.rules.repository.RuleUserRepository
-import com.example.springboot.app.snippets.ControllerUtils.generateHeadersFromStr
+import com.example.springboot.app.snippets.ControllerUtils.generateHeaders
+import com.example.springboot.app.snippets.ControllerUtils.getUserIdFromJWT
 import com.example.springboot.app.utils.FormatConfig
 import com.example.springboot.app.utils.UserUtils
 import kotlinx.coroutines.coroutineScope
@@ -23,6 +24,7 @@ import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpHeaders
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Service
 import java.util.*
 import kotlin.reflect.full.memberProperties
@@ -76,8 +78,9 @@ class RulesService
     suspend fun updateRules(
         ruleType: RulesetType,
         newRules: List<AddRuleDTO>,
-        userId: String
+        jwt: Jwt
     ) {
+        val userId = getUserIdFromJWT(jwt)
         logger.info("Updating rules for $ruleType and user with id $userId")
         newRules.forEach { rule ->
             val userRule = ruleUserRepository.findFirstByUserIdAndRuleId(userId, rule.id)
@@ -95,8 +98,8 @@ class RulesService
             }
         }
         val message = when (ruleType) {
-            RulesetType.FORMAT -> formatAllSnippets(userId)
-            RulesetType.LINT -> lintAllSnippets(userId)
+            RulesetType.FORMAT -> formatAllSnippets(jwt)
+            RulesetType.LINT -> lintAllSnippets(jwt)
         }
         logger.info(message)
     }
@@ -148,13 +151,11 @@ class RulesService
     }
 
     private suspend fun lintAllSnippets(
-        userId: String
+        jwt: Jwt
     ): String {
         return try {
-//            logger.info("getting token")
-//            val jwt = userUtils.getAuth0AccessToken()
-//            logger.info("token gotten $jwt")
-            val snippetIds = permissionService.getAllSnippetsIdsWithUserId(HttpHeaders(), userId)
+            val userId = getUserIdFromJWT(jwt)
+            val snippetIds = permissionService.getAllSnippetsIdsForUser(generateHeaders(jwt))
             val lintRules = getRules(RulesetType.LINT, userId)
             lintEventConsumer.subscription()
             coroutineScope {
@@ -162,7 +163,7 @@ class RulesService
                     launch {
                         val event = LintEvent(
                             snippetId = snippetId,
-                            userId = userId,
+                            jwt = jwt,
                             rules = lintRules
                         )
                         lintEventProducer.publish(event)
@@ -177,14 +178,11 @@ class RulesService
     }
 
     private suspend fun formatAllSnippets(
-        userId: String
-
+        jwt : Jwt,
     ): String {
         return try {
-            val jwt = userUtils.getAuth0AccessToken()
-            logger.info("token gotten $jwt")
-            //val snippetIds = permissionService.getAllSnippetsIdsWithUserId(generateHeadersFromStr(jwt!!), userId)
-            val snippetIds = permissionService.getAllSnippetsIdsWithUserId(HttpHeaders(), userId)
+            val userId = getUserIdFromJWT(jwt)
+            val snippetIds = permissionService.getAllSnippetsIdsForUser(generateHeaders(jwt))
             val formatRules = getRules(RulesetType.FORMAT, userId)
             formatEventConsumer.subscription()
             coroutineScope {
@@ -192,7 +190,7 @@ class RulesService
                     launch {
                         val event = FormatEvent(
                             snippetId = snippetId,
-                            userId = userId,
+                            jwt = jwt,
                             rules = formatRules
                         )
                         formatEventProducer.publish(event)

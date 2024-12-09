@@ -51,3 +51,11 @@ stream:
 groups:
   formatter: ${FORMATTER_GROUP}
   linter: ${LINTER_GROUP}
+
+logging:
+    level:
+      org:
+        springframework:
+          web:
+            client:
+              RestTemplate: DEBUG
