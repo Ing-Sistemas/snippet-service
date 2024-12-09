@@ -1,6 +1,5 @@
 package com.example.springboot.app.snippets
 
-import com.example.springboot.app.snippets.ControllerUtils.generateHeaders
 import com.example.springboot.app.snippets.ControllerUtils.getUserIdFromJWT
 import com.example.springboot.app.snippets.dto.SnippetDTO
 import com.example.springboot.app.utils.*
@@ -43,10 +42,13 @@ class SnippetService @Autowired constructor(
             val usersRE = userUtils.getUsers(page, pageSize, name)
 
             val users = usersRE.body?.filter { it.user_id != userId } ?: emptyList()
-            val userDTOList = users.map { UserDTOUI(it.user_id, it.nickname) }
+            val userDTOList = users.map { User(it.nickname, it.user_id) }
+            logger.info("Users: $users")
             PaginatedUsers(
-                pagination = Pagination(page, pageSize, users.size),
-                usersDTOUI = userDTOList
+                page = page,
+                page_size = pageSize,
+                count = users.size,
+                users = userDTOList
             )
         } catch (e: HttpClientErrorException) {
             logger.error("HTTP error while getting users: ${e.message}")

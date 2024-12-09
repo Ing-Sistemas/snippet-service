@@ -9,14 +9,16 @@ data class Pagination(
     val count: Int
 )
 
-data class UserDTOUI(
+data class User(
+    val name: String,
     val id: String,
-    val name: String
 )
 
 data class PaginatedUsers(
-    val pagination: Pagination,
-    val usersDTOUI: List<UserDTOUI>
+    val page: Int,
+    val page_size: Int,
+    val count: Int,
+    val users: List<User>
 )
 
 data class PaginatedSnippets(
