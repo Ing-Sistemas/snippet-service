@@ -12,15 +12,21 @@ import com.example.springboot.app.rules.enums.RulesetType
 import org.springframework.http.HttpMethod.POST
 import com.example.springboot.app.snippets.ControllerUtils.generateHeaders
 import com.example.springboot.app.snippets.ControllerUtils.getUserIdFromJWT
+import com.example.springboot.app.rules.FormatRule
+import com.example.springboot.app.tests.dto.AddTestCaseDTO
+import com.example.springboot.app.tests.dto.RunTestDTO
+import com.example.springboot.app.tests.dto.TestCaseDTO
 import com.example.springboot.app.tests.entity.TestCase
 import com.example.springboot.app.tests.enums.TestCaseResult
 import com.example.springboot.app.utils.FormatConfig
 import com.example.springboot.app.utils.UserUtils
+import com.example.springboot.app.utils.TestRunHttp
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import org.springframework.context.annotation.Lazy
@@ -121,19 +127,28 @@ class PrintScriptService @Autowired constructor (
         val response = restTemplate.postForEntity(url, requestEntity, String::class.java)
         processResponse(response, userId, rules)
     }
-
-    fun runTests(test: TestCase, userId: String): TestCaseResult {
-        val url = "$psUrl/run_tests"
-        val requestEntity = HttpEntity(test)
+    fun runTests(test: RunTestDTO, headers: HttpHeaders, sId: String): TestCaseResult {
+        val url = "$psUrl/test/run_tests/${sId}"
+        val requestEntity = HttpEntity(test, headers)
         val response = restTemplate.postForEntity(url, requestEntity, String::class.java)
-        if (response.body == null) {
-            throw Exception("Failed to run tests")
+
+        for (outPut in test.output) {
+            return if (outPut != response.body) {
+                TestCaseResult.FAIL
+            } else {
+                TestCaseResult.SUCCESS
+            }
         }
-        return if (response.body == "success") {
-            TestCaseResult.SUCCESS
-        } else {
-            TestCaseResult.FAIL
-        }
+        return TestCaseResult.SUCCESS
+
+//        if (response.body == null) {
+//            throw Exception("Failed to run tests ${response.body}")
+//        }
+//        return if (response.body == "success") {
+//            TestCaseResult.SUCCESS
+//        } else {
+//            TestCaseResult.FAIL
+//        }
     }
 
     private fun processResponse(response: ResponseEntity<String>, userId: String, rules: List<RuleDTO>): ResponseEntity<String> {

@@ -5,16 +5,19 @@ import com.example.springboot.app.external.services.printscript.PrintScriptServi
 import com.example.springboot.app.snippets.ControllerUtils.generateHeaders
 import com.example.springboot.app.snippets.ControllerUtils.getUserIdFromJWT
 import com.example.springboot.app.tests.dto.AddTestCaseDTO
+import com.example.springboot.app.tests.dto.RunTestDTO
 import com.example.springboot.app.tests.dto.TestCaseDTO
 import com.example.springboot.app.tests.entity.TestCase
 import com.example.springboot.app.tests.enums.TestCaseResult
 import com.example.springboot.app.tests.enums.TestStatus
+import com.example.springboot.app.utils.ValidateTestRunRequest
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.*
+import kotlin.math.log
 
 @RestController
 @RequestMapping("/api")
@@ -94,14 +97,16 @@ class TestController @Autowired constructor(
 
 
     // TODO finish
-    @GetMapping("/test")
+    @PutMapping("/test/run_tests/{sId}")
     fun runTests(
         @AuthenticationPrincipal jwt: Jwt,
-        @RequestParam testCase: TestCase
+        @PathVariable sId: String,
+        @RequestBody runTestDTO: RunTestDTO
     ): ResponseEntity<TestCaseResult> {
         return try {
-            val userId = getUserIdFromJWT(jwt)
-            val result = printScriptService.runTests(testCase, userId)
+            val headers = generateHeaders(jwt)
+            val result = printScriptService.runTests(runTestDTO, headers, sId)
+            logger.info(result.toString())
             ResponseEntity.ok(result)
         } catch (e: Exception) {
             logger.error("Error running tests: {}", e.message)
