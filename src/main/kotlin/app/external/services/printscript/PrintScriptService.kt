@@ -96,14 +96,23 @@ class PrintScriptService @Autowired constructor (
         val url = "$psUrl/test/run_tests/${sId}"
         val requestEntity = HttpEntity(test, headers)
         val response = restTemplate.postForEntity(url, requestEntity, String::class.java)
-        println(response.statusCode)
-        if (response.body == null) {
-            throw Exception("Failed to run tests ${response.body}")
+
+        for (outPut in test.output) {
+            return if (outPut != response.body) {
+                TestCaseResult.FAIL
+            } else {
+                TestCaseResult.SUCCESS
+            }
         }
-        return if (response.body == "success") {
-            TestCaseResult.SUCCESS
-        } else {
-            TestCaseResult.FAIL
-        }
+        return TestCaseResult.SUCCESS
+
+//        if (response.body == null) {
+//            throw Exception("Failed to run tests ${response.body}")
+//        }
+//        return if (response.body == "success") {
+//            TestCaseResult.SUCCESS
+//        } else {
+//            TestCaseResult.FAIL
+//        }
     }
 }
