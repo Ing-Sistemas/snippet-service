@@ -4,7 +4,6 @@ package com.example.springboot.app.rules
 import com.example.springboot.app.external.services.permission.PermissionService
 import com.example.springboot.app.external.services.printscript.PrintScriptService
 import com.example.springboot.app.rules.model.dto.AddRuleDTO
-import com.example.springboot.app.rules.model.dto.RuleDTO
 import com.example.springboot.app.rules.enums.RulesetType
 import com.example.springboot.app.rules.model.dto.CompleteRuleDTO
 import com.example.springboot.app.snippets.ControllerUtils.generateHeaders
@@ -32,9 +31,9 @@ class RuleController @Autowired constructor(
         @PathVariable ruleType: String,
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<List<CompleteRuleDTO>> {
+        logger.trace("Getting rules for $ruleType")
         val ruleSetType = RulesetType.valueOf(ruleType.uppercase(Locale.getDefault()))
         val rules = rulesService.getRules(ruleSetType, getUserIdFromJWT(jwt))
-        logger.info("Returning rules : ${rules.map { it.name }}")
         return ResponseEntity.ok(rules)
     }
 
@@ -44,7 +43,7 @@ class RuleController @Autowired constructor(
         @RequestBody rules: List<AddRuleDTO>,
         @AuthenticationPrincipal jwt: Jwt
     ) {
-        logger.info("Updating rules for $ruleType")
+        logger.trace("Updating rules for $ruleType")
         val ruleTypeEnum = RulesetType.valueOf(ruleType)
         return rulesService.updateRules(ruleTypeEnum, rules, jwt)
     }
@@ -56,7 +55,7 @@ class RuleController @Autowired constructor(
         @PathVariable snippetId: String,
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<String> {
-        logger.info("Formatting snippet $snippetId")
+        logger.trace("Formatting snippet $snippetId")
         return try {
             if (permissionService.hasPermissionBySnippetId("WRITE",snippetId, generateHeaders(jwt))) {
 

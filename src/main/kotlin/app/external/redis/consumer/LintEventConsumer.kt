@@ -2,7 +2,6 @@ package com.example.springboot.app.external.redis.consumer
 
 import com.example.springboot.app.external.services.printscript.PrintScriptService
 import com.example.springboot.app.external.redis.events.LintEvent
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.connection.stream.ObjectRecord
@@ -20,7 +19,6 @@ class LintEventConsumer @Autowired constructor(
     @Lazy private val printScriptService: PrintScriptService
 ) : RedisStreamConsumer<LintEvent>(streamKey, groupId, redis){
 
-    private val logger = LoggerFactory.getLogger(LintEventConsumer::class.java)
 
     override fun options(): StreamReceiver.StreamReceiverOptions<String, ObjectRecord<String, LintEvent>> {
         return StreamReceiver.StreamReceiverOptions.builder()
@@ -32,7 +30,6 @@ class LintEventConsumer @Autowired constructor(
     override fun onMessage(record: ObjectRecord<String, LintEvent>) {
         Thread.sleep(1000 * 10)
         val eventValue = record.value
-        logger.info("Id: ${record.id}, Value: ${eventValue}, Stream: ${record.stream}, Group: $groupId")
         printScriptService.autoLint(eventValue.snippetId, eventValue.jwt, eventValue.rules)
 
     }

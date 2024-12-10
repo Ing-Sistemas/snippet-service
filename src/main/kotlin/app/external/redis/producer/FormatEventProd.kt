@@ -16,10 +16,8 @@ class FormatEventProducer(
     @Value("\${stream.key.formatter}") streamKey: String,
     redis: ReactiveRedisTemplate<String, String>
 ) : FormatEventProd, RedisStreamProducer(streamKey, redis) {
-    private val logger = LoggerFactory.getLogger(FormatEventProducer::class.java)
 
     override suspend fun publish(event: FormatEvent) {
-        logger.info("Publishing on stream: $streamKey")
         emit(event).awaitSingle()
     }
 }

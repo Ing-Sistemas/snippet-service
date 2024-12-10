@@ -28,14 +28,11 @@ class RuleSeeder @Autowired constructor(
         "mandatory-variable-or-literal-in-readInput" to Pair("LINT", "BOOLEAN")
     )
 
-    private val logger = LoggerFactory.getLogger(RuleSeeder::class.java)
     override fun run(vararg args: String?) {
-        logger.info("Seeding rules after application startup...")
 
         rulesMap.forEach { (name, type) ->
             val existingRule = ruleRepository.findByNameAndType(name, RulesetType.valueOf(type.first))
             if (existingRule == null) {
-                logger.info("Seeding rule: $name")
                 val newRule = Rule(
                     id = UUID.randomUUID().toString(),
                     name = name,
@@ -43,9 +40,6 @@ class RuleSeeder @Autowired constructor(
                     valueType = ValueType.valueOf(type.second)
                 )
                 ruleRepository.save(newRule)
-                logger.info("Seeded rule: ${newRule.name} with ID: ${newRule.id}")
-            } else {
-                logger.info("Rule already exists: ${existingRule.name}")
             }
         }
     }
