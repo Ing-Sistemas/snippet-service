@@ -85,7 +85,7 @@ class SnippetController @Autowired constructor(
                 throw Exception("Failed to update snippet in asset service")
             }
 //            val headers = generateHeaders(jwt)
-//            val compliance = printScriptService.validateSnippet(snippetId, "1.1", headers).body?.message ?: "not-compliant"
+//            val lintStatus = printScriptService.validateSnippet(snippetId, "1.1", headers).body?.message ?: "not-compliant"
             val snippetDataUi = SnippetDataUi(
                 snippetId,
                 snippet.title,

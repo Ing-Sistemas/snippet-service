@@ -3,24 +3,19 @@ package com.example.springboot.app.external.services.printscript
 import com.example.springboot.app.external.services.printscript.request.FormatRequest
 import com.example.springboot.app.external.services.printscript.request.LintRequest
 import com.example.springboot.app.external.services.printscript.request.PSRequest
-import com.example.springboot.app.external.services.printscript.response.FormatResponse
 import com.example.springboot.app.external.services.printscript.response.PSValResponse
 import com.example.springboot.app.rules.RulesService
-import com.example.springboot.app.rules.dto.RuleDTO
-import com.example.springboot.app.rules.enums.Compliance
+import com.example.springboot.app.rules.model.dto.RuleDTO
+import com.example.springboot.app.rules.enums.SnippetStatus
 import com.example.springboot.app.rules.enums.RulesetType
+import com.example.springboot.app.rules.model.dto.CompleteRuleDTO
 import org.springframework.http.HttpMethod.POST
 import com.example.springboot.app.snippets.ControllerUtils.generateHeaders
 import com.example.springboot.app.snippets.ControllerUtils.getUserIdFromJWT
-import com.example.springboot.app.rules.FormatRule
-import com.example.springboot.app.tests.dto.AddTestCaseDTO
 import com.example.springboot.app.tests.dto.RunTestDTO
-import com.example.springboot.app.tests.dto.TestCaseDTO
-import com.example.springboot.app.tests.entity.TestCase
 import com.example.springboot.app.tests.enums.TestCaseResult
 import com.example.springboot.app.utils.FormatConfig
 import com.example.springboot.app.utils.UserUtils
-import com.example.springboot.app.utils.TestRunHttp
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
@@ -31,7 +26,6 @@ import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import org.springframework.context.annotation.Lazy
 import org.springframework.core.ParameterizedTypeReference
-import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.client.exchange
 
 @Service
@@ -85,7 +79,7 @@ class PrintScriptService @Autowired constructor (
     fun autoFormat(
         snippetId: String,
         jwt: Jwt,
-        rules: List<RuleDTO>
+        rules: List<CompleteRuleDTO>
     ){
         val url = "$psUrl/format"
         val formatConfig = generateFormatConfig(rules)
@@ -97,7 +91,7 @@ class PrintScriptService @Autowired constructor (
             requestEntity,
             object : ParameterizedTypeReference<String> () {}
         )
-        processResponse(response, userId, rules)
+        processFormatResponse(response, userId, rules)
     }
 
     /*
@@ -119,14 +113,20 @@ class PrintScriptService @Autowired constructor (
     fun autoLint(
         snippetId: String,
         jwt: Jwt,
-        rules: List<RuleDTO>
+        rules: List<CompleteRuleDTO>
     ){
         val url = "$psUrl/lint"
         val userId = getUserIdFromJWT(jwt)
         val requestEntity = HttpEntity(LintRequest(snippetId, rules), generateHeaders(jwt))
-        val response = restTemplate.postForEntity(url, requestEntity, String::class.java)
-        processResponse(response, userId, rules)
+        val response = restTemplate.exchange(url,
+            POST,
+            requestEntity,
+            object : ParameterizedTypeReference<List<String>>() {}
+        )
+        processLintResponse(response, userId, rules)
     }
+
+
     fun runTests(test: RunTestDTO, headers: HttpHeaders, sId: String): TestCaseResult {
         val url = "$psUrl/test/run_tests/${sId}"
         val requestEntity = HttpEntity(test, headers)
@@ -151,23 +151,24 @@ class PrintScriptService @Autowired constructor (
 //        }
     }
 
-    private fun processResponse(response: ResponseEntity<String>, userId: String, rules: List<RuleDTO>): ResponseEntity<String> {
+
+    private fun processLintResponse(response: ResponseEntity<List<String>>, userId: String, rules: List<CompleteRuleDTO>): ResponseEntity<List<String>> {
         return when {
             response.statusCode.is2xxSuccessful -> {
                 rules.forEach { rule ->
-                    rulesService.changeUserRuleCompliance(userId, rule.id, Compliance.COMPLIANT)
+                    rulesService.changeUserRuleCompliance(userId, rule.id, SnippetStatus.COMPLIANT)
                 }
                 ResponseEntity.ok(response.body!!)
             }
             response.statusCode.is4xxClientError -> {
                 rules.forEach { rule ->
-                    rulesService.changeUserRuleCompliance(userId, rule.id, Compliance.NOT_COMPLIANT)
+                    rulesService.changeUserRuleCompliance(userId, rule.id, SnippetStatus.NOT_COMPLIANT)
                 }
                 ResponseEntity.status(400).body(response.body!!)
             }
             response.statusCode.is5xxServerError -> {
                 rules.forEach { rule ->
-                    rulesService.changeUserRuleCompliance(userId, rule.id, Compliance.FAILED)
+                    rulesService.changeUserRuleCompliance(userId, rule.id, SnippetStatus.FAILED)
                 }
                 ResponseEntity.status(500).body(response.body!!)
             }
@@ -177,12 +178,38 @@ class PrintScriptService @Autowired constructor (
         }
     }
 
-    private fun generateFormatConfig(rules: List<RuleDTO>): FormatConfig {
+    private fun processFormatResponse(response: ResponseEntity<String>, userId: String, rules: List<CompleteRuleDTO>): ResponseEntity<String> {
+        return when {
+            response.statusCode.is2xxSuccessful -> {
+                rules.forEach { rule ->
+                    rulesService.changeUserRuleCompliance(userId, rule.id, SnippetStatus.SUCCESS)
+                }
+                ResponseEntity.ok(response.body!!)
+            }
+            response.statusCode.is4xxClientError -> {
+                rules.forEach { rule ->
+                    rulesService.changeUserRuleCompliance(userId, rule.id, SnippetStatus.FAILED)
+                }
+                ResponseEntity.status(400).body(response.body!!)
+            }
+            response.statusCode.is5xxServerError -> {
+                rules.forEach { rule ->
+                    rulesService.changeUserRuleCompliance(userId, rule.id, SnippetStatus.FAILED)
+                }
+                ResponseEntity.status(500).body(response.body!!)
+            }
+            else -> {
+                throw Exception("Failed to process response")
+            }
+        }
+    }
+
+    private fun generateFormatConfig(rules: List<CompleteRuleDTO>): FormatConfig {
         val configMap = rules
             .filter { it.ruleType == RulesetType.FORMAT }
             .associateBy { it.name }
 
-        // abomination
+        //abomination
         return FormatConfig(
             spaceBeforeColon = configMap["spaceBeforeColon"]?.value?.toString()?.toBoolean() ?: false,
             spaceAfterColon = configMap["spaceAfterColon"]?.value?.toString()?.toBoolean() ?: false,

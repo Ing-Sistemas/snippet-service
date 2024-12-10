@@ -1,8 +1,9 @@
 package com.example.springboot.app.rules.enums
 
-enum class Compliance {
+enum class SnippetStatus {
     PENDING,
     FAILED,
     NOT_COMPLIANT,
-    COMPLIANT
+    COMPLIANT,
+    SUCCESS
 }

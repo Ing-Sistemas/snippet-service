@@ -7,27 +7,23 @@ import com.example.springboot.app.external.redis.events.LintEvent
 import com.example.springboot.app.external.redis.producer.FormatEventProducer
 import com.example.springboot.app.external.redis.producer.LintEventProducer
 import com.example.springboot.app.external.services.permission.PermissionService
-import com.example.springboot.app.rules.dto.AddRuleDTO
-import com.example.springboot.app.rules.dto.RuleDTO
-import com.example.springboot.app.rules.entity.Rule
-import com.example.springboot.app.rules.entity.RulesUserEntity
-import com.example.springboot.app.rules.enums.Compliance
+import com.example.springboot.app.rules.model.dto.AddRuleDTO
+import com.example.springboot.app.rules.model.entity.RulesUserEntity
+import com.example.springboot.app.rules.enums.SnippetStatus
 import com.example.springboot.app.rules.enums.RulesetType
+import com.example.springboot.app.rules.enums.ValueType
+import com.example.springboot.app.rules.model.dto.CompleteRuleDTO
+import com.example.springboot.app.rules.model.dto.UserRuleDTO
 import com.example.springboot.app.rules.repository.RuleRepository
 import com.example.springboot.app.rules.repository.RuleUserRepository
 import com.example.springboot.app.snippets.ControllerUtils.generateHeaders
 import com.example.springboot.app.snippets.ControllerUtils.getUserIdFromJWT
-import com.example.springboot.app.utils.FormatConfig
-import com.example.springboot.app.utils.UserUtils
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.HttpHeaders
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Service
-import java.util.*
-import kotlin.reflect.full.memberProperties
 
 @Service
 class RulesService
@@ -39,40 +35,25 @@ class RulesService
     private val lintEventConsumer: LintEventConsumer,
     private val formatEventConsumer: FormatEventConsumer,
     private val formatEventProducer: FormatEventProducer,
-    private val userUtils: UserUtils,
-    ) {
+    ){
     private val logger = LoggerFactory.getLogger(RulesService::class.java)
 
-    fun getRules(ruleType: RulesetType, userId: String): List<RuleDTO> {
+    fun getRules(ruleType: RulesetType, userId: String): List<CompleteRuleDTO> {
         logger.info("Getting rules for $ruleType")
-        val rules = ruleRepository.findAllRulesByUserIdAndType(userId, ruleType)
-        logger.info("Found rules ${rules.map {it.name}}")
-        if (rules.isEmpty()) {
-            val defaultRules = genDefaultRules(ruleType)
-            defaultRules.forEach {
-                logger.info("Saving rule ${it.name} with value ${it.value.toString()}")
-                ruleRepository.save(
-                    Rule(
-                        id = it.id,
-                        name = it.name,
-                        value = it.value.toString(),
-                        type = it.ruleType
-                    )
-                )
-                val savedRule = ruleRepository.findRuleById(it.id)
-                logger.info("Saving user rule ${savedRule.name}")
-                ruleUserRepository.save(
-                    RulesUserEntity(
-                        userId = userId,
-                        isActive = it.isActive,
-                        rule = savedRule,
-                    )
-                )
-            }
-            return defaultRules
-        } else {
-            return rules
+        val rules = ruleRepository.findAllByType(ruleType)
+        val userRules = getUserRules(userId, ruleType)
+        val userRulesMap = rules.map { rule ->
+            val userRule = userRules.find { it.ruleId == rule.id }
+            CompleteRuleDTO(
+                id = rule.id,
+                name = rule.name,
+                ruleType = ruleType,
+                userId = userId,
+                isActive = userRule?.isActive ?: false,
+                value = userRule?.value,
+            )
         }
+        return userRulesMap
     }
 
     suspend fun updateRules(
@@ -82,10 +63,12 @@ class RulesService
     ) {
         val userId = getUserIdFromJWT(jwt)
         logger.info("Updating rules for $ruleType and user with id $userId")
+
         newRules.forEach { rule ->
             val userRule = ruleUserRepository.findFirstByUserIdAndRuleId(userId, rule.id)
             if (userRule != null) {
                 userRule.isActive = rule.isActive
+                userRule.value = rule.value.toString()
                 ruleUserRepository.save(userRule)
             } else {
                 ruleUserRepository.save(
@@ -104,49 +87,53 @@ class RulesService
         logger.info(message)
     }
 
-    private fun genDefaultRules(ruleType: RulesetType): List<RuleDTO> {
-        return when (ruleType) {
+    private fun genDefaultUserRules(ruleType: RulesetType, userId: String): List<RulesUserEntity> {
+        val newRules = when (ruleType) {
             RulesetType.FORMAT -> {
-                val config = FormatConfig(
-                    spaceBeforeColon = false,
-                    spaceAfterColon = false,
-                    spaceAroundEquals = false,
-                    lineJumpBeforePrintln = 0,
-                    lineJumpAfterSemicolon = true,
-                    singleSpaceBetweenTokens = true,
-                    spaceAroundOperators = true
-                )
-                FormatConfig::class.memberProperties.map { property ->
-                    val name = property.name
-                    val value = property.get(config).toString()
-                    logger.info("Generating rule $name with value $value")
-
-                    RuleDTO(
-                        id = UUID.randomUUID().toString(),
-                        name = name,
+                val rules = ruleRepository.findAllByType(ruleType)
+                rules.map { rule ->
+                    val value = when(rule.valueType) {
+                        ValueType.BOOLEAN -> false
+                        ValueType.NUMBER -> 0
+                        ValueType.STRING -> "none"
+                    }
+                    UserRuleDTO(
                         isActive = false,
+                        status = SnippetStatus.PENDING,
+                        userId = userId,
                         value = value,
-                        ruleType = RulesetType.FORMAT,
+                        ruleId = rule.id
                     )
                 }
             }
-
             RulesetType.LINT -> {
-                val availableRules = mapOf(
-                    "identifier_format" to "none",
-                    "mandatory-variable-or-literal-in-println" to false,
-                    "mandatory-variable-or-literal-in-readInput" to false,
-                )
-                availableRules.map { (name, value)  ->
-                    RuleDTO(
-                        id = UUID.randomUUID().toString(),
-                        name = name,
+                val rules = ruleRepository.findAllByType(ruleType)
+                rules.map { rule ->
+                    val value = when(rule.valueType) {
+                        ValueType.BOOLEAN -> false
+                        ValueType.NUMBER -> 0
+                        ValueType.STRING -> "none"
+                    }
+                    UserRuleDTO(
                         isActive = false,
-                        value = value, // "camel case" or "snake case"
-                        ruleType = RulesetType.LINT,
+                        status = SnippetStatus.PENDING,
+                        userId = userId,
+                        value = value,
+                        ruleId = rule.id
                     )
                 }
             }
+        }
+
+        return newRules.map {
+            ruleUserRepository.save(
+                RulesUserEntity(
+                    userId = userId,
+                    isActive = it.isActive,
+                    rule = ruleRepository.findRuleById(it.ruleId),
+                    value = it.value.toString(),
+                )
+            )
         }
     }
 
@@ -197,7 +184,6 @@ class RulesService
                     }
                 }.forEach { it.join() }
             }
-
             "Started formatting all snippets"
         } catch (e: Exception) {
             logger.error("Error formatting all snippets: {}", e.message)
@@ -205,14 +191,30 @@ class RulesService
         }
     }
 
+    private fun getUserRules(userId: String, ruleType: RulesetType): List<UserRuleDTO> {
+        var userRules = ruleUserRepository.findAllByUserId(userId)
+        if (userRules.isEmpty()) {
+            userRules = genDefaultUserRules(ruleType, userId)
+        }
+        return userRules.map { userRule ->
+            UserRuleDTO(
+                isActive = userRule.isActive,
+                status = userRule.status,
+                userId = userRule.userId,
+                value = userRule.value,
+                ruleId = userRule.rule!!.id
+            )
+        }
+    }
+
     fun changeUserRuleCompliance(
         userId: String,
         ruleId: String,
-        compliance: Compliance
+        snippetStatus: SnippetStatus
     ) {
         val userRule = ruleUserRepository.findFirstByUserIdAndRuleId(userId, ruleId)
         userRule?.let {
-            userRule.compliance = compliance
+            userRule.status = snippetStatus
             ruleUserRepository.save(userRule)
         }
     }

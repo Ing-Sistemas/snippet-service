@@ -3,9 +3,10 @@ package com.example.springboot.app.rules
 
 import com.example.springboot.app.external.services.permission.PermissionService
 import com.example.springboot.app.external.services.printscript.PrintScriptService
-import com.example.springboot.app.rules.dto.AddRuleDTO
-import com.example.springboot.app.rules.dto.RuleDTO
+import com.example.springboot.app.rules.model.dto.AddRuleDTO
+import com.example.springboot.app.rules.model.dto.RuleDTO
 import com.example.springboot.app.rules.enums.RulesetType
+import com.example.springboot.app.rules.model.dto.CompleteRuleDTO
 import com.example.springboot.app.snippets.ControllerUtils.generateHeaders
 import com.example.springboot.app.snippets.ControllerUtils.getUserIdFromJWT
 import org.slf4j.LoggerFactory
@@ -30,7 +31,7 @@ class RuleController @Autowired constructor(
     fun getRules(
         @PathVariable ruleType: String,
         @AuthenticationPrincipal jwt: Jwt
-    ): ResponseEntity<List<RuleDTO>> {
+    ): ResponseEntity<List<CompleteRuleDTO>> {
         val ruleSetType = RulesetType.valueOf(ruleType.uppercase(Locale.getDefault()))
         val rules = rulesService.getRules(ruleSetType, getUserIdFromJWT(jwt))
         logger.info("Returning rules : ${rules.map { it.name }}")

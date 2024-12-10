@@ -3,17 +3,20 @@ auth0:
 spring:
   application:
     name: snippet-service
+
   datasource:
     url: jdbc:postgresql://${SNIPPET_DB_HOST}:${SNIPPET_DB_PORT}/${POSTGRES_DB}
     driver-class-name: org.postgresql.Driver
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
+
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: false
     generate-ddl: true
     hibernate:
       ddl-auto: update
+
   security:
     oauth2:
       resourceserver:
@@ -21,6 +24,7 @@ spring:
           issuer-uri: ${AUTH_SERVER_URI}
           client-id: ${AUTH_CLIENT_ID}
           client-secret: ${AUTH_CLIENT_SECRET}
+
   data:
     redis:
       jedis:
@@ -38,6 +42,7 @@ spring:
     permission_url: "${BASE_URL}${PERMISSION_HOST}:${PERMISSION_PORT}/${PERMISSION_URL}"
     print_script_url: "${BASE_URL}${PRINTSCRIPT_HOST}:${PRINTSCRIPT_PORT}/${PRINTSCRIPT_URL}"
     asset_url: "${BASE_URL}${ASSET_HOST}:${ASSET_PORT}/${ASSET_URL}"
+
 server:
   port: ${SNIPPET_PORT}
 
@@ -51,11 +56,3 @@ stream:
 groups:
   formatter: ${FORMATTER_GROUP}
   linter: ${LINTER_GROUP}
-
-logging:
-    level:
-      org:
-        springframework:
-          web:
-            client:
-              RestTemplate: DEBUG

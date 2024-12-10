@@ -1,6 +1,7 @@
-package com.example.springboot.app.rules.entity
+package com.example.springboot.app.rules.model.entity
 
 import com.example.springboot.app.rules.enums.RulesetType
+import com.example.springboot.app.rules.enums.ValueType
 import jakarta.persistence.*
 import org.jetbrains.annotations.NotNull
 
@@ -16,7 +17,9 @@ data class Rule (
     @Enumerated(EnumType.STRING)
     val type: RulesetType = RulesetType.LINT,
 
-    val value: String? = null,
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    val valueType: ValueType = ValueType.STRING,
 
     @OneToMany(cascade = [CascadeType.REMOVE], mappedBy = "rule")
     val userRules: List<RulesUserEntity> = listOf(),
