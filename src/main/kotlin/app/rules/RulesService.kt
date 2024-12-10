@@ -39,7 +39,6 @@ class RulesService
     private val logger = LoggerFactory.getLogger(RulesService::class.java)
 
     fun getRules(ruleType: RulesetType, userId: String): List<CompleteRuleDTO> {
-        logger.info("Getting rules for $ruleType")
         val rules = ruleRepository.findAllByType(ruleType)
         val userRules = getUserRules(userId, ruleType)
         val userRulesMap = rules.map { rule ->
@@ -62,7 +61,6 @@ class RulesService
         jwt: Jwt
     ) {
         val userId = getUserIdFromJWT(jwt)
-        logger.info("Updating rules for $ruleType and user with id $userId")
 
         newRules.forEach { rule ->
             val userRule = ruleUserRepository.findFirstByUserIdAndRuleId(userId, rule.id)
@@ -84,7 +82,6 @@ class RulesService
             RulesetType.FORMAT -> formatAllSnippets(jwt)
             RulesetType.LINT -> lintAllSnippets(jwt)
         }
-        logger.info(message)
     }
 
     private fun genDefaultUserRules(ruleType: RulesetType, userId: String): List<RulesUserEntity> {

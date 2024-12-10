@@ -102,7 +102,6 @@ class UserUtils @Autowired constructor(
                 JsonNode::class.java,
             )
 
-            logger.debug("Fetched users: {}", parseJsonToAuthUserDTOList(response.body!!))
             val users = parseJsonToAuthUserDTOList(response.body!!)
             ResponseEntity.ok(users)
         } catch (e: Exception) {
