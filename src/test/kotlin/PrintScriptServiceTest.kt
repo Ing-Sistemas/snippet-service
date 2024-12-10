@@ -41,7 +41,6 @@ class PrintScriptServiceTest {
             status = null
         )
 
-        // Inicializar psUrl mediante reflexión
         val psUrlField: Field = PrintScriptService::class.java.getDeclaredField("psUrl")
         psUrlField.isAccessible = true
         psUrlField.set(printScriptService, "http://mocked-url")

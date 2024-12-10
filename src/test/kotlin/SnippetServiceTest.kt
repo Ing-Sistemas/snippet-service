@@ -24,7 +24,6 @@ class SnippetServiceTest {
     private lateinit var snippetService: SnippetService
 
 
-    // Test para crear un snippet
     @Test
     fun `should create snippet successfully`() {
         val snippetDTO = SnippetDTO("1", "TestSnippet", "Kotlin", ".kt", "1.0")
@@ -40,7 +39,6 @@ class SnippetServiceTest {
         verify(snippetRepository).save(any(SnippetEntity::class.java))
     }
 
-    // Test para eliminar un snippet
     @Test
     fun `should delete snippet successfully`() {
         val snippetId = "1"
@@ -52,7 +50,6 @@ class SnippetServiceTest {
         verify(snippetRepository).deleteById(snippetId)
     }
 
-    // Test para encontrar un snippet por ID
     @Test
     fun `should find snippet by id successfully`() {
         val snippetEntity = SnippetEntity("1", "TestSnippet", ".kt", "Kotlin", "1.0")
@@ -66,7 +63,6 @@ class SnippetServiceTest {
         verify(snippetRepository).findSnippetEntityById("1")
     }
 
-    // Test para encontrar un snippet por título
     @Test
     fun `should find snippet by title successfully`() {
         val snippetEntity = SnippetEntity("1", "TestSnippet", ".kt", "Kotlin", "1.0")
