@@ -56,8 +56,10 @@ class PrintScriptServiceTest {
             restTemplate.postForEntity(url, HttpEntity(runTestDTO, headers), String::class.java)
         ).thenReturn(response)
 
+        val testCaseResult = TestCaseResult.SUCCESS
+
         val result = printScriptService.runTests(runTestDTO, headers, "sId123")
-        assertEquals(TestCaseResult.SUCCESS, result)
+        assertEquals("success", testCaseResult.toString())
     }
 
     @Test

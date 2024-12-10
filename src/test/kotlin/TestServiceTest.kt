@@ -1,5 +1,6 @@
 import com.example.springboot.app.snippets.SnippetRepository
 import com.example.springboot.app.tests.TestService
+import com.example.springboot.app.tests.dto.AddTestCaseDTO
 import com.example.springboot.app.tests.entity.TestCase
 import com.example.springboot.app.tests.repository.SnippetTestRepository
 import com.example.springboot.app.tests.repository.TestCaseRepository
@@ -28,6 +29,8 @@ class TestServiceTest {
             input = listOf("input1"),
             output = listOf("output1")
         )
+        val addTestCaseDTO = AddTestCaseDTO(null, "Test 1", emptyList(), emptyList())
+
         `when`(testCaseRepository.findBySnippetId("snippet1")).thenReturn(listOf(testCase))
 
         val result = testService.getAllTests("snippet1")
