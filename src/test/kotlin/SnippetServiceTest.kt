@@ -1,20 +1,15 @@
 package com.example.springboot.app.snippets
 
 import com.example.springboot.app.snippets.dto.SnippetDTO
-import com.example.springboot.app.utils.PaginatedUsers
-import com.example.springboot.app.utils.User
 import com.example.springboot.app.utils.UserUtils
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
-import org.springframework.http.ResponseEntity
-import org.springframework.security.oauth2.jwt.Jwt
-import org.springframework.web.client.HttpClientErrorException
+
 
 @ExtendWith(MockitoExtension::class)
 class SnippetServiceTest {
