@@ -60,6 +60,8 @@ class RulesServiceTest {
             isActive = false,
             rule = Rule("1", "Test Rule", RulesetType.LINT, "value")
         )
+        val lintRule = LintRule("camel case")
+        val formatRule = FormatRule("rule 1")
 
         val updatedRuleDTO = AddRuleDTO("1", true, "new-value")
 
