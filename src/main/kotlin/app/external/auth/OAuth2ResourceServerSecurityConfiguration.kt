@@ -58,7 +58,7 @@ class OAuth2ResourceServerSecurityConfiguration(@Value("\${auth0.audience}")
     @Bean
     fun corsConfigurationSource(): UrlBasedCorsConfigurationSource {
         val configuration = CorsConfiguration().apply {
-            allowedOrigins = listOf("http://localhost:5173", "https://fantoche.duckdns.org")
+            allowedOrigins = listOf("http://localhost:5173", "https://fantoche.duckdns.org", "https://fantochetriple.duckdns.org")
             allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
             allowedHeaders = listOf("*")
         }
