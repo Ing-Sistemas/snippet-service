@@ -42,13 +42,13 @@ class RulesService
         val rules = ruleRepository.findAllByType(ruleType)
         val userRules = getUserRules(userId, ruleType)
         val userRulesMap = rules.map { rule ->
-            val userRule = userRules.find { it.ruleId == rule.id }!!
+            val userRule = userRules.find { it.ruleId == rule.id }
             CompleteRuleDTO(
                 id = rule.id,
                 name = rule.name,
                 ruleType = ruleType,
                 userId = userId,
-                isActive = userRule.isActive,
+                isActive = userRule!!.isActive,
                 value = userRule.value,
             )
         }
