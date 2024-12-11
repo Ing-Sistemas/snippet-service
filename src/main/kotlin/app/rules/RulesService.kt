@@ -43,7 +43,6 @@ class RulesService
         val userRules = getUserRules(userId, ruleType)
         val userRulesMap = rules.map { rule ->
             val userRule = userRules.find { it.ruleId == rule.id }!!
-            logger.info("User rule: ${userRule.value}")
             CompleteRuleDTO(
                 id = rule.id,
                 name = rule.name,
