@@ -1,14 +1,11 @@
 package com.example.springboot.app.external.services.asset
 
-import com.example.springboot.app.snippets.SnippetController
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Bean
 import org.springframework.http.*
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.stereotype.Component
-import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.reactive.function.client.WebClient
 
@@ -24,7 +21,6 @@ class AssetService @Autowired constructor(
         .build()
 
     fun saveSnippet(snippetId: String, snippetFile: MultipartFile): ResponseEntity<String> {
-        logger.info("Saving snippet with id: $snippetId")
         return try {
 
             val response = client.put()
@@ -36,7 +32,6 @@ class AssetService @Autowired constructor(
                 .toEntity(String::class.java)
                 .block()!!
 
-            logger.info("Response: $response")
             response
         } catch (e: Exception) {
             logger.error("Failed to save snippet: ${e.message}")

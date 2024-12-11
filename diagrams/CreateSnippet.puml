@@ -1,0 +1,19 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+Proxy -> UI
+UI -> Proxy: Create a snippet
+Proxy -> SnippetService: Create a snippet
+SnippetService -> PermissionService: Create permission
+PermissionService -> SnippetService: Sends OK
+SnippetService -> AssetService: Saves snippet
+SnippetService -> PrintScripService: Sends snippetId
+PrintScripService -> AssetService: Gets snippet
+PrintScripService -> PrintScripService: Validates snippet
+PrintScripService -> SnippetService: Snippet validated
+
+
+SnippetService -> UI: Snippet created
+Proxy <- UI: Snippets listed
+@enduml

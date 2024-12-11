@@ -1,5 +1,6 @@
-package com.example.springboot.app.rules.entity
+package com.example.springboot.app.rules.model.entity
 
+import com.example.springboot.app.rules.enums.SnippetStatus
 import jakarta.persistence.*
 import java.util.*
 
@@ -15,6 +16,13 @@ data class RulesUserEntity(
 
     @Column(name = "is_active", nullable = false)
     var isActive: Boolean = false,
+
+    @Column(name = "value", nullable = true)
+    var value: String = " ",
+
+    @Column(name="compilace", nullable = false)
+    @Enumerated(EnumType.STRING)
+    var status: SnippetStatus = SnippetStatus.PENDING,
 
     @ManyToOne
     @JoinColumn(name = "ruleId", referencedColumnName = "id", nullable = false)

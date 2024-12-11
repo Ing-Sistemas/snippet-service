@@ -41,12 +41,11 @@ class SnippetController @Autowired constructor(
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetResponse> {
         return try {
+            logger.trace("Creating snippet with name: ${snippetRequestCreate.title}")
             val snippetDTO = generateSnippetDTO(snippetRequestCreate)
             val headers = generateHeaders(jwt)
             val snippetFile = generateFile(snippetRequestCreate)
-            logger.info("saving snippet file: $snippetFile")
             assetService.saveSnippet(snippetDTO.id, snippetFile)
-            logger.info("saved snippet file!")
 
             val validation = printScriptService.validateSnippet(snippetDTO.id, snippetDTO.version, headers)
             if (validation.statusCode.is4xxClientError) {
@@ -70,9 +69,9 @@ class SnippetController @Autowired constructor(
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetDataUi> {
         return try {
+            logger.trace("Updating snippet with id: $snippetId")
             val hasPermission = permissionService.hasPermissionBySnippetId("WRITE", snippetId, generateHeaders(jwt))
             if(!hasPermission) {
-                logger.info("User does not have permission to write snippet")
                 ResponseEntity.status(400).body(SnippetResponse(null, "User does not have permission to write snippet"))
             }
             val code = updateSnippetDTO.content
@@ -80,12 +79,11 @@ class SnippetController @Autowired constructor(
             val toUpdateFile = generateFileFromData(snippet, code)
             assetService.deleteSnippet(snippetId)
             val updatedSnippet = assetService.saveSnippet(snippetId, toUpdateFile)
-            logger.info("Snippet updated successfully in the assetService end, ${updatedSnippet.statusCode}")
             if (updatedSnippet.statusCode.is5xxServerError) {
                 throw Exception("Failed to update snippet in asset service")
             }
 //            val headers = generateHeaders(jwt)
-//            val compliance = printScriptService.validateSnippet(snippetId, "1.1", headers).body?.message ?: "not-compliant"
+//            val lintStatus = printScriptService.validateSnippet(snippetId, "1.1", headers).body?.message ?: "not-compliant"
             val snippetDataUi = SnippetDataUi(
                 snippetId,
                 snippet.title,
@@ -108,11 +106,12 @@ class SnippetController @Autowired constructor(
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetDataUi> {
         return try {
+            logger.trace("Sharing snippet with id: ${shareRequest.snippetId}")
             val hasPermission = permissionService.hasPermissionBySnippetId("SHARE", shareRequest.snippetId, generateHeaders(jwt))
             if(!hasPermission) {
                 ResponseEntity.status(400).body(SnippetResponse(null, "User does not have permission to share snippet"))
             }
-            permissionService.shareSnippet(shareRequest.snippetId, shareRequest.userId, generateHeaders(jwt))
+            permissionService.shareSnippet(shareRequest.snippetId, shareRequest.userId.removePrefix("auth0|"), generateHeaders(jwt))
             val snippet = snippetService.findSnippetById(shareRequest.snippetId)
             val snippetCode = assetService.getSnippet(shareRequest.snippetId).body!!
             val compliance = printScriptService.validateSnippet(shareRequest.snippetId, snippet.version, generateHeaders(jwt)).body?.message ?: "not-compliant"
@@ -139,6 +138,7 @@ class SnippetController @Autowired constructor(
         @PathVariable snippetId: String
     ): ResponseEntity<Void> {
         return try {
+            logger.trace("Deleting snippet with id: $snippetId")
             val hasPermission = permissionService.hasPermissionBySnippetId("WRITE", snippetId, generateHeaders(jwt))
             if (!hasPermission) {
                 return ResponseEntity.status(403).build()
@@ -160,6 +160,7 @@ class SnippetController @Autowired constructor(
         @PathVariable snippetId: String,
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetDataUi> {
+        logger.trace("Getting snippet with id: $snippetId")
         val headers = generateHeaders(jwt)
         val hasPermission = permissionService.hasPermissionBySnippetId("READ", snippetId, headers)
         if (hasPermission) {
@@ -191,6 +192,7 @@ class SnippetController @Autowired constructor(
         @RequestParam(required = false, defaultValue = "10") pageSize: Int,
     ): ResponseEntity<PaginatedUsers> {
         return try {
+            logger.trace("Getting all users")
             val users = snippetService.getAllUsers(page, pageSize, name, jwt)
             ResponseEntity.ok(users)
         } catch (e: Exception) {
@@ -207,6 +209,7 @@ class SnippetController @Autowired constructor(
         @RequestParam(required = false) snippetName: String?
     ): ResponseEntity<PaginatedSnippets> {
         return try {
+            logger.trace("Getting all snippets for user")
             val headers = generateHeaders(jwt)
             val snippetIds = permissionService.getAllSnippetsIdsForUser(headers)
 
@@ -233,8 +236,6 @@ class SnippetController @Autowired constructor(
             ResponseEntity.status(500).build()
         }
     }
-
-    // TODO agregar el upload
 
     private fun convertSnippetDtoToSnippetData(snippetDto: SnippetDTO, headers: HttpHeaders): SnippetDataUi {
 
