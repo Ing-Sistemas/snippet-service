@@ -7,7 +7,9 @@ UI -> Proxy
 
 Proxy -> SnippetService
 SnippetService -> PermissionService: Get all snippets id from user
-SnippetService -> Redis: Send suscription
-Redis -> Redis: Executes linting/formatting
-Redis -> SnippetService: Send publish (event)
+SnippetService -> Redis: Publishes Lint/Formatting event
+Redis -> SnippetService: Consumes Lint/Formatting event
+SnippetService -> PrintScriptService: Executes linting/formatting
+PrintScriptService -> SnippetService: Status
+SnippetService -> UI: Code linted/formatted
 @enduml
