@@ -113,6 +113,12 @@ jacocoTestCoverageVerification {
     doFirst {
         println "Clases analizadas por JaCoCo en la verificación de cobertura:"
         fileTree(dir: 'build/classes/kotlin/main', excludes: [
+                "com/example/springboot/app/rules/RuleController.class",
+                "com/example/springboot/app/snippets/SnippetController.class",
+                "com/example/springboot/app/tests/TestController.class",
+                "com/example/springboot/ApplicationKt.class",
+                "com/example/springboot/SnippetServiceApplication.class",
+                "META-INF/Snippet-Service.kotlin_module",
                 "com/example/springboot/app/configuration/**",
                 "com/example/springboot/app/external/**",
                 "com/example/springboot/app/health/**",
