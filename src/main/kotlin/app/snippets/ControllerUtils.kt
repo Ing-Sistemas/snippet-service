@@ -26,12 +26,20 @@ object ControllerUtils {
             System.getenv("AUTH0_AUDIENCE"),
             System.getenv("AUTH_SERVER_URI")
         ).jwtDecoder()
-        return auth.decode(jwt.tokenValue).subject!!
+        val subject =  auth.decode(jwt.tokenValue).subject
+        return subject?.removePrefix("auth0|") ?: throw IllegalArgumentException("User ID is null or invalid")
     }
 
     fun generateHeaders(jwt: Jwt): HttpHeaders {
         return HttpHeaders().apply {
             set("Authorization", "Bearer ${jwt.tokenValue}")
+            contentType = MediaType.APPLICATION_JSON
+        }
+    }
+
+    fun generateHeadersFromStr(token: String): HttpHeaders {
+        return HttpHeaders().apply {
+            set("Authorization", "Bearer $token")
             contentType = MediaType.APPLICATION_JSON
         }
     }

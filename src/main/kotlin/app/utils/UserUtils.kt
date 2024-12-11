@@ -1,10 +1,6 @@
 package com.example.springboot.app.utils
 
-import com.example.springboot.app.snippets.ControllerUtils.generateHeaders
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -12,14 +8,13 @@ import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.*
 import org.springframework.http.converter.FormHttpMessageConverter
 import org.springframework.http.converter.StringHttpMessageConverter
-import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Component
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.util.MultiValueMap
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestTemplate
-import org.springframework.web.reactive.function.client.WebClient
+
 
 @Component
 class UserUtils @Autowired constructor(
@@ -36,7 +31,15 @@ class UserUtils @Autowired constructor(
 ) {
     private val logger = LoggerFactory.getLogger(UserUtils::class.java)
 
+
+    //TODO see if this token is OP or not
     fun getAuth0AccessToken(): String? {
+        restTemplate.apply {
+            messageConverters.add(FormHttpMessageConverter())
+            messageConverters.add(StringHttpMessageConverter())
+
+        }
+
         val audience = auth0URL + "api/v2/"
 
         val headers = HttpHeaders()
@@ -72,6 +75,7 @@ class UserUtils @Autowired constructor(
         }
     }
 
+
     fun getUsers(
         page: Int,
         perPage: Int,
@@ -98,7 +102,6 @@ class UserUtils @Autowired constructor(
                 JsonNode::class.java,
             )
 
-            logger.debug("Fetched users: {}", parseJsonToAuthUserDTOList(response.body!!))
             val users = parseJsonToAuthUserDTOList(response.body!!)
             ResponseEntity.ok(users)
         } catch (e: Exception) {

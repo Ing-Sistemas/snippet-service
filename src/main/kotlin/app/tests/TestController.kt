@@ -10,7 +10,6 @@ import com.example.springboot.app.tests.dto.TestCaseDTO
 import com.example.springboot.app.tests.entity.TestCase
 import com.example.springboot.app.tests.enums.TestCaseResult
 import com.example.springboot.app.tests.enums.TestStatus
-import com.example.springboot.app.utils.ValidateTestRunRequest
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
@@ -34,6 +33,7 @@ class TestController @Autowired constructor(
         @PathVariable snippetId: String
     ): ResponseEntity<List<TestCaseDTO>> {
         return try {
+            logger.trace("Getting test cases for snippet with id: {}", snippetId)
             val hasPermission = permissionService.hasPermissionBySnippetId("READ", snippetId, generateHeaders(jwt))
             if (!hasPermission) return ResponseEntity.status(403).build()
             val testList = testService.getAllTests(snippetId)
@@ -51,9 +51,8 @@ class TestController @Autowired constructor(
         @RequestParam sId: String
     ): ResponseEntity<TestCaseDTO> {
         return try {
-            // TODO validate permission instead
+            logger.trace("Adding test case with name: ${testCase.name}")
             if (testCase.id != null && testService.existsById(testCase.id)) {
-                // update the test case
                 val test = testService.updateTest(testCase)
                 val testCaseDTO = TestCaseDTO(
                     id = test.id,
@@ -86,7 +85,7 @@ class TestController @Autowired constructor(
         @PathVariable id: String
     ): ResponseEntity<Void> {
         return try {
-            // TODO check write permissions
+            logger.trace("Deleting test case with id: {}", id)
             testService.deleteTest(id)
             ResponseEntity.noContent().build()
         } catch (e: Exception) {
@@ -96,7 +95,6 @@ class TestController @Autowired constructor(
     }
 
 
-    // TODO finish
     @PutMapping("/test/run_tests/{sId}")
     fun runTests(
         @AuthenticationPrincipal jwt: Jwt,
@@ -104,9 +102,9 @@ class TestController @Autowired constructor(
         @RequestBody runTestDTO: RunTestDTO
     ): ResponseEntity<TestCaseResult> {
         return try {
+            logger.trace("Running tests for snippet with id: {}", sId)
             val headers = generateHeaders(jwt)
             val result = printScriptService.runTests(runTestDTO, headers, sId)
-            logger.info(result.toString())
             ResponseEntity.ok(result)
         } catch (e: Exception) {
             logger.error("Error running tests: {}", e.message)

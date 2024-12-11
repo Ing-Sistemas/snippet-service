@@ -2,8 +2,7 @@ package com.example.springboot.app.external.services.printscript.request
 
 import com.example.springboot.app.rules.model.dto.CompleteRuleDTO
 
-
-data class FormatRequest(
+data class LintRequest(
     val snippetId: String,
-    val config: List<CompleteRuleDTO>
+    val rules: List<CompleteRuleDTO>
 )
