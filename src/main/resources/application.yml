@@ -1,16 +1,58 @@
+auth0:
+  audience: ${AUTH0_AUDIENCE}
 spring:
   application:
     name: snippet-service
+
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${POSTGRES_DB}
+    url: jdbc:postgresql://${SNIPPET_DB_HOST}:${SNIPPET_DB_PORT}/${POSTGRES_DB}
     driver-class-name: org.postgresql.Driver
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
+
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: false
     generate-ddl: true
     hibernate:
       ddl-auto: update
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${AUTH_SERVER_URI}
+          client-id: ${AUTH_CLIENT_ID}
+          client-secret: ${AUTH_CLIENT_SECRET}
+
+  data:
+    redis:
+      jedis:
+        pool:
+          enabled: false
+      lettuce:
+        pool:
+          enabled: false
+      repositories:
+        enabled: false
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
+  constants:
+    permission_url: "${BASE_URL}${PERMISSION_HOST}:${PERMISSION_PORT}/${PERMISSION_URL}"
+    print_script_url: "${BASE_URL}${PRINTSCRIPT_HOST}:${PRINTSCRIPT_PORT}/${PRINTSCRIPT_URL}"
+    asset_url: "${BASE_URL}${ASSET_HOST}:${ASSET_PORT}/${ASSET_URL}"
+
 server:
-  port: 8081
+  port: ${SNIPPET_PORT}
+
+# streamKeys to be used by producers
+stream:
+  key:
+    formatter: ${FORMATTER_STREAM_KEY}
+    linter: ${LINTER_STREAM_KEY}
+
+# groupIds to be used by consumers
+groups:
+  formatter: ${FORMATTER_GROUP}
+  linter: ${LINTER_GROUP}
