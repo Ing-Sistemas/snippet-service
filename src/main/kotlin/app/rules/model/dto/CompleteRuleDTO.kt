@@ -8,9 +8,5 @@ data class CompleteRuleDTO(
     val ruleType: RulesetType,
     val userId: String,
     val isActive: Boolean,
-    val value: Any?,
+    val value: Any,
 )
-//id: string,
-//name: string,
-//isActive: boolean,
-//value?: string | number | null,

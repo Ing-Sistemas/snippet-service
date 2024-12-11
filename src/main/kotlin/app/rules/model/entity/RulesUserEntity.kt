@@ -18,7 +18,7 @@ data class RulesUserEntity(
     var isActive: Boolean = false,
 
     @Column(name = "value", nullable = true)
-    var value: String? = null,
+    var value: String = " ",
 
     @Column(name="compilace", nullable = false)
     @Enumerated(EnumType.STRING)

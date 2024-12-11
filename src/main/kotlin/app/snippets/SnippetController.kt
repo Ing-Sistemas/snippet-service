@@ -111,7 +111,7 @@ class SnippetController @Autowired constructor(
             if(!hasPermission) {
                 ResponseEntity.status(400).body(SnippetResponse(null, "User does not have permission to share snippet"))
             }
-            permissionService.shareSnippet(shareRequest.snippetId, shareRequest.userId, generateHeaders(jwt))
+            permissionService.shareSnippet(shareRequest.snippetId, shareRequest.userId.removePrefix("auth0|"), generateHeaders(jwt))
             val snippet = snippetService.findSnippetById(shareRequest.snippetId)
             val snippetCode = assetService.getSnippet(shareRequest.snippetId).body!!
             val compliance = printScriptService.validateSnippet(shareRequest.snippetId, snippet.version, generateHeaders(jwt)).body?.message ?: "not-compliant"

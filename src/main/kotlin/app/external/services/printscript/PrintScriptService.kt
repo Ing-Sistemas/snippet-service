@@ -59,7 +59,7 @@ class PrintScriptService @Autowired constructor (
         jwt: Jwt
     ): ResponseEntity<String> {
         val url = "$psUrl/format"
-        val formatConfig = generateFormatConfig(rulesService.getRules(RulesetType.FORMAT, getUserIdFromJWT(jwt)))
+        val formatConfig = rulesService.getRules(RulesetType.FORMAT, getUserIdFromJWT(jwt))
         val requestEntity = HttpEntity(FormatRequest(snippetId, formatConfig), generateHeaders(jwt))
         println(formatConfig.toString())
         val response = restTemplate.exchange(
@@ -82,9 +82,8 @@ class PrintScriptService @Autowired constructor (
         rules: List<CompleteRuleDTO>
     ){
         val url = "$psUrl/format"
-        val formatConfig = generateFormatConfig(rules)
         val userId = getUserIdFromJWT(jwt)
-        val requestEntity = HttpEntity(FormatRequest(snippetId, formatConfig), generateHeaders(jwt))
+        val requestEntity = HttpEntity(FormatRequest(snippetId, rules), generateHeaders(jwt))
         val response = restTemplate.exchange(
             url,
             POST,
@@ -123,6 +122,7 @@ class PrintScriptService @Autowired constructor (
             requestEntity,
             object : ParameterizedTypeReference<List<String>>() {}
         )
+        println(response.body)
         processLintResponse(response, userId, rules)
     }
 

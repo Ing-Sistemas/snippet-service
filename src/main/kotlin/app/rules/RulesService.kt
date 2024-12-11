@@ -42,14 +42,15 @@ class RulesService
         val rules = ruleRepository.findAllByType(ruleType)
         val userRules = getUserRules(userId, ruleType)
         val userRulesMap = rules.map { rule ->
-            val userRule = userRules.find { it.ruleId == rule.id }
+            val userRule = userRules.find { it.ruleId == rule.id }!!
+            logger.info("User rule: ${userRule.value}")
             CompleteRuleDTO(
                 id = rule.id,
                 name = rule.name,
                 ruleType = ruleType,
                 userId = userId,
-                isActive = userRule?.isActive ?: false,
-                value = userRule?.value,
+                isActive = userRule.isActive,
+                value = userRule.value,
             )
         }
         return userRulesMap
@@ -78,7 +79,7 @@ class RulesService
                 )
             }
         }
-        val message = when (ruleType) {
+        when (ruleType) {
             RulesetType.FORMAT -> formatAllSnippets(jwt)
             RulesetType.LINT -> lintAllSnippets(jwt)
         }
@@ -103,6 +104,7 @@ class RulesService
                     )
                 }
             }
+
             RulesetType.LINT -> {
                 val rules = ruleRepository.findAllByType(ruleType)
                 rules.map { rule ->
@@ -123,6 +125,7 @@ class RulesService
         }
 
         return newRules.map {
+            logger.info("Creating new rule with value: ${it.value}")
             ruleUserRepository.save(
                 RulesUserEntity(
                     userId = userId,
