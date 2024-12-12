@@ -1,29 +1,34 @@
 package com.example.springboot.app.tests
 
 import com.example.springboot.app.external.services.permission.PermissionService
+import com.example.springboot.app.external.services.printscript.LanguageService
 import com.example.springboot.app.external.services.printscript.PrintScriptService
 import com.example.springboot.app.snippets.ControllerUtils.generateHeaders
 import com.example.springboot.app.snippets.ControllerUtils.getUserIdFromJWT
+import com.example.springboot.app.snippets.SnippetService
 import com.example.springboot.app.tests.dto.AddTestCaseDTO
 import com.example.springboot.app.tests.dto.RunTestDTO
 import com.example.springboot.app.tests.dto.TestCaseDTO
 import com.example.springboot.app.tests.entity.TestCase
 import com.example.springboot.app.tests.enums.TestCaseResult
 import com.example.springboot.app.tests.enums.TestStatus
+import com.example.springboot.app.utils.CodingLanguage
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.*
+import java.util.*
 import kotlin.math.log
 
 @RestController
 @RequestMapping("/api")
 class TestController @Autowired constructor(
-    private val printScriptService: PrintScriptService,
+    private val languageService: Map<CodingLanguage, LanguageService>,
     private val permissionService: PermissionService,
     private val testService: TestService,
+    private val snippetService: SnippetService,
 ){
     private val logger = LoggerFactory.getLogger(TestController::class.java)
 
@@ -104,7 +109,9 @@ class TestController @Autowired constructor(
         return try {
             logger.trace("Running tests for snippet with id: {}", sId)
             val headers = generateHeaders(jwt)
-            val result = printScriptService.runTests(runTestDTO, headers, sId)
+            val snippet = snippetService.findSnippetById(sId)
+            println("Testing snippet ${snippet.language.uppercase(Locale.getDefault())}")
+            val result = languageService[CodingLanguage.valueOf(snippet.language.uppercase(Locale.getDefault()))]!!.runTests(runTestDTO, headers, sId)
             ResponseEntity.ok(result)
         } catch (e: Exception) {
             logger.error("Error running tests: {}", e.message)

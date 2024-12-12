@@ -1,5 +1,6 @@
 package com.example.springboot.app.snippets
 
+import com.example.springboot.app.rules.enums.SnippetStatus
 import jakarta.persistence.*
 import org.jetbrains.annotations.NotNull
 
@@ -19,4 +20,8 @@ data class SnippetEntity(
 
     @NotNull
     val version: String,
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    var status: SnippetStatus = SnippetStatus.PENDING,
 )
