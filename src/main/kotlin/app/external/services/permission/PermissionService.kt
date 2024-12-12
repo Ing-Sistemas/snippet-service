@@ -84,7 +84,6 @@ class PermissionService @Autowired constructor(
         headers: HttpHeaders
     ): PermissionResponse {
         val url = "$permissionURL/share"
-        logger.info("the sId: $snippetId, the fid: $friendId, the headers: $headers")
         val shareRequest = HttpEntity(PermissionShare(snippetId, friendId), headers)
         val response = restTemplate.postForEntity(url, shareRequest, PermissionResponse::class.java)
         if (response.body == null) {
