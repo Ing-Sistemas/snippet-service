@@ -5,5 +5,5 @@ import com.example.springboot.app.rules.model.dto.RuleDTO
 data class SyncFormatRequest(
     val snippetId: String,
     val userId: String,
-    val rules: List<RuleDTO>
+    val rules: List<RuleDTO>,
 )

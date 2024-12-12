@@ -13,7 +13,7 @@ interface LintEventProd {
 @Component
 class LintEventProducer(
     @Value("\${stream.key.linter}") streamKey: String,
-    redis: ReactiveRedisTemplate<String, String>
+    redis: ReactiveRedisTemplate<String, String>,
 ) : LintEventProd, RedisStreamProducer(streamKey, redis) {
     override suspend fun publish(event: LintEvent) {
         emit(event).awaitSingle()

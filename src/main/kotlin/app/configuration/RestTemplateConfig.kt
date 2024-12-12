@@ -11,10 +11,8 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.web.client.ResponseErrorHandler
 import org.springframework.web.client.RestTemplate
 
-
 @Configuration
 class RestTemplateConfig {
-
     @Bean
     fun restTemplate(): RestTemplate {
         val objectMapper = ObjectMapper()
@@ -24,15 +22,16 @@ class RestTemplateConfig {
         val restTemplate = RestTemplate(listOf(messageConverter))
 
         restTemplate.requestFactory = clientHttpRequestFactory()
-        restTemplate.errorHandler = object : ResponseErrorHandler {
-            // this avoids the default behavior of RestTemplate to throw exceptions for HTTP error status codes.
-            override fun hasError(response: ClientHttpResponse): Boolean {
-                return response.statusCode.is4xxClientError || response.statusCode.is5xxServerError
-            }
+        restTemplate.errorHandler =
+            object : ResponseErrorHandler {
+                // this avoids the default behavior of RestTemplate to throw exceptions for HTTP error status codes.
+                override fun hasError(response: ClientHttpResponse): Boolean {
+                    return response.statusCode.is4xxClientError || response.statusCode.is5xxServerError
+                }
 
-            override fun handleError(response: ClientHttpResponse) {
+                override fun handleError(response: ClientHttpResponse) {
+                }
             }
-        }
         return restTemplate
     }
 

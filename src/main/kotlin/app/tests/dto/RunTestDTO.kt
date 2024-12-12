@@ -7,5 +7,5 @@ data class RunTestDTO(
     val name: String?,
     val input: List<String>,
     val output: List<String>,
-    val status: TestStatus? = null
+    val status: TestStatus? = null,
 )

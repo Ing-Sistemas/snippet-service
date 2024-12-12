@@ -7,5 +7,5 @@ data class RuleDTO(
     val id: String,
     val name: String,
     val ruleType: RulesetType,
-    val valueType: ValueType
+    val valueType: ValueType,
 )

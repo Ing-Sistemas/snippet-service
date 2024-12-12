@@ -3,7 +3,7 @@ package com.example.springboot.app.external.auth
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.HttpMethod.*
+import org.springframework.http.HttpMethod.GET
 import org.springframework.security.config.Customizer.withDefaults
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
@@ -16,14 +16,15 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
-import org.springframework.web.cors.reactive.CorsWebFilter
 
 @Configuration
 @EnableWebSecurity
-class OAuth2ResourceServerSecurityConfiguration(@Value("\${auth0.audience}")
-                                                val audience: String,
-                                                @Value("\${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
-                                                val issuer: String,) {
+class OAuth2ResourceServerSecurityConfiguration(
+    @Value("\${auth0.audience}")
+    val audience: String,
+    @Value("\${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+    val issuer: String,
+) {
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http.authorizeHttpRequests {
@@ -34,7 +35,7 @@ class OAuth2ResourceServerSecurityConfiguration(@Value("\${auth0.audience}")
         }
             .oauth2ResourceServer {
                 it
-                .jwt(withDefaults())
+                    .jwt(withDefaults())
             }
             .cors {
                 it.configurationSource(corsConfigurationSource())
@@ -57,11 +58,12 @@ class OAuth2ResourceServerSecurityConfiguration(@Value("\${auth0.audience}")
 
     @Bean
     fun corsConfigurationSource(): UrlBasedCorsConfigurationSource {
-        val configuration = CorsConfiguration().apply {
-            allowedOrigins = listOf("http://localhost:5173", "https://fantoche.duckdns.org", "https://fantochetriple.duckdns.org")
-            allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
-            allowedHeaders = listOf("*")
-        }
+        val configuration =
+            CorsConfiguration().apply {
+                allowedOrigins = listOf("http://localhost:5173", "https://fantoche.duckdns.org", "https://fantochetriple.duckdns.org")
+                allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                allowedHeaders = listOf("*")
+            }
         val source = UrlBasedCorsConfigurationSource()
         source.registerCorsConfiguration("/**", configuration)
         return source

@@ -6,10 +6,10 @@ import com.example.springboot.app.rules.enums.SnippetStatus
 import com.example.springboot.app.snippets.dto.SnippetDTO
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
+import org.springframework.mock.web.MockMultipartFile
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.multipart.MultipartFile
 import java.util.*
-import org.springframework.mock.web.MockMultipartFile
 
 object ControllerUtils {
     fun generateSnippetDTO(snippetRequestCreate: SnippetRequestCreate): SnippetDTO {
@@ -19,16 +19,17 @@ object ControllerUtils {
             snippetRequestCreate.language,
             snippetRequestCreate.extension,
             snippetRequestCreate.version,
-            SnippetStatus.PENDING
+            SnippetStatus.PENDING,
         )
     }
 
     fun getUserIdFromJWT(jwt: Jwt): String {
-        val auth = OAuth2ResourceServerSecurityConfiguration(
-            System.getenv("AUTH0_AUDIENCE"),
-            System.getenv("AUTH_SERVER_URI")
-        ).jwtDecoder()
-        val subject =  auth.decode(jwt.tokenValue).subject
+        val auth =
+            OAuth2ResourceServerSecurityConfiguration(
+                System.getenv("AUTH0_AUDIENCE"),
+                System.getenv("AUTH_SERVER_URI"),
+            ).jwtDecoder()
+        val subject = auth.decode(jwt.tokenValue).subject
         return subject?.removePrefix("auth0|") ?: throw IllegalArgumentException("User ID is null or invalid")
     }
 
@@ -44,24 +45,23 @@ object ControllerUtils {
             snippetRequestCreate.title,
             snippetRequestCreate.title,
             snippetRequestCreate.extension,
-            snippetRequestCreate.code.toByteArray()
+            snippetRequestCreate.code.toByteArray(),
         )
     }
 
     fun generateFileFromData(
         snippet: SnippetDTO,
-        code: String
+        code: String,
     ): MultipartFile {
         return MockMultipartFile(
             snippet.title,
             snippet.title,
             snippet.extension,
-            code.toByteArray()
+            code.toByteArray(),
         )
     }
 
     fun getFileContent(file: MultipartFile): String {
         return String(file.bytes)
     }
-
 }

@@ -10,6 +10,5 @@ SnippetService -> PermissionService: Checks has share perm
 PermissionService -> SnippetService: Has share perm
 SnippetService -> PermissionService: Snippet to share
 SnippetService -> AssetService: Gets snippet
-SnippetService -> PrintScriptService: Validates snippet
 SnippetService -> AssetService: Assigns snippet to friend ID
 @enduml

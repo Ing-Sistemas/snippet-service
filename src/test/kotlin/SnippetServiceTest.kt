@@ -3,18 +3,20 @@ package com.example.springboot.app.snippets
 import com.example.springboot.app.rules.enums.SnippetStatus
 import com.example.springboot.app.snippets.dto.SnippetDTO
 import com.example.springboot.app.utils.UserUtils
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito.*
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.doNothing
+import org.mockito.Mockito.any
 import org.mockito.junit.jupiter.MockitoExtension
-
 
 @ExtendWith(MockitoExtension::class)
 class SnippetServiceTest {
-
     @Mock
     private lateinit var snippetRepository: SnippetRepository
 
@@ -23,7 +25,6 @@ class SnippetServiceTest {
 
     @InjectMocks
     private lateinit var snippetService: SnippetService
-
 
     @Test
     fun `should create snippet successfully`() {
@@ -77,4 +78,16 @@ class SnippetServiceTest {
         verify(snippetRepository).findSnippetEntityByTitle("TestSnippet")
     }
 
+    @Test
+    fun `should change snippet status successfully`() {
+        val snippetEntity = SnippetEntity("1", "TestSnippet", ".kt", "Kotlin", "1.0")
+
+        `when`(snippetRepository.findSnippetEntityById("1")).thenReturn(snippetEntity)
+
+        snippetService.changeSnippetStatus("1", SnippetStatus.COMPLIANT)
+
+        assertEquals(SnippetStatus.COMPLIANT, snippetEntity.status)
+        verify(snippetRepository).findSnippetEntityById("1")
+        verify(snippetRepository).save(snippetEntity)
+    }
 }

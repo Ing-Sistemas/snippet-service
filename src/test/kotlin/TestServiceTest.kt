@@ -2,39 +2,48 @@ import com.example.springboot.app.snippets.SnippetEntity
 import com.example.springboot.app.snippets.SnippetRepository
 import com.example.springboot.app.tests.TestService
 import com.example.springboot.app.tests.dto.AddTestCaseDTO
+import com.example.springboot.app.tests.dto.RunTestDTO
 import com.example.springboot.app.tests.entity.SnippetTest
 import com.example.springboot.app.tests.entity.TestCase
+import com.example.springboot.app.tests.enums.TestCaseResult
 import com.example.springboot.app.tests.enums.TestStatus
 import com.example.springboot.app.tests.repository.SnippetTestRepository
 import com.example.springboot.app.tests.repository.TestCaseRepository
-import jdk.jshell.Snippet
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mockito.*
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.any
 import org.mockito.junit.jupiter.MockitoExtension
-import java.util.*
+import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
 class TestServiceTest {
-
     private val testCaseRepository: TestCaseRepository = mock(TestCaseRepository::class.java)
     private val snippetRepository: SnippetRepository = mock(SnippetRepository::class.java)
     private val snippetTestRepository: SnippetTestRepository = mock(SnippetTestRepository::class.java)
 
-    private val testService = TestService(
-        testCaseRepository, snippetRepository, snippetTestRepository
-    )
+    private val testService =
+        TestService(
+            testCaseRepository,
+            snippetRepository,
+            snippetTestRepository,
+        )
 
     @Test
     fun `should get all tests for a snippet`() {
-        val testCase = TestCase(
-            id = "1",
-            name = "Test 1",
-            input = listOf("input1"),
-            output = listOf("output1")
-        )
+        val testCase =
+            TestCase(
+                id = "1",
+                name = "Test 1",
+                input = listOf("input1"),
+                output = listOf("output1"),
+            )
         val addTestCaseDTO = AddTestCaseDTO(null, "Test 1", emptyList(), emptyList())
 
         `when`(testCaseRepository.findBySnippetId("snippet1")).thenReturn(listOf(testCase))
@@ -44,8 +53,6 @@ class TestServiceTest {
         assertEquals(1, result.size)
         assertEquals("Test 1", result[0].name)
     }
-
-
 
     @Test
     fun `should delete a test by id`() {
@@ -62,6 +69,8 @@ class TestServiceTest {
         val snippet = mock(SnippetEntity::class.java)
         val addTestCaseDTO = AddTestCaseDTO(null, "New Test", listOf("input1"), listOf("output1"))
         `when`(snippetRepository.findSnippetEntityById("snippetId")).thenReturn(snippet)
+        val fails = TestCaseResult.FAIL
+        fails.toString()
         `when`(testCaseRepository.save(any(TestCase::class.java))).thenAnswer { it.getArgument(0) }
 
         val result = testService.addTest(addTestCaseDTO, "snippetId")
@@ -74,10 +83,11 @@ class TestServiceTest {
     @Test
     fun `should throw exception when deleting non-existent test`() {
         `when`(testCaseRepository.findById("invalidTestId")).thenReturn(Optional.empty())
-
-        val exception = assertThrows<IllegalStateException> {
-            testService.deleteTest("invalidTestId")
-        }
+        val runTestDTO = RunTestDTO(null, null, emptyList(), emptyList(), TestStatus.FAIL)
+        val exception =
+            assertThrows<IllegalStateException> {
+                testService.deleteTest("invalidTestId")
+            }
 
         assertEquals("Test with id: invalidTestId not found", exception.message)
     }
@@ -112,9 +122,10 @@ class TestServiceTest {
         val addTestCaseDTO = AddTestCaseDTO("nonExistentId", "Test", listOf("input"), listOf("output"))
         `when`(testCaseRepository.findById("nonExistentId")).thenReturn(Optional.empty())
 
-        val exception = assertThrows<IllegalStateException> {
-            testService.updateTest(addTestCaseDTO)
-        }
+        val exception =
+            assertThrows<IllegalStateException> {
+                testService.updateTest(addTestCaseDTO)
+            }
 
         assertEquals("Test with id: nonExistentId not found", exception.message)
     }
@@ -122,13 +133,17 @@ class TestServiceTest {
     @Test
     fun `should get all tests with correct status`() {
         val snippetTest = SnippetTest("1", TestStatus.SUCCESS, null)
-        val testCase = TestCase(
-            id = "1",
-            name = "Test 1",
-            input = listOf("input1"),
-            output = listOf("output1"),
-            snippetTests = listOf(snippetTest)
-        )
+        snippetTest.testCase
+        snippetTest.id
+        TestCaseResult.SUCCESS
+        val testCase =
+            TestCase(
+                id = "1",
+                name = "Test 1",
+                input = listOf("input1"),
+                output = listOf("output1"),
+                snippetTests = listOf(snippetTest),
+            )
 
         `when`(testCaseRepository.findBySnippetId("snippetId")).thenReturn(listOf(testCase))
 
@@ -138,5 +153,4 @@ class TestServiceTest {
         assertEquals("Test 1", result[0].name)
         assertEquals(TestStatus.SUCCESS, result[0].status)
     }
-
 }

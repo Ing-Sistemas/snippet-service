@@ -67,6 +67,12 @@ jacocoTestReport {
 			fileTree(
 					dir: 'build/classes/kotlin/main',
 					exclude: [
+                            "com/example/springboot/app/rules/RuleController.class",
+                            "com/example/springboot/app/snippets/SnippetController.class",
+                            "com/example/springboot/app/tests/TestController.class",
+                            "com/example/springboot/ApplicationKt.class",
+                            "com/example/springboot/SnippetServiceApplication.class",
+                            "META-INF/Snippet-Service.kotlin_module",
 							"com/example/springboot/app/configuration/**",
 							"com/example/springboot/app/external/**",
 							"com/example/springboot/app/health/**",
@@ -82,10 +88,20 @@ jacocoTestCoverageVerification {
 			fileTree(
 					dir: 'build/classes/kotlin/main',
 					exclude: [
-							"com/example/springboot/app/configuration/**",
-							"com/example/springboot/app/external/**",
-							"com/example/springboot/app/health/**",
-							"com/example/springboot/app/utils/**",
+                            "com/example/springboot/app/rules/RuleController.class",
+                            "com/example/springboot/app/rules/seed/**",
+                            "com/example/springboot/app/snippets/SnippetController.class",
+                            "com/example/springboot/app/tests/TestController.class",
+                            "com/example/springboot/ApplicationKt.class",
+                            "com/example/springboot/SnippetServiceApplication.class",
+                            "META-INF/Snippet-Service.kotlin_module",
+                            "com/example/springboot/app/configuration/**",
+                            "com/example/springboot/app/external/auth/**",
+                            "com/example/springboot/app/external/redis/**",
+                            "com/example/springboot/app/external/services/permission/**",
+                            "com/example/springboot/app/external/services/printscript/**",
+                            "com/example/springboot/app/health/**",
+                            "com/example/springboot/app/utils/**",
 					]
 			)
 	)
@@ -94,7 +110,7 @@ jacocoTestCoverageVerification {
 			limit {
 				counter = 'LINE'
 				value = 'COVEREDRATIO'
-				minimum = 0.10//CHANGE
+				minimum = 0.69
 			}
 		}
 	}
