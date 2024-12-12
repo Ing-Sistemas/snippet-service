@@ -14,5 +14,4 @@ data class SnippetTest(
 
     @ManyToOne
     @JoinColumn(name = "testId", nullable = false)
-    val testCase: TestCase? = null,
-)
+    val testCase: TestCase? = null,)

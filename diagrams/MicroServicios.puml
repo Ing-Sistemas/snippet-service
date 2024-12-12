@@ -1,0 +1,73 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+package "VM" {
+    package "Infra"{
+
+    [UI] -> [Proxy]
+    [Proxy] -> [UI]
+
+    [Proxy] ---> [SnippetService]
+
+    [SnippetService] -> [snippet-service-db] #magenta
+    [SnippetService] ---> [PermissionService] #magenta
+    [SnippetService] ---> [PrintScriptService] #magenta
+    [SnippetService] ---> [assetService] #magenta
+    [SnippetService] -> [Redis] #red
+    [Redis] -> [SnippetService] #red
+
+
+
+    [PermissionService] --> [permission-db] #lightblue
+
+
+    [PrintScriptService] --> [assetService] #yellow
+
+    }
+}
+
+
+component NewRelic{
+    [NewRelic] --> [SnippetService] #green
+    [NewRelic] --> [PermissionService] #green
+    [NewRelic] --> [PrintScriptService] #green
+}
+
+component Redis{
+}
+
+component Proxy{
+}
+
+component UI{
+}
+
+component PermissionService{
+}
+
+component SnippetService{
+}
+
+component PrintScriptService{
+    component PrintScript
+}
+
+database permission-db{
+}
+
+database snippet-service-db{
+}
+
+database assetService{
+}
+
+component User{
+    [User] ----> [Proxy]
+}
+
+component Auth0{
+    [Auth0] -> [SnippetService] #blue
+    [Auth0] -> [PrintScriptService] #blue
+    [Auth0] -> [PermissionService] #blue
+}
+@enduml
