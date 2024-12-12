@@ -2,12 +2,15 @@ package com.example.springboot.app.rules
 
 
 import com.example.springboot.app.external.services.permission.PermissionService
+import com.example.springboot.app.external.services.printscript.LanguageService
 import com.example.springboot.app.external.services.printscript.PrintScriptService
 import com.example.springboot.app.rules.model.dto.AddRuleDTO
 import com.example.springboot.app.rules.enums.RulesetType
 import com.example.springboot.app.rules.model.dto.CompleteRuleDTO
 import com.example.springboot.app.snippets.ControllerUtils.generateHeaders
 import com.example.springboot.app.snippets.ControllerUtils.getUserIdFromJWT
+import com.example.springboot.app.snippets.SnippetService
+import com.example.springboot.app.utils.CodingLanguage
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
@@ -21,7 +24,8 @@ import java.util.*
 class RuleController @Autowired constructor(
     private val rulesService: RulesService,
     private val permissionService: PermissionService,
-    private val printScriptService: PrintScriptService,
+    private val snippetService: SnippetService,
+    private val languageService: Map<CodingLanguage, LanguageService>,
 ) {
 
     private val logger = LoggerFactory.getLogger(RuleController::class.java)
@@ -58,8 +62,8 @@ class RuleController @Autowired constructor(
         logger.trace("Formatting snippet $snippetId")
         return try {
             if (permissionService.hasPermissionBySnippetId("WRITE",snippetId, generateHeaders(jwt))) {
-
-                printScriptService.format(snippetId, jwt)
+                val language = snippetService.findSnippetById(snippetId).language
+                languageService[CodingLanguage.valueOf(language.uppercase(Locale.getDefault()))]!!.format(snippetId, jwt)
             } else {
                 ResponseEntity.status(403).build()
             }
