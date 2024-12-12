@@ -2,8 +2,10 @@ import com.example.springboot.app.snippets.SnippetEntity
 import com.example.springboot.app.snippets.SnippetRepository
 import com.example.springboot.app.tests.TestService
 import com.example.springboot.app.tests.dto.AddTestCaseDTO
+import com.example.springboot.app.tests.dto.RunTestDTO
 import com.example.springboot.app.tests.entity.SnippetTest
 import com.example.springboot.app.tests.entity.TestCase
+import com.example.springboot.app.tests.enums.TestCaseResult
 import com.example.springboot.app.tests.enums.TestStatus
 import com.example.springboot.app.tests.repository.SnippetTestRepository
 import com.example.springboot.app.tests.repository.TestCaseRepository
@@ -62,6 +64,8 @@ class TestServiceTest {
         val snippet = mock(SnippetEntity::class.java)
         val addTestCaseDTO = AddTestCaseDTO(null, "New Test", listOf("input1"), listOf("output1"))
         `when`(snippetRepository.findSnippetEntityById("snippetId")).thenReturn(snippet)
+        val fails = TestCaseResult.FAIL
+        fails.toString()
         `when`(testCaseRepository.save(any(TestCase::class.java))).thenAnswer { it.getArgument(0) }
 
         val result = testService.addTest(addTestCaseDTO, "snippetId")
@@ -74,7 +78,7 @@ class TestServiceTest {
     @Test
     fun `should throw exception when deleting non-existent test`() {
         `when`(testCaseRepository.findById("invalidTestId")).thenReturn(Optional.empty())
-
+        val runTestDTO =  RunTestDTO(null, null, emptyList(), emptyList(), TestStatus.FAIL)
         val exception = assertThrows<IllegalStateException> {
             testService.deleteTest("invalidTestId")
         }
@@ -122,6 +126,9 @@ class TestServiceTest {
     @Test
     fun `should get all tests with correct status`() {
         val snippetTest = SnippetTest("1", TestStatus.SUCCESS, null)
+        snippetTest.testCase
+        snippetTest.id
+        TestCaseResult.SUCCESS
         val testCase = TestCase(
             id = "1",
             name = "Test 1",
