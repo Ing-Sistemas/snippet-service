@@ -13,7 +13,11 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.net.InetAddress
 
-abstract class RedisStreamConsumer<Value>(protected val streamKey: String, protected val groupId: String, private val redis: ReactiveRedisTemplate<String, String>) {
+abstract class RedisStreamConsumer<Value>(
+    protected val streamKey: String,
+    protected val groupId: String,
+    private val redis: ReactiveRedisTemplate<String, String>,
+) {
     protected abstract fun onMessage(record: ObjectRecord<String, Value>)
 
     private lateinit var flow: Flux<ObjectRecord<String, Value>>

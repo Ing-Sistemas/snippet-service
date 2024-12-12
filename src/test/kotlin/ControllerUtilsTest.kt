@@ -3,9 +3,10 @@ import com.example.springboot.app.snippets.ControllerUtils
 import com.example.springboot.app.snippets.dto.SnippetDataUi
 import com.example.springboot.app.snippets.dto.SnippetsGroup
 import com.example.springboot.app.snippets.dto.UpdateSnippetDTO
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.*
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.security.oauth2.jwt.Jwt
 
@@ -23,9 +24,10 @@ class ControllerUtilsTest {
 
         val dto = ControllerUtils.generateSnippetDTO(request)
         val update = UpdateSnippetDTO("println('adios');")
+        println(update)
 
         val file = ControllerUtils.generateFileFromData(dto, "println(\"Hello, World!\")")
-
+        println(file)
         assertEquals("Test Snippet", dto.title)
         assertEquals("PrintScript", dto.language)
         assertEquals("ps", dto.extension)
@@ -36,6 +38,7 @@ class ControllerUtilsTest {
     fun `generateHeaders creates correct headers`() {
         val jwt = mock(Jwt::class.java)
         val group = SnippetsGroup(emptyList())
+        println(group)
         `when`(jwt.tokenValue).thenReturn("jwt-token")
 
         val headers = ControllerUtils.generateHeaders(jwt)
@@ -55,7 +58,7 @@ class ControllerUtilsTest {
                 version = "1.0",
                 code = "fun main() {}",
             )
-
+        println(uiData)
         val file = ControllerUtils.generateFile(request)
 
         assertEquals("Test File", file.name)

@@ -3,12 +3,16 @@ package com.example.springboot.app.snippets
 import com.example.springboot.app.rules.enums.SnippetStatus
 import com.example.springboot.app.snippets.dto.SnippetDTO
 import com.example.springboot.app.utils.UserUtils
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito.*
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.doNothing
+import org.mockito.Mockito.any
 import org.mockito.junit.jupiter.MockitoExtension
 
 @ExtendWith(MockitoExtension::class)

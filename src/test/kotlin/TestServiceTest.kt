@@ -9,13 +9,18 @@ import com.example.springboot.app.tests.enums.TestCaseResult
 import com.example.springboot.app.tests.enums.TestStatus
 import com.example.springboot.app.tests.repository.SnippetTestRepository
 import com.example.springboot.app.tests.repository.TestCaseRepository
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mockito.*
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.any
 import org.mockito.junit.jupiter.MockitoExtension
-import java.util.*
+import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
 class TestServiceTest {

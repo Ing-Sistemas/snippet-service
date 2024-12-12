@@ -3,7 +3,8 @@ package com.example.springboot.app.external.services.asset
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.*
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.stereotype.Component
 import org.springframework.web.multipart.MultipartFile

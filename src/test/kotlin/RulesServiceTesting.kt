@@ -20,7 +20,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
-import org.mockito.Mockito.*
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import kotlin.test.assertEquals
@@ -72,7 +73,8 @@ class RulesServiceTesting {
             )
         val userRule = UserRuleDTO("299", false, 4, SnippetStatus.COMPLIANT, "1")
         `when`(ruleRepository.findAllRulesByUserIdAndType(userId, ruleType)).thenReturn(mockRules)
-
+        println(addRule)
+        println(userRule)
         val result = rulesService.getRules(ruleType, userId)
         assertEquals(mockRules, result)
         verify(ruleRepository).findAllRulesByUserIdAndType(userId, ruleType)
@@ -84,7 +86,7 @@ class RulesServiceTesting {
         val userId = "test-user"
         val ruleId = "rule-1"
         val mockEntity = RulesUserEntity(userId = userId, rule = Rule(ruleId, "Test Rule"))
-
+        println(rule)
         `when`(ruleUserRepository.findFirstByUserIdAndRuleId(userId, ruleId)).thenReturn(mockEntity)
 
         rulesService.changeUserRuleCompliance(userId, ruleId, SnippetStatus.COMPLIANT)

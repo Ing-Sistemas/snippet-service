@@ -16,7 +16,8 @@ import org.springframework.data.redis.serializer.StringRedisSerializer
 class ConnectionFactory(
     @Value("\${spring.data.redis.host}") private val hostName: String,
     @Value("\${spring.data.redis.port}") private val port: Int,
-    private val objectMapper: ObjectMapper, // FIXME: Could not autowire. No beans of 'ObjectMapper' type found.
+    private val objectMapper: ObjectMapper,
+    // FIXME: Could not autowire. No beans of 'ObjectMapper' type found.
 ) {
     @Bean
     fun redisConnectionFactory(): LettuceConnectionFactory {

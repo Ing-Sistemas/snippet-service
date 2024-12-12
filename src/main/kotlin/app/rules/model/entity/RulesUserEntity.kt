@@ -1,8 +1,16 @@
 package com.example.springboot.app.rules.model.entity
 
 import com.example.springboot.app.rules.enums.SnippetStatus
-import jakarta.persistence.*
-import java.util.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.Enumerated
+import jakarta.persistence.EnumType
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.Id
+import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
+import java.util.UUID
 
 @Entity
 @Table(uniqueConstraints = [UniqueConstraint(columnNames = ["userId", "ruleId"])])

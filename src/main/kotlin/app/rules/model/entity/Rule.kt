@@ -2,7 +2,12 @@ package com.example.springboot.app.rules.model.entity
 
 import com.example.springboot.app.rules.enums.RulesetType
 import com.example.springboot.app.rules.enums.ValueType
-import jakarta.persistence.*
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.Enumerated
+import jakarta.persistence.EnumType
+import jakarta.persistence.OneToMany
+import jakarta.persistence.CascadeType
 import org.jetbrains.annotations.NotNull
 
 @Entity

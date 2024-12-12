@@ -7,7 +7,7 @@ import com.example.springboot.app.rules.repository.RuleRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
-import java.util.*
+import java.util.UUID
 
 @Component
 class RuleSeeder
