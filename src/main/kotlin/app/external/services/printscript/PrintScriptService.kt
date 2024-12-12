@@ -12,10 +12,9 @@ import com.example.springboot.app.rules.model.dto.CompleteRuleDTO
 import org.springframework.http.HttpMethod.POST
 import com.example.springboot.app.snippets.ControllerUtils.generateHeaders
 import com.example.springboot.app.snippets.ControllerUtils.getUserIdFromJWT
+import com.example.springboot.app.snippets.SnippetService
 import com.example.springboot.app.tests.dto.RunTestDTO
 import com.example.springboot.app.tests.enums.TestCaseResult
-import com.example.springboot.app.utils.FormatConfig
-import com.example.springboot.app.utils.UserUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpEntity
@@ -26,18 +25,17 @@ import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import org.springframework.context.annotation.Lazy
 import org.springframework.core.ParameterizedTypeReference
-import org.springframework.web.client.exchange
 
 @Service
 class PrintScriptService @Autowired constructor (
     private val restTemplate: RestTemplate,
-    private val userUtils: UserUtils,
+    private val snippetService: SnippetService,
     @Lazy private val rulesService: RulesService,
 
-){
+): LanguageService {
     @Value("\${spring.constants.print_script_url}") private lateinit var psUrl: String
 
-    fun validateSnippet(
+    override fun validateSnippet(
     snippetId: String,
     version: String,
     headers: HttpHeaders
@@ -54,7 +52,7 @@ class PrintScriptService @Autowired constructor (
 
 
     // for sync formatting
-    fun format(
+    override fun format(
         snippetId: String,
         jwt: Jwt
     ): ResponseEntity<String> {
@@ -76,7 +74,7 @@ class PrintScriptService @Autowired constructor (
     }
 
     // for async formatting
-    fun autoFormat(
+    override fun autoFormat(
         snippetId: String,
         jwt: Jwt,
         rules: List<CompleteRuleDTO>
@@ -109,7 +107,7 @@ class PrintScriptService @Autowired constructor (
      */
 
 
-    fun autoLint(
+    override fun autoLint(
         snippetId: String,
         jwt: Jwt,
         rules: List<CompleteRuleDTO>
@@ -122,12 +120,12 @@ class PrintScriptService @Autowired constructor (
             requestEntity,
             object : ParameterizedTypeReference<List<String>>() {}
         )
-        println(response.body)
-        processLintResponse(response, userId, rules)
+        println("Response from linting: ${response.body}")
+        processLintResponse(response, userId, snippetId)
     }
 
 
-    fun runTests(test: RunTestDTO, headers: HttpHeaders, sId: String): TestCaseResult {
+    override fun runTests(test: RunTestDTO, headers: HttpHeaders, sId: String): TestCaseResult {
         val url = "$psUrl/test/run_tests/${sId}"
         val requestEntity = HttpEntity(test, headers)
         val response = restTemplate.postForEntity(url, requestEntity, String::class.java)
@@ -152,24 +150,18 @@ class PrintScriptService @Autowired constructor (
     }
 
 
-    private fun processLintResponse(response: ResponseEntity<List<String>>, userId: String, rules: List<CompleteRuleDTO>): ResponseEntity<List<String>> {
+    private fun processLintResponse(response: ResponseEntity<List<String>>, userId: String, snippetId: String): ResponseEntity<List<String>> {
         return when {
             response.statusCode.is2xxSuccessful -> {
-                rules.forEach { rule ->
-                    rulesService.changeUserRuleCompliance(userId, rule.id, SnippetStatus.COMPLIANT)
-                }
+                snippetService.changeSnippetStatus(snippetId, SnippetStatus.COMPLIANT)
                 ResponseEntity.ok(response.body!!)
             }
             response.statusCode.is4xxClientError -> {
-                rules.forEach { rule ->
-                    rulesService.changeUserRuleCompliance(userId, rule.id, SnippetStatus.NOT_COMPLIANT)
-                }
+                snippetService.changeSnippetStatus(snippetId, SnippetStatus.NOT_COMPLIANT)
                 ResponseEntity.status(400).body(response.body!!)
             }
             response.statusCode.is5xxServerError -> {
-                rules.forEach { rule ->
-                    rulesService.changeUserRuleCompliance(userId, rule.id, SnippetStatus.FAILED)
-                }
+                snippetService.changeSnippetStatus(snippetId, SnippetStatus.FAILED)
                 ResponseEntity.status(500).body(response.body!!)
             }
             else -> {
@@ -202,22 +194,5 @@ class PrintScriptService @Autowired constructor (
                 throw Exception("Failed to process response")
             }
         }
-    }
-
-    private fun generateFormatConfig(rules: List<CompleteRuleDTO>): FormatConfig {
-        val configMap = rules
-            .filter { it.ruleType == RulesetType.FORMAT }
-            .associateBy { it.name }
-
-        //abomination
-        return FormatConfig(
-            spaceBeforeColon = configMap["spaceBeforeColon"]?.value?.toString()?.toBoolean() ?: false,
-            spaceAfterColon = configMap["spaceAfterColon"]?.value?.toString()?.toBoolean() ?: false,
-            spaceAroundEquals = configMap["spaceAroundEquals"]?.value?.toString()?.toBoolean() ?: false,
-            lineJumpBeforePrintln = configMap["lineJumpBeforePrintln"]?.value?.toString()?.toIntOrNull() ?: 0,
-            lineJumpAfterSemicolon = configMap["lineJumpAfterSemicolon"]?.value?.toString()?.toBoolean() ?: false,
-            singleSpaceBetweenTokens = configMap["singleSpaceBetweenTokens"]?.value?.toString()?.toBoolean() ?: true,
-            spaceAroundOperators = configMap["spaceAroundOperators"]?.value?.toString()?.toBoolean() ?: true
-        )
     }
 }

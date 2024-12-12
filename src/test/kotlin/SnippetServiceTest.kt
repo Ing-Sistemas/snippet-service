@@ -1,5 +1,6 @@
 package com.example.springboot.app.snippets
 
+import com.example.springboot.app.rules.enums.SnippetStatus
 import com.example.springboot.app.snippets.dto.SnippetDTO
 import com.example.springboot.app.utils.UserUtils
 import org.junit.jupiter.api.Test
@@ -26,7 +27,7 @@ class SnippetServiceTest {
 
     @Test
     fun `should create snippet successfully`() {
-        val snippetDTO = SnippetDTO("1", "TestSnippet", "Kotlin", ".kt", "1.0")
+        val snippetDTO = SnippetDTO("1", "TestSnippet", "Kotlin", ".kt", "1.0", SnippetStatus.PENDING)
         val snippetEntity = SnippetEntity("1", "TestSnippet", ".kt", "Kotlin", "1.0")
 
         `when`(snippetRepository.save(any(SnippetEntity::class.java))).thenReturn(snippetEntity)

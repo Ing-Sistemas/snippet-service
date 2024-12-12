@@ -2,6 +2,7 @@ package com.example.springboot.app.snippets
 
 import com.example.springboot.app.external.auth.OAuth2ResourceServerSecurityConfiguration
 import com.example.springboot.app.external.services.printscript.request.SnippetRequestCreate
+import com.example.springboot.app.rules.enums.SnippetStatus
 import com.example.springboot.app.snippets.dto.SnippetDTO
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -18,6 +19,7 @@ object ControllerUtils {
             snippetRequestCreate.language,
             snippetRequestCreate.extension,
             snippetRequestCreate.version,
+            SnippetStatus.PENDING
         )
     }
 
@@ -33,13 +35,6 @@ object ControllerUtils {
     fun generateHeaders(jwt: Jwt): HttpHeaders {
         return HttpHeaders().apply {
             set("Authorization", "Bearer ${jwt.tokenValue}")
-            contentType = MediaType.APPLICATION_JSON
-        }
-    }
-
-    fun generateHeadersFromStr(token: String): HttpHeaders {
-        return HttpHeaders().apply {
-            set("Authorization", "Bearer $token")
             contentType = MediaType.APPLICATION_JSON
         }
     }
