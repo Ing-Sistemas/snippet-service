@@ -4,5 +4,5 @@ import com.example.springboot.app.rules.model.dto.CompleteRuleDTO
 
 data class LintRequest(
     val snippetId: String,
-    val rules: List<CompleteRuleDTO>
+    val rules: List<CompleteRuleDTO>,
 )

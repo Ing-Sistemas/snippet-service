@@ -7,13 +7,13 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-class LanguageServiceConfig (
-    private val printScriptService: PrintScriptService
-){
+class LanguageServiceConfig(
+    private val printScriptService: PrintScriptService,
+) {
     @Bean
     fun languageMap(): Map<CodingLanguage, LanguageService> {
         return mapOf(
-            CodingLanguage.PRINTSCRIPT to printScriptService
+            CodingLanguage.PRINTSCRIPT to printScriptService,
         )
     }
 }

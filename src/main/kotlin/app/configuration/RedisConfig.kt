@@ -16,13 +16,12 @@ import org.springframework.data.redis.serializer.StringRedisSerializer
 class ConnectionFactory(
     @Value("\${spring.data.redis.host}") private val hostName: String,
     @Value("\${spring.data.redis.port}") private val port: Int,
-    private val objectMapper: ObjectMapper,//FIXME: Could not autowire. No beans of 'ObjectMapper' type found.
+    private val objectMapper: ObjectMapper, // FIXME: Could not autowire. No beans of 'ObjectMapper' type found.
 ) {
-
     @Bean
     fun redisConnectionFactory(): LettuceConnectionFactory {
         return LettuceConnectionFactory(
-            RedisStandaloneConfiguration(hostName, port)
+            RedisStandaloneConfiguration(hostName, port),
         )
     }
 
@@ -34,10 +33,11 @@ class ConnectionFactory(
         // Configure Jackson2JsonRedisSerializer with TypeFactory for handling Java types
         val valueSerializer = Jackson2JsonRedisSerializer<Any>(javaType)
 
-        val serializationContext = RedisSerializationContext
-            .newSerializationContext<String, Any>(StringRedisSerializer())
-            .value(valueSerializer)
-            .build()
+        val serializationContext =
+            RedisSerializationContext
+                .newSerializationContext<String, Any>(StringRedisSerializer())
+                .value(valueSerializer)
+                .build()
 
         return ReactiveRedisTemplate(connectionFactory, serializationContext)
     }

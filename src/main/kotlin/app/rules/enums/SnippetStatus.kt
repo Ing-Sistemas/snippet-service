@@ -5,5 +5,5 @@ enum class SnippetStatus {
     FAILED,
     NOT_COMPLIANT,
     COMPLIANT,
-    SUCCESS
+    SUCCESS,
 }

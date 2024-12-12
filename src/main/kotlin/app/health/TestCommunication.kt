@@ -9,7 +9,6 @@ import org.springframework.web.client.RestTemplate
 @RestController
 @RequestMapping("/api/com/health")
 class TestCommunication(private val restTemplate: RestTemplate) {
-
     private val host = System.getenv().getOrDefault("HOST", "localhost")
     private val permissionPort = System.getenv().getOrDefault("PERMISSION_SERVICE_PORT", "none")
     private val psPort = System.getenv().getOrDefault("PRINT_SCRIPT_SERVICE_PORT", "none")

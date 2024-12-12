@@ -9,7 +9,6 @@ import com.example.springboot.app.external.services.printscript.response.PSRespo
 import com.example.springboot.app.external.services.printscript.response.PSValResponse
 import com.example.springboot.app.external.services.printscript.response.SnippetResponse
 import com.example.springboot.app.rules.RulesService
-import com.example.springboot.app.rules.enums.SnippetStatus
 import com.example.springboot.app.rules.enums.RulesetType
 import com.example.springboot.app.rules.model.dto.CompleteRuleDTO
 import com.example.springboot.app.snippets.SnippetService
@@ -19,7 +18,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.http.HttpHeaders
@@ -28,7 +26,6 @@ import org.springframework.web.client.RestTemplate
 
 @ExtendWith(MockitoExtension::class)
 class PrintScriptServiceTest {
-
     @Mock
     private lateinit var restTemplate: RestTemplate
 
@@ -59,16 +56,18 @@ class PrintScriptServiceTest {
 
         val lintReq = LintRequest("s1", emptyList())
         val psRespo = PSResponse(null, null)
-        val result = printScriptService.run {
-            val method = this::class.java.getDeclaredMethod(
-                "processLintResponse",
-                ResponseEntity::class.java,
-                String::class.java,
-                String::class.java
-            )
-            method.isAccessible = true
-            method.invoke(this, response, userId, snippetId) as ResponseEntity<*>
-        }
+        val result =
+            printScriptService.run {
+                val method =
+                    this::class.java.getDeclaredMethod(
+                        "processLintResponse",
+                        ResponseEntity::class.java,
+                        String::class.java,
+                        String::class.java,
+                    )
+                method.isAccessible = true
+                method.invoke(this, response, userId, snippetId) as ResponseEntity<*>
+            }
 
         assertEquals(response.statusCode, result.statusCode)
     }
@@ -81,16 +80,18 @@ class PrintScriptServiceTest {
         val snippetId = "snippet123"
         val psValRes = PSValResponse(null, null)
 
-        val result = printScriptService.run {
-            val method = this::class.java.getDeclaredMethod(
-                "processLintResponse",
-                ResponseEntity::class.java,
-                String::class.java,
-                String::class.java
-            )
-            method.isAccessible = true
-            method.invoke(this, response, userId, snippetId) as ResponseEntity<*>
-        }
+        val result =
+            printScriptService.run {
+                val method =
+                    this::class.java.getDeclaredMethod(
+                        "processLintResponse",
+                        ResponseEntity::class.java,
+                        String::class.java,
+                        String::class.java,
+                    )
+                method.isAccessible = true
+                method.invoke(this, response, userId, snippetId) as ResponseEntity<*>
+            }
 
         assertEquals(response.statusCode, result.statusCode)
     }
@@ -100,19 +101,24 @@ class PrintScriptServiceTest {
         val response = ResponseEntity.ok("Format successful")
         val syncF = SyncFormatRequest("s1", "u1", emptyList())
         val userId = "user123"
-        val rules = listOf(CompleteRuleDTO("rule1", "name1", RulesetType.FORMAT, "user1", true, "value1"),
-            CompleteRuleDTO("rule2","name2", RulesetType.FORMAT, "user2", true, "value2"))
-        val snippResp = SnippetResponse(null, null)
-        val result = printScriptService.run {
-            val method = this::class.java.getDeclaredMethod(
-                "processFormatResponse",
-                ResponseEntity::class.java,
-                String::class.java,
-                List::class.java
+        val rules =
+            listOf(
+                CompleteRuleDTO("rule1", "name1", RulesetType.FORMAT, "user1", true, "value1"),
+                CompleteRuleDTO("rule2", "name2", RulesetType.FORMAT, "user2", true, "value2"),
             )
-            method.isAccessible = true
-            method.invoke(this, response, userId, rules) as ResponseEntity<*>
-        }
+        val snippResp = SnippetResponse(null, null)
+        val result =
+            printScriptService.run {
+                val method =
+                    this::class.java.getDeclaredMethod(
+                        "processFormatResponse",
+                        ResponseEntity::class.java,
+                        String::class.java,
+                        List::class.java,
+                    )
+                method.isAccessible = true
+                method.invoke(this, response, userId, rules) as ResponseEntity<*>
+            }
 
         assertEquals(response.statusCode, result.statusCode)
     }
@@ -121,19 +127,24 @@ class PrintScriptServiceTest {
     fun `processFormatResponse should update rules to FAILED on 5xx response`() {
         val response = ResponseEntity.status(500).body("Format failed")
         val userId = "user123"
-        val rules = listOf(CompleteRuleDTO("rule1", "name1", RulesetType.FORMAT, "user1", true, "value1"),
-            CompleteRuleDTO("rule2","name2", RulesetType.FORMAT, "user2", true, "value2"))
-
-        val result = printScriptService.run {
-            val method = this::class.java.getDeclaredMethod(
-                "processFormatResponse",
-                ResponseEntity::class.java,
-                String::class.java,
-                List::class.java
+        val rules =
+            listOf(
+                CompleteRuleDTO("rule1", "name1", RulesetType.FORMAT, "user1", true, "value1"),
+                CompleteRuleDTO("rule2", "name2", RulesetType.FORMAT, "user2", true, "value2"),
             )
-            method.isAccessible = true
-            method.invoke(this, response, userId, rules) as ResponseEntity<*>
-        }
+
+        val result =
+            printScriptService.run {
+                val method =
+                    this::class.java.getDeclaredMethod(
+                        "processFormatResponse",
+                        ResponseEntity::class.java,
+                        String::class.java,
+                        List::class.java,
+                    )
+                method.isAccessible = true
+                method.invoke(this, response, userId, rules) as ResponseEntity<*>
+            }
 
         assertEquals(response.statusCode, result.statusCode)
     }

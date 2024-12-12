@@ -14,8 +14,8 @@ import reactor.core.publisher.Mono
 import java.net.InetAddress
 
 abstract class RedisStreamConsumer<Value>(protected val streamKey: String, protected val groupId: String, private val redis: ReactiveRedisTemplate<String, String>) {
-
     protected abstract fun onMessage(record: ObjectRecord<String, Value>)
+
     private lateinit var flow: Flux<ObjectRecord<String, Value>>
 
     protected abstract fun options(): StreamReceiver.StreamReceiverOptions<String, ObjectRecord<String, Value>>
@@ -28,23 +28,24 @@ abstract class RedisStreamConsumer<Value>(protected val streamKey: String, prote
         runBlocking {
             try {
                 val consumerGroupExists = consumerGroupExists(streamKey, groupId).awaitSingle()
-                if(!consumerGroupExists) {
-                    println("Consumer group ${groupId} for stream ${streamKey} doesn't exist. Creating...")
+                if (!consumerGroupExists) {
+                    println("Consumer group $groupId for stream $streamKey doesn't exist. Creating...")
                     createConsumerGroup(streamKey, groupId).awaitSingle()
-                }else {
-                    println("Consumer group ${groupId} for stream ${streamKey} exists!")
+                } else {
+                    println("Consumer group $groupId for stream $streamKey exists!")
                 }
             } catch (e: Exception) {
                 println("Exception: $e")
-                println("Stream ${streamKey} doesn't exist. Creating stream ${streamKey} and group ${groupId}")
+                println("Stream $streamKey doesn't exist. Creating stream $streamKey and group $groupId")
                 redis.opsForStream<Any, Any>().createGroup(streamKey, groupId).awaitSingle()
             }
         }
         val container = StreamReceiver.create(redis.connectionFactory, options)
-        flow = container.receiveAutoAck(
-            Consumer.from(groupId, InetAddress.getLocalHost().hostName),
-            StreamOffset.create(streamKey, ReadOffset.lastConsumed())
-        )
+        flow =
+            container.receiveAutoAck(
+                Consumer.from(groupId, InetAddress.getLocalHost().hostName),
+                StreamOffset.create(streamKey, ReadOffset.lastConsumed()),
+            )
         flow.subscribe(this::onMessage, this::handleError)
     }
 
@@ -53,11 +54,17 @@ abstract class RedisStreamConsumer<Value>(protected val streamKey: String, prote
         throwable.localizedMessage
     }
 
-    private fun createConsumerGroup(streamKey: String, groupId: String): Mono<String> {
+    private fun createConsumerGroup(
+        streamKey: String,
+        groupId: String,
+    ): Mono<String> {
         return redis.opsForStream<Any, Any>().createGroup(streamKey, groupId)
     }
 
-    private fun consumerGroupExists(stream: String, group: String): Mono<Boolean> {
+    private fun consumerGroupExists(
+        stream: String,
+        group: String,
+    ): Mono<Boolean> {
         return redis.opsForStream<Any, Any>().groups(stream).any { it.groupName() == group }
     }
 }

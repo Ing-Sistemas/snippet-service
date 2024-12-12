@@ -2,15 +2,13 @@ package com.example.springboot.app.rules.repository
 
 import com.example.springboot.app.rules.enums.RulesetType
 import com.example.springboot.app.rules.model.dto.CompleteRuleDTO
-import com.example.springboot.app.rules.model.dto.RuleDTO
 import com.example.springboot.app.rules.model.entity.Rule
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
-import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 
 @Repository
-interface RuleRepository: JpaRepository<Rule, String> {
+interface RuleRepository : JpaRepository<Rule, String> {
     fun findRuleById(id: String): Rule
 
     @Query(
@@ -35,7 +33,15 @@ interface RuleRepository: JpaRepository<Rule, String> {
         """,
         nativeQuery = false,
     )
-    fun findAllRulesByUserIdAndType(userId: String, ruleType: RulesetType): List<CompleteRuleDTO>
-    fun findByNameAndType(name: String, ruleType: RulesetType): Rule?
+    fun findAllRulesByUserIdAndType(
+        userId: String,
+        ruleType: RulesetType,
+    ): List<CompleteRuleDTO>
+
+    fun findByNameAndType(
+        name: String,
+        ruleType: RulesetType,
+    ): Rule?
+
     fun findAllByType(ruleType: RulesetType): List<Rule>
 }

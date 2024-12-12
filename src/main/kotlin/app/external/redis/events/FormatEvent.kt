@@ -7,4 +7,4 @@ data class FormatEvent(
     val snippetId: String,
     val jwt: Jwt,
     val rules: List<CompleteRuleDTO>,
-): Event
+) : Event
