@@ -1,5 +1,6 @@
 package com.example.springboot.app.snippets
 
+import com.example.springboot.app.rules.enums.SnippetStatus
 import com.example.springboot.app.snippets.ControllerUtils.getUserIdFromJWT
 import com.example.springboot.app.snippets.dto.SnippetDTO
 import com.example.springboot.app.utils.*
@@ -55,6 +56,13 @@ class SnippetService @Autowired constructor(
         }
     }
 
+    fun changeSnippetStatus(snippetId: String, status: SnippetStatus) {
+        val snippetEntity = snippetRepository.findSnippetEntityById(snippetId)
+        logger.info("Changing status of snippet with id: $snippetId to $status")
+        snippetEntity.status = status
+        snippetRepository.save(snippetEntity)
+    }
+
 
     private fun translate(snippetDTO: SnippetDTO): SnippetEntity {
         return SnippetEntity(
@@ -70,9 +78,10 @@ class SnippetService @Autowired constructor(
         return SnippetDTO(
             snippetEntity.id,
             snippetEntity.title,
-            snippetEntity.extension,
             snippetEntity.language,
+            snippetEntity.extension,
             snippetEntity.version,
+            snippetEntity.status
         )
     }
 
