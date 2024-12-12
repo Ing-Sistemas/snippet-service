@@ -22,7 +22,6 @@ import com.example.springboot.app.utils.PaginatedUsers
 import com.example.springboot.app.utils.Pagination
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
@@ -48,6 +47,7 @@ class SnippetController @Autowired constructor(
     ): ResponseEntity<SnippetResponse> {
         return try {
             logger.trace("Creating snippet with name: ${snippetRequestCreate.title}")
+            logger.info("Creating snippet with name: ${snippetRequestCreate.title}")
             val snippetDTO = generateSnippetDTO(snippetRequestCreate)
             val headers = generateHeaders(jwt)
             val snippetFile = generateFile(snippetRequestCreate)
@@ -242,6 +242,12 @@ class SnippetController @Autowired constructor(
             logger.error("Error getting snippets: {}", e.message)
             ResponseEntity.status(500).build()
         }
+    }
+
+    @GetMapping("/test/error")
+    fun testNewRelicError(): ResponseEntity<Void> {
+        logger.error("This is an error for testing")
+        return ResponseEntity.status(400).build()
     }
 
     private fun convertSnippetDtoToSnippetData(snippetDto: SnippetDTO, jwt: Jwt): SnippetDataUi {

@@ -39,6 +39,7 @@ class TestController @Autowired constructor(
     ): ResponseEntity<List<TestCaseDTO>> {
         return try {
             logger.trace("Getting test cases for snippet with id: {}", snippetId)
+            logger.info("Getting test cases for snippet with id: {}", snippetId)
             val hasPermission = permissionService.hasPermissionBySnippetId("READ", snippetId, generateHeaders(jwt))
             if (!hasPermission) return ResponseEntity.status(403).build()
             val testList = testService.getAllTests(snippetId)
@@ -57,6 +58,7 @@ class TestController @Autowired constructor(
     ): ResponseEntity<TestCaseDTO> {
         return try {
             logger.trace("Adding test case with name: ${testCase.name}")
+            logger.info("Adding test case with name: ${testCase.name}")
             if (testCase.id != null && testService.existsById(testCase.id)) {
                 val test = testService.updateTest(testCase)
                 val testCaseDTO = TestCaseDTO(
@@ -91,6 +93,7 @@ class TestController @Autowired constructor(
     ): ResponseEntity<Void> {
         return try {
             logger.trace("Deleting test case with id: {}", id)
+            logger.info("Deleting test case with id: {}", id)
             testService.deleteTest(id)
             ResponseEntity.noContent().build()
         } catch (e: Exception) {
@@ -108,6 +111,7 @@ class TestController @Autowired constructor(
     ): ResponseEntity<TestCaseResult> {
         return try {
             logger.trace("Running tests for snippet with id: {}", sId)
+            logger.info("Running tests for snippet with id: {}", sId)
             val headers = generateHeaders(jwt)
             val snippet = snippetService.findSnippetById(sId)
             println("Testing snippet ${snippet.language.uppercase(Locale.getDefault())}")

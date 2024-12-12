@@ -3,7 +3,6 @@ package com.example.springboot.app.rules
 
 import com.example.springboot.app.external.services.permission.PermissionService
 import com.example.springboot.app.external.services.printscript.LanguageService
-import com.example.springboot.app.external.services.printscript.PrintScriptService
 import com.example.springboot.app.rules.model.dto.AddRuleDTO
 import com.example.springboot.app.rules.enums.RulesetType
 import com.example.springboot.app.rules.model.dto.CompleteRuleDTO
@@ -36,6 +35,7 @@ class RuleController @Autowired constructor(
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<List<CompleteRuleDTO>> {
         logger.trace("Getting rules for $ruleType")
+        logger.info("Getting rules for $ruleType")
         val ruleSetType = RulesetType.valueOf(ruleType.uppercase(Locale.getDefault()))
         val rules = rulesService.getRules(ruleSetType, getUserIdFromJWT(jwt))
         return ResponseEntity.ok(rules)
@@ -48,6 +48,7 @@ class RuleController @Autowired constructor(
         @AuthenticationPrincipal jwt: Jwt
     ) {
         logger.trace("Updating rules for $ruleType")
+        logger.info("Updating rules for $ruleType")
         val ruleTypeEnum = RulesetType.valueOf(ruleType)
         return rulesService.updateRules(ruleTypeEnum, rules, jwt)
     }
@@ -60,6 +61,7 @@ class RuleController @Autowired constructor(
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<String> {
         logger.trace("Formatting snippet $snippetId")
+        logger.info("Formatting snippet $snippetId")
         return try {
             if (permissionService.hasPermissionBySnippetId("WRITE",snippetId, generateHeaders(jwt))) {
                 val language = snippetService.findSnippetById(snippetId).language
