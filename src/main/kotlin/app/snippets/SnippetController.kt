@@ -16,13 +16,9 @@ import com.example.springboot.app.snippets.ControllerUtils.getUserIdFromJWT
 import com.example.springboot.app.snippets.dto.SnippetDTO
 import com.example.springboot.app.snippets.dto.SnippetDataUi
 import com.example.springboot.app.snippets.dto.UpdateSnippetDTO
-import com.example.springboot.app.utils.CodingLanguage
-import com.example.springboot.app.utils.PaginatedSnippets
-import com.example.springboot.app.utils.PaginatedUsers
-import com.example.springboot.app.utils.Pagination
+import com.example.springboot.app.utils.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
@@ -37,7 +33,8 @@ class SnippetController @Autowired constructor(
     private val permissionService: PermissionService,
     private val assetService: AssetService,
     private val userRuleRepository: RuleUserRepository,
-    private val languageService: Map<CodingLanguage, LanguageService>
+    private val languageService: Map<CodingLanguage, LanguageService>,
+    private val correlationService: CorrelationService
 ) {
     private val logger = LoggerFactory.getLogger(SnippetController::class.java)
 
@@ -48,6 +45,10 @@ class SnippetController @Autowired constructor(
     ): ResponseEntity<SnippetResponse> {
         return try {
             logger.trace("Creating snippet with name: ${snippetRequestCreate.title}")
+            val cId = UUID.randomUUID().toString()
+            correlationService.correlatePermission(cId, generateHeaders(jwt))
+            correlationService.correlatePs(cId, generateHeaders(jwt))
+            logger.info("Creating snippet with name: ${snippetRequestCreate.title}; $cId")
             val snippetDTO = generateSnippetDTO(snippetRequestCreate)
             val headers = generateHeaders(jwt)
             val snippetFile = generateFile(snippetRequestCreate)
@@ -76,6 +77,10 @@ class SnippetController @Autowired constructor(
     ): ResponseEntity<SnippetDataUi> {
         return try {
             logger.trace("Updating snippet with id: $snippetId")
+            val cId = UUID.randomUUID().toString()
+            correlationService.correlatePermission(cId, generateHeaders(jwt))
+            correlationService.correlatePs(cId, generateHeaders(jwt))
+            logger.info("Updating snippet with id: $snippetId; $cId")
             val hasPermission = permissionService.hasPermissionBySnippetId("WRITE", snippetId, generateHeaders(jwt))
             if(!hasPermission) {
                 ResponseEntity.status(400).body(SnippetResponse(null, "User does not have permission to write snippet"))
@@ -114,6 +119,10 @@ class SnippetController @Autowired constructor(
     ): ResponseEntity<SnippetDataUi> {
         return try {
             logger.trace("Sharing snippet with id: ${shareRequest.snippetId}")
+            val cId = UUID.randomUUID().toString()
+            correlationService.correlatePermission(cId, generateHeaders(jwt))
+            correlationService.correlatePs(cId, generateHeaders(jwt))
+            logger.info("Sharing snippet with id: ${shareRequest.snippetId}; $cId")
             val hasPermission = permissionService.hasPermissionBySnippetId("SHARE", shareRequest.snippetId, generateHeaders(jwt))
             if(!hasPermission) {
                 ResponseEntity.status(400).body(SnippetResponse(null, "User does not have permission to share snippet"))
@@ -148,6 +157,10 @@ class SnippetController @Autowired constructor(
     ): ResponseEntity<Void> {
         return try {
             logger.trace("Deleting snippet with id: $snippetId")
+            val cId = UUID.randomUUID().toString()
+            correlationService.correlatePermission(cId, generateHeaders(jwt))
+            correlationService.correlatePs(cId, generateHeaders(jwt))
+            logger.info("Deleting snippet with id: $snippetId; $cId")
             val hasPermission = permissionService.hasPermissionBySnippetId("WRITE", snippetId, generateHeaders(jwt))
             if (!hasPermission) {
                 return ResponseEntity.status(403).build()
@@ -170,6 +183,10 @@ class SnippetController @Autowired constructor(
         @AuthenticationPrincipal jwt: Jwt
     ): ResponseEntity<SnippetDataUi> {
         logger.trace("Getting snippet with id: $snippetId")
+        val cId = UUID.randomUUID().toString()
+        correlationService.correlatePermission(cId, generateHeaders(jwt))
+        correlationService.correlatePs(cId, generateHeaders(jwt))
+        logger.info("Getting snippet with id: $snippetId; $cId")
         val headers = generateHeaders(jwt)
         val hasPermission = permissionService.hasPermissionBySnippetId("READ", snippetId, headers)
         if (hasPermission) {
@@ -200,6 +217,10 @@ class SnippetController @Autowired constructor(
     ): ResponseEntity<PaginatedUsers> {
         return try {
             logger.trace("Getting all users")
+            val cId = UUID.randomUUID().toString()
+            correlationService.correlatePermission(cId, generateHeaders(jwt))
+            correlationService.correlatePs(cId, generateHeaders(jwt))
+            logger.info("Getting all users; $cId")
             val users = snippetService.getAllUsers(page, pageSize, name, jwt)
             ResponseEntity.ok(users)
         } catch (e: Exception) {
@@ -217,6 +238,10 @@ class SnippetController @Autowired constructor(
     ): ResponseEntity<PaginatedSnippets> {
         return try {
             logger.trace("Getting all snippets for user")
+            val cId = UUID.randomUUID().toString()
+            correlationService.correlatePermission(cId, generateHeaders(jwt))
+            correlationService.correlatePs(cId, generateHeaders(jwt))
+            logger.info("Getting all snippets for user; $cId")
             val headers = generateHeaders(jwt)
             val snippetIds = permissionService.getAllSnippetsIdsForUser(headers)
 
@@ -242,6 +267,12 @@ class SnippetController @Autowired constructor(
             logger.error("Error getting snippets: {}", e.message)
             ResponseEntity.status(500).build()
         }
+    }
+
+    @GetMapping("/test/error")
+    fun testNewRelicError(): ResponseEntity<Void> {
+        logger.error("This is an error for testing")
+        return ResponseEntity.status(400).build()
     }
 
     private fun convertSnippetDtoToSnippetData(snippetDto: SnippetDTO, jwt: Jwt): SnippetDataUi {

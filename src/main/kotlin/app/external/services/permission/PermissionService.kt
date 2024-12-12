@@ -4,6 +4,7 @@ import com.example.springboot.app.external.services.permission.request.Permissio
 import com.example.springboot.app.external.services.permission.request.PermissionShare
 import com.example.springboot.app.external.services.permission.response.PermissionResponse
 import com.example.springboot.app.snippets.SnippetService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.ParameterizedTypeReference
@@ -19,6 +20,8 @@ class PermissionService @Autowired constructor(
     private val snippetService: SnippetService
 ) {
     @Value("\${spring.constants.permission_url}") private lateinit var permissionURL: String
+
+    private val logger = LoggerFactory.getLogger(PermissionService::class.java)
 
     fun hasPermissionByTitle(
         permission: String,
