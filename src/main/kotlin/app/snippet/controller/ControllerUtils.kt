@@ -16,8 +16,8 @@ object ControllerUtils {
             snippetRequestCreate.language,
             snippetRequestCreate.extension,
             snippetRequestCreate.version,
-            snippetRequestCreate.compliance,
-            snippetRequestCreate.author,
+            //snippetRequestCreate.compliance,
+           //snippetRequestCreate.author,
             snippetRequestCreate.code
 
         )
@@ -32,11 +32,10 @@ object ControllerUtils {
         return auth.decode(jwt.tokenValue).subject!!
     }
 
-    fun generateHeaders(jwt: Jwt): HttpHeaders {
-        return HttpHeaders().apply {
-            set("Authorization", "Bearer ${jwt.tokenValue}")
-            contentType = MediaType.APPLICATION_JSON
+    fun generateHeaders(jwt: Jwt): HttpHeaders { //CHANGE, this method should return HttpHeaders
+        val headers = HttpHeaders()
+        headers.contentType = MediaType.APPLICATION_JSON
+        headers.setBearerAuth(jwt.tokenValue)
+        return headers
         }
     }
-
-}

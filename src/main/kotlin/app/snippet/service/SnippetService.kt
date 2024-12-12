@@ -1,5 +1,7 @@
 package com.example.springboot.app.snippet.service
 
+import com.example.springboot.app.external.rest.ui.SnippetData
+import com.example.springboot.app.snippet.model.dto.PaginatedSnippets
 import com.example.springboot.app.snippet.model.dto.SnippetDTO
 import com.example.springboot.app.snippet.repository.SnippetRepository
 import com.example.springboot.app.snippet.model.entity.SnippetEntity
@@ -40,10 +42,9 @@ class SnippetService (
             snippetDTO.extension,
             snippetDTO.language,
             snippetDTO.version,
-            snippetDTO.content,
-            snippetDTO.compliance,
-            snippetDTO.author,
-
+            snippetDTO.content
+            //snippetDTO.compliance,
+            //snippetDTO.author,
         )
     }
 
@@ -55,8 +56,36 @@ class SnippetService (
             snippetEntity.language,
             snippetEntity.version,
             snippetEntity.content,
-            snippetEntity.compliance,
-            snippetEntity.author,
+            //snippetEntity.compliance,
+            //snippetEntity.author,
+        )
+    }
+
+    fun getPaginatedSnippets(page: Int, size: Int, title: String): PaginatedSnippets {
+
+        val snippets = snippetRepository.findAll()
+        val paginatedSnippets = snippets.subList(
+            (page - 1) * size,
+            if (page * size > snippets.size) snippets.size else page * size
+        ).map { translate(it) }
+        val paginatedSnippetData = paginatedSnippets.map { translateToSnippetData(it) }
+        return PaginatedSnippets(
+            paginatedSnippetData,
+            snippets.size,
+            totalPages = snippets.size / 10,
+            snippets.indices.first,
+
+        )
+    }
+
+    private fun translateToSnippetData(snippetDTO: SnippetDTO): SnippetData {
+        return SnippetData(
+            snippetDTO.snippetId,
+            snippetDTO.title,
+            snippetDTO.content,
+            snippetDTO.extension,
+            //snippetDTO.compliance,
+            //snippetDTO.author,
         )
     }
 }
